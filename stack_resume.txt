@@ -1,0 +1,36 @@
+Stack technique du projet banking-system
+
+1. ServeurPret & ServeurCompteCourant (Java EJB/Jakarta EE)
+- Langage : Java
+- Framework : Jakarta EE (ex-Java EE), EJB pour la logique métier
+- API REST : JAX-RS pour exposer les endpoints REST
+- ORM : JPA (Hibernate) pour la persistance
+- Serveur d’application : WildFly
+- Base de données : PostgreSQL
+
+2. ServeurCompteDepot (.NET Core)
+- Langage : C#
+- Framework : ASP.NET Core
+- API REST : Contrôleurs Web API
+- ORM : Entity Framework Core (avec Npgsql pour PostgreSQL)
+- Base de données : PostgreSQL
+
+3. Centralizer (Spring Boot)
+- Langage : Java
+- Framework : Spring Boot
+- Web : Spring MVC + Thymeleaf pour l’interface utilisateur
+- Appels REST : RestTemplate pour consommer les APIs des serveurs
+- Persistance locale : Spring Data JPA (si besoin)
+- Base de données : PostgreSQL (pour les opérations locales)
+
+Architecture
+- Chaque serveur app expose ses données via des endpoints REST (JSON).
+- Le centralizer agrège les données en appelant les serveurs via des proxies REST.
+- L’interface utilisateur du centralizer affiche les données agrégées (Thymeleaf).
+
+Résumé
+- Java EE/Jakarta EE + EJB + JPA/Hibernate + WildFly + PostgreSQL
+- ASP.NET Core + Entity Framework Core + PostgreSQL
+- Spring Boot + Spring MVC + Thymeleaf + RestTemplate + PostgreSQL
+
+Le tout forme un système distribué, interopérable, avec chaque service indépendant et un centralizer pour l’agrégation et l’UI.

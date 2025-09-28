@@ -42,5 +42,4 @@ public class CompteDepotController {
     public void deleteCompteDepot(@PathVariable int id) {
         compteDepotProxyService.deleteCompteDepot(id);
     }
-    // test modif
 }
