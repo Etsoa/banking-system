@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Liste des Comptes Courants</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+<body>
+    <h1>Liste des Comptes Courants</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Solde</th>
+                <th>Date d'ouverture</th>
+                <th>Client</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="compte : ${comptesCourant}">
+                <td th:text="${compte.id}"></td>
+                <td th:text="${compte.solde}"></td>
+                <td th:text="${compte.dateOuverture}"></td>
+                <td th:text="${compte.client}"></td>
+            </tr>
+        </tbody>
+    </table>
+    <a th:href="@{/}">Retour à l'accueil</a>
+</body>
+</html>

@@ -1,0 +1,32 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.pdb
+*.dll
+*.exe
+*.runtimeconfig.json
+*.deps.json
+
+# Visual Studio
+.vs/
+*.vscode/
+
+# Java / Maven
+target/
+*.class
+*.jar
+*.war
+*.iml
+.idea/
+*.log
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+*.tmp
+*.bak
+
+# Dossiers que tu ne veux pas tracker
+banking-system/

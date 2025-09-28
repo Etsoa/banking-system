@@ -1,0 +1,31 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Centralizer - Opérations</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <h1>Liste des opérations</h1>
+    <table border="1">
+        <tr>
+            <th>ID</th>
+            <th>Type</th>
+            <th>Montant</th>
+            <th>Serveur</th>
+        </tr>
+        <tr th:each="op : ${operations}">
+            <td th:text="${op.id}"></td>
+            <td th:text="${op.type}"></td>
+            <td th:text="${op.montant}"></td>
+            <td th:text="${op.serveur}"></td>
+        </tr>
+    </table>
+    <h2>Ajouter une opération</h2>
+    <form th:action="@{/add}" method="post">
+        <label>Type:</label><input type="text" name="type" required><br>
+        <label>Montant:</label><input type="number" name="montant" step="0.01" required><br>
+        <label>Serveur:</label><input type="text" name="serveur" required><br>
+        <button type="submit">Ajouter</button>
+    </form>
+</body>
+</html>

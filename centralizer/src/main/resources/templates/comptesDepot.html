@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Liste des Comptes de Dépôt</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+<body>
+    <h1>Liste des Comptes de Dépôt</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Titulaire</th>
+                <th>Solde</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="compte : ${comptesDepot}">
+                <td th:text="${compte.id}"></td>
+                <td th:text="${compte.titulaire}"></td>
+                <td th:text="${compte.solde}"></td>
+            </tr>
+        </tbody>
+    </table>
+    <a th:href="@{/}">Retour à l'accueil</a>
+</body>
+</html>

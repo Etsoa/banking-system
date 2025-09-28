@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Liste des Prêts</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+<body>
+    <h1>Liste des Prêts</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Montant</th>
+                <th>Date</th>
+                <th>Client</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="pret : ${prets}">
+                <td th:text="${pret['id']}"></td>
+                <td th:text="${pret['montant']}"></td>
+                <td th:text="${pret['date']}"></td>
+                <td th:text="${pret['client']}"></td>
+            </tr>
+
+        </tbody>
+    </table>
+    <a th:href="@{/}">Retour à l'accueil</a>
+</body>
+</html>

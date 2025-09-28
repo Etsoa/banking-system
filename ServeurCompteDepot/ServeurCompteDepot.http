@@ -1,0 +1,6 @@
+@CompteDepotService_HostAddress = http://localhost:5086
+
+GET {{CompteDepotService_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

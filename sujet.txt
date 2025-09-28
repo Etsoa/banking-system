@@ -1,0 +1,21 @@
+Architecture N/N
+- serveur d application (app dans un serveur atsoina ho ampesaina) miservir application
+- serveur web
+- client
+* serveur : manome services, stock
+* application : fonction avec donnees (argument, retour) 
+server web : mahita diff server app : manome
+
+- WebService
+- EGB
+
+mamorona systeme 3 heterogene (.Net, Java) (2 Java 1 .Net)
+Banking 
+- serveur 1 : situation vola miditra sy mivoka (compte courant) Java
+- serveur 2 : compte de depot (vola apetraka mitombo) .Net azahoana zanabola
+ rehefa miotra (contraintes : tsy azo kitiana 50%, tsy azo mindrana ao raha tsy 1 par mois) interet par an 2% 
+- serveur 3 : pret (indrana vola) Java taux d interet par an 24% (an ny banque)
+- serveur 4 : centralisateur Java (manambatra an izy rehetra)
+
+
+
