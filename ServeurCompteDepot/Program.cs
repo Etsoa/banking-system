@@ -1,4 +1,4 @@
-using ServeurCompteDepot.models;
+using ServeurCompteDepot.Models;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);

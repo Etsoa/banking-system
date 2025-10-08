@@ -15,8 +15,7 @@ namespace ServeurCompteDepot.Models
         public DateTime DateTransaction { get; set; } = DateTime.UtcNow;
 
         [Required]
-        [Column("montant")]
-        [Column(TypeName = "decimal(12,2)")]
+        [Column("montant", TypeName = "decimal(12,2)")]
         public decimal Montant { get; set; }
 
         [Required]

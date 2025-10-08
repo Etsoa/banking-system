@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using ServeurCompteDepot.Models;
 
-namespace ServeurCompteDepot.models
+namespace ServeurCompteDepot.Models
 {
     public class CompteDepotContext : DbContext
     {

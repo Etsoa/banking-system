@@ -14,10 +14,9 @@ namespace ServeurCompteDepot.Models
         [Column("date_transfert")]
         public DateTime DateTransfert { get; set; } = DateTime.UtcNow.Date;
 
-        [Required]
-        [Column("montant")]
-        [Column(TypeName = "decimal(12,2)")]
-        public decimal Montant { get; set; }
+    [Required]
+    [Column("montant", TypeName = "decimal(12,2)")]
+    public decimal Montant { get; set; }
 
         [Required]
         [Column("envoyer")]

@@ -18,10 +18,9 @@ namespace ServeurCompteDepot.Models
         [Column("id_client")]
         public int IdClient { get; set; }
 
-        [Required]
-        [Column("solde")]
-        [Column(TypeName = "decimal(12,2)")]
-        public decimal Solde { get; set; } = 0;
+    [Required]
+    [Column("solde", TypeName = "decimal(12,2)")]
+    public decimal Solde { get; set; } = 0;
 
         // Navigation properties
         public virtual ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();

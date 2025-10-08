@@ -1,4 +1,4 @@
-using ServeurCompteDepot.models;
+using ServeurCompteDepot.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,35 +15,39 @@ namespace ServeurCompteDepot.controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<CompteDepot>>> GetAll()
+
+        public async Task<ActionResult<IEnumerable<Compte>>> GetAll()
         {
-            return await _context.ComptesDepot.ToListAsync();
+            return await _context.Comptes.ToListAsync();
         }
 
         [HttpPost]
-        public async Task<ActionResult<CompteDepot>> Create(CompteDepot compte)
+
+        public async Task<ActionResult<Compte>> Create(Compte compte)
         {
-            _context.ComptesDepot.Add(compte);
+            _context.Comptes.Add(compte);
             await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetAll), new { id = compte.Id }, compte);
+            return CreatedAtAction(nameof(GetAll), new { id = compte.IdCompte }, compte);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<CompteDepot>> GetById(int id)
+
+        public async Task<ActionResult<Compte>> GetById(int id)
         {
-            var compte = await _context.ComptesDepot.FindAsync(id);
+            var compte = await _context.Comptes.FindAsync(id);
             if (compte == null)
                 return NotFound();
             return compte;
         }
 
         [HttpDelete("{id}")]
+
         public async Task<IActionResult> Delete(int id)
         {
-            var compte = await _context.ComptesDepot.FindAsync(id);
+            var compte = await _context.Comptes.FindAsync(id);
             if (compte == null)
                 return NotFound();
-            _context.ComptesDepot.Remove(compte);
+            _context.Comptes.Remove(compte);
             await _context.SaveChangesAsync();
             return NoContent();
         }

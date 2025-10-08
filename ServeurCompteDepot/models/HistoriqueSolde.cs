@@ -10,10 +10,9 @@ namespace ServeurCompteDepot.Models
         [Column("id_historique_solde")]
         public int IdHistoriqueSolde { get; set; }
 
-        [Required]
-        [Column("montant")]
-        [Column(TypeName = "decimal(12,2)")]
-        public decimal Montant { get; set; }
+    [Required]
+    [Column("montant", TypeName = "decimal(12,2)")]
+    public decimal Montant { get; set; }
 
         [Required]
         [Column("date_changement")]
