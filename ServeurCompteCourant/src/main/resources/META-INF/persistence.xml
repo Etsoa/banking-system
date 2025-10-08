@@ -5,7 +5,7 @@
              version="2.2">
     <persistence-unit name="ServeurCompteCourantPU" transaction-type="JTA">
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
-        <jta-data-source>java:/PostgresDS</jta-data-source>
+        <jta-data-source>java:/CompteCourant</jta-data-source>
         <properties>
             <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
             <property name="hibernate.hbm2ddl.auto" value="update"/>
