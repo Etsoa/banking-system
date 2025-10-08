@@ -1,6 +1,12 @@
 package com.example.serveurpret.models;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -12,29 +18,38 @@ public class Pret {
     @Column(name = "id_pret")
     private Integer id;
 
-    @Column(name = "date_pret", nullable = false)
-    private LocalDateTime datePret;
+    @Column(name = "montant", nullable = false, precision = 12, scale = 2)
+    private BigDecimal montant;
 
-    @Column(name = "montant", nullable = false)
-    private Long montant;
+    @Column(name = "duree_mois", nullable = false)
+    private Integer dureeMois;
 
-    @Column(name = "nb_mois_retour_prevu", nullable = false)
-    private Integer nbMoisRetourPrevu;
+    @Column(name = "date_debut", nullable = false)
+    private LocalDateTime dateDebut;
 
-    @Column(name = "id_type_statu_pret", nullable = false)
-    private Integer idTypeStatuPret;
-
-    @Column(name = "id_type_remboursement", nullable = false)
-    private Integer idTypeRemboursement;
+    @Column(name = "Id_statut_pret", nullable = false)
+    private Integer idStatutPret;
 
     @Column(name = "id_modalite", nullable = false)
     private Integer idModalite;
 
-    @Column(name = "id_client", nullable = false)
-    private Integer idClient;
+    @Column(name = "Id_type_remboursement", nullable = false)
+    private Integer idTypeRemboursement;
+
+    // Constructors
+    public Pret() {}
+
+    public Pret(BigDecimal montant, Integer dureeMois, LocalDateTime dateDebut, 
+                Integer idStatutPret, Integer idModalite, Integer idTypeRemboursement) {
+        this.montant = montant;
+        this.dureeMois = dureeMois;
+        this.dateDebut = dateDebut;
+        this.idStatutPret = idStatutPret;
+        this.idModalite = idModalite;
+        this.idTypeRemboursement = idTypeRemboursement;
+    }
 
     // Getters & Setters
-
     public Integer getId() {
         return id;
     }
@@ -43,44 +58,36 @@ public class Pret {
         this.id = id;
     }
 
-    public LocalDateTime getDatePret() {
-        return datePret;
-    }
-
-    public void setDatePret(LocalDateTime datePret) {
-        this.datePret = datePret;
-    }
-
-    public Long getMontant() {
+    public BigDecimal getMontant() {
         return montant;
     }
 
-    public void setMontant(Long montant) {
+    public void setMontant(BigDecimal montant) {
         this.montant = montant;
     }
 
-    public Integer getNbMoisRetourPrevu() {
-        return nbMoisRetourPrevu;
+    public Integer getDureeMois() {
+        return dureeMois;
     }
 
-    public void setNbMoisRetourPrevu(Integer nbMoisRetourPrevu) {
-        this.nbMoisRetourPrevu = nbMoisRetourPrevu;
+    public void setDureeMois(Integer dureeMois) {
+        this.dureeMois = dureeMois;
     }
 
-    public Integer getIdTypeStatuPret() {
-        return idTypeStatuPret;
+    public LocalDateTime getDateDebut() {
+        return dateDebut;
     }
 
-    public void setIdTypeStatuPret(Integer idTypeStatuPret) {
-        this.idTypeStatuPret = idTypeStatuPret;
+    public void setDateDebut(LocalDateTime dateDebut) {
+        this.dateDebut = dateDebut;
     }
 
-    public Integer getIdTypeRemboursement() {
-        return idTypeRemboursement;
+    public Integer getIdStatutPret() {
+        return idStatutPret;
     }
 
-    public void setIdTypeRemboursement(Integer idTypeRemboursement) {
-        this.idTypeRemboursement = idTypeRemboursement;
+    public void setIdStatutPret(Integer idStatutPret) {
+        this.idStatutPret = idStatutPret;
     }
 
     public Integer getIdModalite() {
@@ -91,11 +98,24 @@ public class Pret {
         this.idModalite = idModalite;
     }
 
-    public Integer getIdClient() {
-        return idClient;
+    public Integer getIdTypeRemboursement() {
+        return idTypeRemboursement;
     }
 
-    public void setIdClient(Integer idClient) {
-        this.idClient = idClient;
+    public void setIdTypeRemboursement(Integer idTypeRemboursement) {
+        this.idTypeRemboursement = idTypeRemboursement;
+    }
+
+    @Override
+    public String toString() {
+        return "Pret{" +
+                "id=" + id +
+                ", montant=" + montant +
+                ", dureeMois=" + dureeMois +
+                ", dateDebut=" + dateDebut +
+                ", idStatutPret=" + idStatutPret +
+                ", idModalite=" + idModalite +
+                ", idTypeRemboursement=" + idTypeRemboursement +
+                '}';
     }
 }
