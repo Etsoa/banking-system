@@ -24,7 +24,7 @@ public class CompteDepotController {
             model.addAttribute("comptesDepot", null);
             model.addAttribute("error", "Erreur lors de la récupération des comptes dépôt: " + e.getMessage());
         }
-        return "comptesDepot";
+        return "comptes-depot/list";
     }
 
     @GetMapping("/comptes-depot/{id}")

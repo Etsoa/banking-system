@@ -23,7 +23,7 @@ public class PretController {
             model.addAttribute("prets", null);
             model.addAttribute("error", "Erreur lors de la récupération des prêts: " + e.getMessage());
         }
-        return "prets";
+        return "prets/list";
     }
 
     @GetMapping("/prets/{id}")

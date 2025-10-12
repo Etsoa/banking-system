@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Centralizer - Modifier un Client</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 20px;">
+        <h1>Modifier le Client</h1>
+        <div style="margin-bottom: 20px;">
+            <a href="/clients" style="color: #007bff; text-decoration: none;">← Retour à la liste des clients</a>
+        </div>
+        
+        <!-- Message d'erreur si problème -->
+        <div th:if="${error}" style="margin-top: 20px; padding: 15px; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 5px; color: #721c24;">
+            <strong>Erreur:</strong> <span>[[${error}]]</span>
+        </div>
+        
+        <!-- Message de succès -->
+        <div th:if="${success}" style="margin-top: 20px; padding: 15px; background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 5px; color: #155724;">
+            <strong>Succès:</strong> <span>[[${success}]]</span>
+        </div>
+        
+        <div style="margin-top: 20px;">
+            <form th:action="@{/clients/edit}" method="post" th:object="${client}" style="max-width: 600px;">
+                <input type="hidden" name="id" th:value="${client.id}" />
+                
+                <div style="margin-bottom: 15px;">
+                    <label for="nom" style="display: block; margin-bottom: 5px; font-weight: bold;">Nom:</label>
+                    <input type="text" id="nom" th:field="*{nom}" 
+                           style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" 
+                           placeholder="Entrez le nom du client">
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label for="prenom" style="display: block; margin-bottom: 5px; font-weight: bold;">Prénom:</label>
+                    <input type="text" id="prenom" th:field="*{prenom}" 
+                           style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" 
+                           placeholder="Entrez le prénom du client">
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label for="dateNaissance" style="display: block; margin-bottom: 5px; font-weight: bold;">Date de Naissance:</label>
+                    <input type="date" id="dateNaissance" th:field="*{dateNaissance}" 
+                           style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label for="email" style="display: block; margin-bottom: 5px; font-weight: bold;">Email:</label>
+                    <input type="email" id="email" th:field="*{email}" 
+                           style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" 
+                           placeholder="Entrez l'email du client">
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label for="telephone" style="display: block; margin-bottom: 5px; font-weight: bold;">Téléphone:</label>
+                    <input type="tel" id="telephone" th:field="*{telephone}" 
+                           style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" 
+                           placeholder="Entrez le numéro de téléphone">
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label for="adresse" style="display: block; margin-bottom: 5px; font-weight: bold;">Adresse:</label>
+                    <textarea id="adresse" th:field="*{adresse}" rows="3" 
+                              style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" 
+                              placeholder="Entrez l'adresse du client"></textarea>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label for="nouveauStatut" style="display: block; margin-bottom: 5px; font-weight: bold;">Statut:</label>
+                    <div style="margin-bottom: 10px;">
+                        <strong>Statut actuel:</strong> 
+                        <span th:text="${statutActuel}" 
+                              th:style="${statutActuel == 'actif'} ? 'color: #28a745; font-weight: bold;' : 'color: #dc3545; font-weight: bold;'">
+                            Statut actuel
+                        </span>
+                    </div>
+                    <select id="nouveauStatut" name="nouveauStatut" 
+                            style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        <option value="actif" th:selected="${statutActuel == 'actif'}">Actif</option>
+                        <option value="inactif" th:selected="${statutActuel == 'inactif'}">Inactif</option>
+                    </select>
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <button type="submit" style="background-color: #007bff; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px; margin-right: 10px;">
+                        Modifier le Client
+                    </button>
+                    <a href="/clients" style="background-color: #6c757d; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                        Annuler
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

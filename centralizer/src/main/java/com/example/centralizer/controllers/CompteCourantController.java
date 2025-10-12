@@ -24,7 +24,7 @@ public class CompteCourantController {
             model.addAttribute("comptesCourant", null);
             model.addAttribute("error", "Erreur lors de la récupération des comptes courant: " + e.getMessage());
         }
-        return "comptesCourant";
+        return "comptes-courant/list";
     }
 
     @GetMapping("/comptes-courant/{id}")

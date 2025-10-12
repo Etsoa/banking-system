@@ -10,11 +10,11 @@ CREATE TABLE comptes(
 );
 
 CREATE TABLE types_transaction(
-   Id_type_transaction SERIAL,
+   id_type_transaction SERIAL,
    libelle VARCHAR(50)  NOT NULL,
    actif BOOLEAN NOT NULL DEFAULT TRUE,
    signe VARCHAR(1) NOT NULL,
-   PRIMARY KEY(Id_type_transaction)
+   PRIMARY KEY(id_type_transaction)
 );
 
 CREATE TABLE transferts(
@@ -32,12 +32,12 @@ CREATE TABLE transactions(
    id_transaction SERIAL,
    date_transaction TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
    montant NUMERIC(12,2)   NOT NULL,
-   Id_type_transaction INTEGER NOT NULL,
+   id_type_transaction INTEGER NOT NULL,
    id_compte INTEGER NOT NULL,
    id_transfert INTEGER,
    PRIMARY KEY(id_transaction),
-   FOREIGN KEY(Id_type_transaction) REFERENCES types_transaction(Id_type_transaction) on delete cascade on update cascade,
-   FOREIGN KEY(Id_transfert) REFERENCES transferts(Id_transfert) on delete cascade on update cascade,
+   FOREIGN KEY(id_type_transaction) REFERENCES types_transaction(id_type_transaction) on delete cascade on update cascade,
+   FOREIGN KEY(id_transfert) REFERENCES transferts(id_transfert) on delete cascade on update cascade,
    FOREIGN KEY(id_compte) REFERENCES comptes(id_compte) on delete cascade on update cascade
 );
 
@@ -53,20 +53,20 @@ CREATE TABLE historiques_solde(
 );
 
 CREATE TABLE types_statut_compte(
-   Id_type_statut_compte SERIAL,
+   id_type_statut_compte SERIAL,
    libelle VARCHAR(50)  NOT NULL,
    actif BOOLEAN NOT NULL DEFAULT TRUE,
-   PRIMARY KEY(Id_type_statut_compte)
+   PRIMARY KEY(id_type_statut_compte)
 );
 
 CREATE TABLE historiques_statut_compte(
    id_historique_statut_compte SERIAL,
    date_changement TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
    id_compte INTEGER NOT NULL,
-   Id_type_statut_compte INTEGER NOT NULL,
+   id_type_statut_compte INTEGER NOT NULL,
    PRIMARY KEY(id_historique_statut_compte),
    FOREIGN KEY(id_compte) REFERENCES comptes(id_compte) on delete cascade on update cascade,
-   FOREIGN KEY(Id_type_statut_compte) REFERENCES types_statut_compte(Id_type_statut_compte) on delete cascade on update cascade
+   FOREIGN KEY(id_type_statut_compte) REFERENCES types_statut_compte(id_type_statut_compte) on delete cascade on update cascade
 );
 
 -- Données pour les types de transaction

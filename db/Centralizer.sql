@@ -66,3 +66,12 @@ CREATE TABLE configurations(
    actif BOOLEAN NOT NULL,
    PRIMARY KEY(Id_configuration)
 );
+
+CREATE TABLE historiques_statut_client(
+   id_historique_statut_client SERIAL,
+   date_changement TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+   id_client INTEGER NOT NULL,
+   statut VARCHAR(50)  NOT NULL,
+   PRIMARY KEY(id_historique_statut_client),
+   FOREIGN KEY(id_client) REFERENCES clients(id_client) on delete cascade on update cascade
+);
