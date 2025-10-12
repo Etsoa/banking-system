@@ -1,31 +1,69 @@
-<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Liste des Prêts</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <title>Centralizer - Prêts</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-    <h1>Liste des Prêts</h1>
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Montant</th>
-                <th>Date</th>
-                <th>Client</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr th:each="pret : ${prets}">
-                <td th:text="${pret['id']}"></td>
-                <td th:text="${pret['montant']}"></td>
-                <td th:text="${pret['date']}"></td>
-                <td th:text="${pret['client']}"></td>
-            </tr>
-
-        </tbody>
-    </table>
-    <a th:href="@{/}">Retour à l'accueil</a>
+    <h1>Gestion des Prêts</h1>
+    <div style="margin-bottom: 20px;">
+        <a href="/" style="color: #007bff; text-decoration: none;">← Retour à l'accueil</a>
+    </div>
+    
+    <div>
+        <h2>Liste des Prêts</h2>
+        
+        <!-- Message d'erreur si problème de connexion -->
+        <div th:if="${error}" style="margin-top: 20px; padding: 15px; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 5px; color: #721c24;">
+            <strong>Erreur:</strong> <span>[[${error}]]</span>
+        </div>
+        
+        <!-- Tableau des prêts -->
+        <div th:if="${prets != null and not #lists.isEmpty(prets)}">
+            <table border="1" style="border-collapse: collapse; width: 100%; margin-top: 20px;">
+                <thead style="background-color: #f8f9fa;">
+                    <tr>
+                        <th style="padding: 10px; text-align: left;">ID Prêt</th>
+                        <th style="padding: 10px; text-align: left;">ID Client</th>
+                        <th style="padding: 10px; text-align: left;">Montant</th>
+                        <th style="padding: 10px; text-align: left;">Taux d'Intérêt</th>
+                        <th style="padding: 10px; text-align: left;">Durée (années)</th>
+                        <th style="padding: 10px; text-align: left;">Date de Début</th>
+                        <th style="padding: 10px; text-align: left;">Statut</th>
+                        <th style="padding: 10px; text-align: left;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="pret : ${prets}" style="border-bottom: 1px solid #dee2e6;">
+                        <td style="padding: 10px;">[[${pret.idPret}]]</td>
+                        <td style="padding: 10px;">[[${pret.idClient}]]</td>
+                        <td style="padding: 10px;">[[${#numbers.formatCurrency(pret.montant)}]]</td>
+                        <td style="padding: 10px;">[[${pret.tauxInteret + '%'}]]</td>
+                        <td style="padding: 10px;">[[${pret.dureeAnne}]]</td>
+                        <td style="padding: 10px;">[[${#temporals.format(pret.dateDebut, 'dd/MM/yyyy')}]]</td>
+                        <td style="padding: 10px;">[[${pret.idStatutPret}]]</td>
+                        <td style="padding: 10px;">
+                            <button style="background-color: #007bff; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer;">Voir</button>
+                            <button style="background-color: #28a745; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer;">Modifier</button>
+                            <button style="background-color: #ffc107; color: black; border: none; padding: 5px 10px; margin: 2px; cursor: pointer;">Remboursements</button>
+                            <button style="background-color: #dc3545; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer;">Supprimer</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Message si aucun prêt -->
+        <div th:if="${prets == null or #lists.isEmpty(prets)}" style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px;">
+            <p style="margin: 0; color: #6c757d;">Aucun prêt trouvé.</p>
+        </div>
+        
+        <!-- Bouton d'ajout -->
+        <div style="margin-top: 20px;">
+            <button onclick="location.href='/prets/nouveau'" style="background-color: #28a745; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px;">
+                + Ajouter un nouveau prêt
+            </button>
+        </div>
+    </div>
 </body>
 </html>

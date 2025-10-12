@@ -1,30 +1,69 @@
-<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Liste des Comptes Courants</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <title>Centralizer - Comptes Courant</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-    <h1>Liste des Comptes Courants</h1>
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Solde</th>
-                <th>Date d'ouverture</th>
-                <th>Client</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr th:each="compte : ${comptesCourant}">
-                <td th:text="${compte.id}"></td>
-                <td th:text="${compte.solde}"></td>
-                <td th:text="${compte.dateOuverture}"></td>
-                <td th:text="${compte.client}"></td>
-            </tr>
-        </tbody>
-    </table>
-    <a th:href="@{/}">Retour à l'accueil</a>
+    <h1>Gestion des Comptes Courant</h1>
+    <div style="margin-bottom: 20px;">
+        <a href="/" style="color: #007bff; text-decoration: none;">← Retour à l'accueil</a>
+    </div>
+    
+    <div>
+        <h2>Liste des Comptes Courant</h2>
+        
+        <!-- Message d'erreur si problème de connexion -->
+        <div th:if="${error}" style="margin-top: 20px; padding: 15px; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 5px; color: #721c24;">
+            <strong>Erreur:</strong> <span>[[${error}]]</span>
+        </div>
+        
+        <!-- Tableau des comptes courant -->
+        <div th:if="${comptesCourant != null and not #lists.isEmpty(comptesCourant)}">
+            <table border="1" style="border-collapse: collapse; width: 100%; margin-top: 20px;">
+                <thead style="background-color: #f8f9fa;">
+                    <tr>
+                        <th style="padding: 10px; text-align: left;">ID Compte</th>
+                        <th style="padding: 10px; text-align: left;">ID Client</th>
+                        <th style="padding: 10px; text-align: left;">Date d'Ouverture</th>
+                        <th style="padding: 10px; text-align: left;">Solde</th>
+                        <th style="padding: 10px; text-align: left;">Découvert Autorisé</th>
+                        <th style="padding: 10px; text-align: left;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="compte : ${comptesCourant}" style="border-bottom: 1px solid #dee2e6;">
+                        <td style="padding: 10px;">[[${compte.id}]]</td>
+                        <td style="padding: 10px;">[[${compte.idClient}]]</td>
+                        <td style="padding: 10px;">[[${#temporals.format(compte.dateOuverture, 'dd/MM/yyyy HH:mm')}]]</td>
+                        <td style="padding: 10px;" th:style="${compte.solde < 0} ? 'color: red;' : 'color: green;'">[[${#numbers.formatCurrency(compte.solde)}]]</td>
+                        <td style="padding: 10px;">
+                            <span th:if="${compte.decouvert}" style="color: green;">✓ Oui</span>
+                            <span th:unless="${compte.decouvert}" style="color: red;">✗ Non</span>
+                        </td>
+                        <td style="padding: 10px;">
+                            <button style="background-color: #007bff; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer;">Voir</button>
+                            <button style="background-color: #28a745; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer;">Modifier</button>
+                            <button style="background-color: #17a2b8; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer;">Transactions</button>
+                            <button style="background-color: #ffc107; color: black; border: none; padding: 5px 10px; margin: 2px; cursor: pointer;">Transferts</button>
+                            <button style="background-color: #dc3545; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer;">Supprimer</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Message si aucun compte -->
+        <div th:if="${comptesCourant == null or #lists.isEmpty(comptesCourant)}" style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px;">
+            <p style="margin: 0; color: #6c757d;">Aucun compte courant trouvé.</p>
+        </div>
+        
+        <!-- Bouton d'ajout -->
+        <div style="margin-top: 20px;">
+            <button onclick="location.href='/comptes-courant/nouveau'" style="background-color: #28a745; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px;">
+                + Ouvrir un nouveau compte courant
+            </button>
+        </div>
+    </div>
 </body>
 </html>

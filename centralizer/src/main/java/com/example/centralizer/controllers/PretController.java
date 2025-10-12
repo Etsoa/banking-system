@@ -4,9 +4,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import java.util.Map;
 import com.example.centralizer.services.PretProxyService;
-
+import com.example.centralizer.models.pretDTO.Pret;
+import com.example.centralizer.models.pretDTO.Remboursement;
+import java.util.List;
 
 @Controller
 public class PretController {
@@ -15,25 +16,31 @@ public class PretController {
 
     @GetMapping("/prets")
     public String getPrets(Model model) {
-        model.addAttribute("prets", pretProxyService.getAllPrets());
+        try {
+            model.addAttribute("prets", pretProxyService.getAllPrets());
+        } catch (Exception e) {
+            // En cas d'erreur de connexion au service
+            model.addAttribute("prets", null);
+            model.addAttribute("error", "Erreur lors de la récupération des prêts: " + e.getMessage());
+        }
         return "prets";
     }
 
     @GetMapping("/prets/{id}")
     @ResponseBody
-    public Object getPretById(@PathVariable int id) {
+    public Pret getPretById(@PathVariable int id) {
         return pretProxyService.getPretById(id);
     }
 
     @PostMapping("/prets")
     @ResponseBody
-    public Object createPret(@RequestBody Map<String, Object> pret) {
+    public Pret createPret(@RequestBody Pret pret) {
         return pretProxyService.createPret(pret);
     }
 
     @PutMapping("/prets/{id}")
     @ResponseBody
-    public Object updatePret(@PathVariable int id, @RequestBody Map<String, Object> pret) {
+    public Pret updatePret(@PathVariable int id, @RequestBody Pret pret) {
         return pretProxyService.updatePret(id, pret);
     }
 
@@ -41,5 +48,18 @@ public class PretController {
     @ResponseBody
     public void deletePret(@PathVariable int id) {
         pretProxyService.deletePret(id);
+    }
+
+    // Endpoints pour les remboursements
+    @GetMapping("/prets/{pretId}/remboursements")
+    @ResponseBody
+    public List<Remboursement> getRemboursementsByPretId(@PathVariable int pretId) {
+        return pretProxyService.getRemboursementsByPretId(pretId);
+    }
+
+    @PostMapping("/prets/{pretId}/remboursements")
+    @ResponseBody
+    public Remboursement createRemboursement(@PathVariable int pretId, @RequestBody Remboursement remboursement) {
+        return pretProxyService.createRemboursement(pretId, remboursement);
     }
 }

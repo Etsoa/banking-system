@@ -18,6 +18,8 @@ public interface ClientRepository extends JpaRepository<Client, Integer> {
     
     List<Client> findByPrenomContainingIgnoreCase(String prenom);
     
+    List<Client> findByEmailContainingIgnoreCase(String email);
+    
     @Query("SELECT c FROM Client c WHERE LOWER(c.nom) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR LOWER(c.prenom) LIKE LOWER(CONCAT('%', :searchTerm, '%'))")
     List<Client> findByNomOrPrenomContaining(@Param("searchTerm") String searchTerm);
     
