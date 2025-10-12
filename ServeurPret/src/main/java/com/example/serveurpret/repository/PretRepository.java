@@ -16,6 +16,12 @@ public class PretRepository {
         return em.createQuery("SELECT p FROM Pret p", Pret.class).getResultList();
     }
 
+    public List<Pret> findByClientId(Integer clientId) {
+        return em.createQuery("SELECT p FROM Pret p WHERE p.idClient = :clientId", Pret.class)
+                .setParameter("clientId", clientId)
+                .getResultList();
+    }
+
     public Pret findById(Integer id) {
         return em.find(Pret.class, id);
     }

@@ -40,6 +40,15 @@ namespace ServeurCompteDepot.controllers
             return compte;
         }
 
+        [HttpGet("client/{clientId}")]
+        public async Task<ActionResult<IEnumerable<Compte>>> GetByClientId(int clientId)
+        {
+            var comptes = await _context.Comptes
+                .Where(c => c.IdClient == clientId)
+                .ToListAsync();
+            return Ok(comptes);
+        }
+
         [HttpDelete("{id}")]
 
         public async Task<IActionResult> Delete(int id)

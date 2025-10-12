@@ -22,4 +22,10 @@ public class CompteCourantRepository {
     public List<CompteCourant> findAll() {
         return em.createQuery("SELECT c FROM CompteCourant c", CompteCourant.class).getResultList();
     }
+
+    public List<CompteCourant> findByClientId(Long clientId) {
+        return em.createQuery("SELECT c FROM CompteCourant c WHERE c.idClient = :clientId", CompteCourant.class)
+                .setParameter("clientId", clientId)
+                .getResultList();
+    }
 }

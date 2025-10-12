@@ -28,6 +28,19 @@ public class PretController {
         }
     }
 
+    @GET
+    @Path("/client/{clientId}")
+    public Response getByClientId(@PathParam("clientId") Integer clientId) {
+        try {
+            List<Pret> prets = pretService.getPretsByClientId(clientId);
+            return Response.ok(prets).build();
+        } catch (Exception e) {
+            return Response.serverError()
+                           .entity("Erreur lors de la récupération des prêts pour le client " + clientId + " : " + e.getMessage())
+                           .build();
+        }
+    }
+
     @POST
     public Response create(Pret pret) {
         try {

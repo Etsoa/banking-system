@@ -39,32 +39,32 @@ CREATE TABLE roles(
 );
 
 CREATE TABLE historiques_role_utilisateur(
-   Id_historique_role_utilisateur SERIAL,
+   id_historique_role_utilisateur SERIAL,
    date_assignation DATE NOT NULL,
    id_role INTEGER NOT NULL,
    id_utilisateur INTEGER NOT NULL,
-   PRIMARY KEY(Id_historique_role_utilisateur),
+   PRIMARY KEY(id_historique_role_utilisateur),
    FOREIGN KEY(id_role) REFERENCES roles(id_role) on delete cascade on update cascade,
    FOREIGN KEY(id_utilisateur) REFERENCES utilisateurs(id_utilisateur) on delete cascade on update cascade
 );
 
 CREATE TABLE historiques_revenus(
-   Id_historique_revenus SERIAL,
+   id_historique_revenus SERIAL,
    date_changement DATE NOT NULL,
    valeur VARCHAR(50)  NOT NULL,
    id_client INTEGER NOT NULL,
-   PRIMARY KEY(Id_historique_revenus),
+   PRIMARY KEY(id_historique_revenus),
    FOREIGN KEY(id_client) REFERENCES clients(id_client) on delete cascade on update cascade
 );
 
 CREATE TABLE configurations(
-   Id_configuration SERIAL,
+   id_configuration SERIAL,
    nom VARCHAR(50)  NOT NULL,
    min_ NUMERIC(15,2)   NOT NULL,
    max_ NUMERIC(15,2)   NOT NULL,
    valeur NUMERIC(15,2)   NOT NULL,
    actif BOOLEAN NOT NULL,
-   PRIMARY KEY(Id_configuration)
+   PRIMARY KEY(id_configuration)
 );
 
 CREATE TABLE historiques_statut_client(

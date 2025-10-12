@@ -5,12 +5,17 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.example.centralizer.services.ClientService;
+import com.example.centralizer.services.CompteCourantProxyService;
+import com.example.centralizer.services.CompteDepotProxyService;
+import com.example.centralizer.services.PretProxyService;
 import com.example.centralizer.models.Client;
+import com.example.centralizer.models.compteCourantDTO.CompteCourant;
+import com.example.centralizer.models.compteDepotDTO.Compte;
+import com.example.centralizer.models.pretDTO.Pret;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -20,6 +25,15 @@ public class HomeController {
 
     @Autowired
     private ClientService clientService;
+    
+    @Autowired
+    private CompteCourantProxyService compteCourantProxyService;
+    
+    @Autowired
+    private CompteDepotProxyService compteDepotProxyService;
+    
+    @Autowired
+    private PretProxyService pretProxyService;
 
     @GetMapping("/")
     public String index() {
@@ -150,9 +164,42 @@ public class HomeController {
     @GetMapping("/clients/view")
     public String viewClient(@RequestParam("id") Integer id, Model model) {
         try {
+            // Récupérer le client
             Client client = clientService.getClientById(id)
                 .orElseThrow(() -> new RuntimeException("Client introuvable avec l'ID: " + id));
             model.addAttribute("client", client);
+            
+            // Récupérer le statut du client
+            String statut = clientService.getStatutClient(id);
+            model.addAttribute("statut", statut);
+            
+            // Récupérer les comptes courants du client spécifique
+            try {
+                List<CompteCourant> comptesCourant = compteCourantProxyService.getComptesCourantByClientId(id);
+                model.addAttribute("comptesCourant", comptesCourant);
+            } catch (Exception e) {
+                model.addAttribute("comptesCourant", null);
+                model.addAttribute("errorComptesCourant", "Erreur: Erreur lors de la récupération des comptes courants: " + e.getMessage());
+            }
+            
+            // Récupérer les comptes dépôt du client spécifique
+            try {
+                List<Compte> comptesDepot = compteDepotProxyService.getComptesDepotByClientId(id);
+                model.addAttribute("comptesDepot", comptesDepot);
+            } catch (Exception e) {
+                model.addAttribute("comptesDepot", null);
+                model.addAttribute("errorComptesDepot", "Erreur: Erreur lors de la récupération des comptes dépôt: " + e.getMessage());
+            }
+            
+            // Récupérer les prêts du client spécifique
+            try {
+                List<Pret> prets = pretProxyService.getPretsByClientId(id);
+                model.addAttribute("prets", prets);
+            } catch (Exception e) {
+                model.addAttribute("prets", null);
+                model.addAttribute("errorPrets", "Erreur: Erreur lors de la récupération des prêts: " + e.getMessage());
+            }
+            
             return "clients/client-view";
         } catch (Exception e) {
             model.addAttribute("error", "Erreur lors de la récupération du client: " + e.getMessage());

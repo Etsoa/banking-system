@@ -26,6 +26,17 @@ public class PretProxyService {
         return restTemplate.getForObject(url, Pret.class);
     }
 
+    public List<Pret> getPretsByClientId(int clientId) {
+        try {
+            String url = baseUrl + "/client/" + clientId;
+            ResponseEntity<Pret[]> response = restTemplate.getForEntity(url, Pret[].class);
+            return Arrays.asList(response.getBody());
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la récupération des prêts pour le client " + clientId + ": " + e.getMessage());
+            return Arrays.asList();
+        }
+    }
+
     public Pret createPret(Pret pret) {
         return restTemplate.postForObject(baseUrl, pret, Pret.class);
     }

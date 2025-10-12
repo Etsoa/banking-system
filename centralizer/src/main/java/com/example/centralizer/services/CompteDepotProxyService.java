@@ -27,6 +27,17 @@ public class CompteDepotProxyService {
         return restTemplate.getForObject(url, Compte.class);
     }
 
+    public List<Compte> getComptesDepotByClientId(int clientId) {
+        try {
+            String url = baseUrl + "/client/" + clientId;
+            ResponseEntity<Compte[]> response = restTemplate.getForEntity(url, Compte[].class);
+            return Arrays.asList(response.getBody());
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la récupération des comptes dépôt pour le client " + clientId + ": " + e.getMessage());
+            return Arrays.asList();
+        }
+    }
+
     public Compte createCompteDepot(Compte compte) {
         return restTemplate.postForObject(baseUrl, compte, Compte.class);
     }

@@ -39,6 +39,17 @@ public class CompteCourantProxyService {
         }
     }
 
+    public List<CompteCourant> getComptesCourantByClientId(int clientId) {
+        try {
+            String url = baseUrl + "/client/" + clientId;
+            ResponseEntity<CompteCourant[]> response = restTemplate.getForEntity(url, CompteCourant[].class);
+            return Arrays.asList(response.getBody());
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la récupération des comptes courants pour le client " + clientId + ": " + e.getMessage());
+            return Arrays.asList();
+        }
+    }
+
     public CompteCourant createCompteCourant(CompteCourant compteCourant) {
         try {
             return restTemplate.postForObject(baseUrl, compteCourant, CompteCourant.class);

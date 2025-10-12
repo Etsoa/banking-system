@@ -49,6 +49,141 @@
                 </div>
                 
                 <div style="margin-top: 30px; border-top: 1px solid #dee2e6; padding-top: 20px;">
+                    <h3 style="color: #495057;">Comptes Courant</h3>
+                    
+                    <!-- Message d'erreur pour les comptes courant -->
+                    <div th:if="${errorComptesCourant}" style="margin-bottom: 15px; padding: 15px; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 5px; color: #721c24; font-family: monospace; word-break: break-all;">
+                        <strong>⚠️ Service Comptes Courants :</strong><br>
+                        <span style="font-size: 0.9em;">[[${errorComptesCourant}]]</span>
+                    </div>
+                    
+                    <div th:if="${comptesCourant != null and not #lists.isEmpty(comptesCourant)}">
+                        <table style="width: 100%; border-collapse: collapse; border: 1px solid #dee2e6;">
+                            <thead style="background-color: #f8f9fa;">
+                                <tr>
+                                    <th style="padding: 8px; border: 1px solid #dee2e6;">Numéro de Compte</th>
+                                    <th style="padding: 8px; border: 1px solid #dee2e6;">Solde</th>
+                                    <th style="padding: 8px; border: 1px solid #dee2e6;">Date d'Ouverture</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="compte : ${comptesCourant}" style="border-bottom: 1px solid #dee2e6;">
+                                    <td style="padding: 8px; border: 1px solid #dee2e6;">[[${compte.numeroCompte}]]</td>
+                                    <td style="padding: 8px; border: 1px solid #dee2e6;" 
+                                        th:style="${compte.solde >= 0} ? 'color: #28a745;' : 'color: #dc3545;'">
+                                        [[${#numbers.formatDecimal(compte.solde, 0, 2)}]] €
+                                    </td>
+                                    <td style="padding: 8px; border: 1px solid #dee2e6;">[[${#temporals.format(compte.dateOuverture, 'dd/MM/yyyy')}]]</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Cas où la liste est null (erreur de service) -->
+                    <div th:if="${comptesCourant == null and not errorComptesCourant}" 
+                         style="padding: 15px; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 5px; color: #721c24;">
+                        ⚠️ Erreur de connexion au service des comptes courants. Veuillez réessayer plus tard.
+                    </div>
+                    <!-- Cas où la liste est vide -->
+                    <div th:if="${comptesCourant != null and #lists.isEmpty(comptesCourant)}" 
+                         style="padding: 15px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px; color: #6c757d;">
+                        ℹ️ Aucun compte courant trouvé pour ce client.
+                    </div>
+                </div>
+                
+                <div style="margin-top: 30px; border-top: 1px solid #dee2e6; padding-top: 20px;">
+                    <h3 style="color: #495057;">Comptes Dépôt</h3>
+                    
+                    <!-- Message d'erreur pour les comptes dépôt -->
+                    <div th:if="${errorComptesDepot}" style="margin-bottom: 15px; padding: 15px; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 5px; color: #721c24; font-family: monospace; word-break: break-all;">
+                        <strong>⚠️ Service Comptes Dépôt :</strong><br>
+                        <span style="font-size: 0.9em;">[[${errorComptesDepot}]]</span>
+                    </div>
+                    
+                    <div th:if="${comptesDepot != null and not #lists.isEmpty(comptesDepot)}">
+                        <table style="width: 100%; border-collapse: collapse; border: 1px solid #dee2e6;">
+                            <thead style="background-color: #f8f9fa;">
+                                <tr>
+                                    <th style="padding: 8px; border: 1px solid #dee2e6;">Numéro de Compte</th>
+                                    <th style="padding: 8px; border: 1px solid #dee2e6;">Solde</th>
+                                    <th style="padding: 8px; border: 1px solid #dee2e6;">Taux d'Intérêt</th>
+                                    <th style="padding: 8px; border: 1px solid #dee2e6;">Date d'Ouverture</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="compte : ${comptesDepot}" style="border-bottom: 1px solid #dee2e6;">
+                                    <td style="padding: 8px; border: 1px solid #dee2e6;">[[${compte.numeroCompte}]]</td>
+                                    <td style="padding: 8px; border: 1px solid #dee2e6; color: #28a745;">
+                                        [[${#numbers.formatDecimal(compte.solde, 0, 2)}]] €
+                                    </td>
+                                    <td style="padding: 8px; border: 1px solid #dee2e6;">[[${compte.tauxInteret}]]%</td>
+                                    <td style="padding: 8px; border: 1px solid #dee2e6;">[[${#temporals.format(compte.dateOuverture, 'dd/MM/yyyy')}]]</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Cas où la liste est null (erreur de service) -->
+                    <div th:if="${comptesDepot == null and not errorComptesDepot}" 
+                         style="padding: 15px; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 5px; color: #721c24;">
+                        ⚠️ Erreur de connexion au service des comptes dépôt. Veuillez réessayer plus tard.
+                    </div>
+                    <!-- Cas où la liste est vide -->
+                    <div th:if="${comptesDepot != null and #lists.isEmpty(comptesDepot)}" 
+                         style="padding: 15px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px; color: #6c757d;">
+                        ℹ️ Aucun compte dépôt trouvé pour ce client.
+                    </div>
+                </div>
+                
+                <div style="margin-top: 30px; border-top: 1px solid #dee2e6; padding-top: 20px;">
+                    <h3 style="color: #495057;">Prêts</h3>
+                    
+                    <!-- Message d'erreur pour les prêts -->
+                    <div th:if="${errorPrets}" style="margin-bottom: 15px; padding: 15px; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 5px; color: #721c24; font-family: monospace; word-break: break-all;">
+                        <strong>⚠️ Service Prêts :</strong><br>
+                        <span style="font-size: 0.9em;">[[${errorPrets}]]</span>
+                    </div>
+                    
+                    <div th:if="${prets != null and not #lists.isEmpty(prets)}">
+                        <table style="width: 100%; border-collapse: collapse; border: 1px solid #dee2e6;">
+                            <thead style="background-color: #f8f9fa;">
+                                <tr>
+                                    <th style="padding: 8px; border: 1px solid #dee2e6;">Montant</th>
+                                    <th style="padding: 8px; border: 1px solid #dee2e6;">Taux d'Intérêt</th>
+                                    <th style="padding: 8px; border: 1px solid #dee2e6;">Durée</th>
+                                    <th style="padding: 8px; border: 1px solid #dee2e6;">Date de Début</th>
+                                    <th style="padding: 8px; border: 1px solid #dee2e6;">Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="pret : ${prets}" style="border-bottom: 1px solid #dee2e6;">
+                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">
+                                        [[${#numbers.formatDecimal(pret.montant, 0, 2)}]] €
+                                    </td>
+                                    <td style="padding: 8px; border: 1px solid #dee2e6;">[[${pret.tauxInteret}]]%</td>
+                                    <td style="padding: 8px; border: 1px solid #dee2e6;">[[${pret.dureeEnMois}]] mois</td>
+                                    <td style="padding: 8px; border: 1px solid #dee2e6;">[[${#temporals.format(pret.dateDebut, 'dd/MM/yyyy')}]]</td>
+                                    <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                        <span th:text="${pret.statut}" 
+                                              th:style="${pret.statut == 'actif'} ? 'color: #28a745; font-weight: bold;' : 'color: #dc3545; font-weight: bold;'">
+                                            Statut
+                                        </span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Cas où la liste est null (erreur de service) -->
+                    <div th:if="${prets == null and not errorPrets}" 
+                         style="padding: 15px; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 5px; color: #721c24;">
+                        ⚠️ Erreur de connexion au service des prêts. Veuillez réessayer plus tard.
+                    </div>
+                    <!-- Cas où la liste est vide -->
+                    <div th:if="${prets != null and #lists.isEmpty(prets)}" 
+                         style="padding: 15px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px; color: #6c757d;">
+                        ℹ️ Aucun prêt trouvé pour ce client.
+                    </div>
+                </div>
+                
+                <div style="margin-top: 30px; border-top: 1px solid #dee2e6; padding-top: 20px;">
                     <h3 style="color: #495057;">Actions</h3>
                     <div style="display: flex; gap: 10px;">
                         <form th:action="@{/clients/edit}" method="get" style="display: inline;">

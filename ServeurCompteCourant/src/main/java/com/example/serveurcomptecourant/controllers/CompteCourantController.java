@@ -16,12 +16,23 @@ public class CompteCourantController {
 
     @GET
     public List<CompteCourant> getAll() {
-        // Implement logic to get all CompteCourant
-        return null;
+        return compteService.getAllComptes();
+    }
+
+    @GET
+    @Path("/client/{clientId}")
+    public List<CompteCourant> getByClientId(@PathParam("clientId") Long clientId) {
+        return compteService.getComptesByClientId(clientId);
+    }
+
+    @GET
+    @Path("/{id}")
+    public CompteCourant getById(@PathParam("id") Long id) {
+        return compteService.getCompteById(id);
     }
 
     @POST
     public void create(CompteCourant compte) {
-        // Implement logic to create CompteCourant
+        compteService.createCompte(compte);
     }
 }

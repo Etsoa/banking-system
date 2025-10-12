@@ -16,6 +16,10 @@ public class PretService {
         return pretRepository.findAll();
     }
 
+    public List<Pret> getPretsByClientId(Integer clientId) {
+        return pretRepository.findByClientId(clientId);
+    }
+
     public Pret getPretById(Integer id) {
         return pretRepository.findById(id);
     }
