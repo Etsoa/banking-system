@@ -7,8 +7,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import com.example.centralizer.models.compteCourantDTO.CompteCourant;
-import com.example.centralizer.models.compteCourantDTO.Transaction;
-import com.example.centralizer.models.compteCourantDTO.Transfert;
 import java.util.List;
 import java.util.Arrays;
 
@@ -80,47 +78,5 @@ public class CompteCourantProxyService {
         }
     }
 
-    // Méthodes pour les transactions
-    public List<Transaction> getTransactionsByCompteId(int compteId) {
-        try {
-            String url = baseUrl + "/" + compteId + "/transactions";
-            ResponseEntity<Transaction[]> response = restTemplate.getForEntity(url, Transaction[].class);
-            return Arrays.asList(response.getBody());
-        } catch (Exception e) {
-            System.err.println("Erreur lors de la récupération des transactions pour le compte " + compteId + ": " + e.getMessage());
-            return Arrays.asList();
-        }
-    }
-
-    public Transaction createTransaction(int compteId, Transaction transaction) {
-        try {
-            String url = baseUrl + "/" + compteId + "/transactions";
-            return restTemplate.postForObject(url, transaction, Transaction.class);
-        } catch (Exception e) {
-            System.err.println("Erreur lors de la création de la transaction: " + e.getMessage());
-            return null;
-        }
-    }
-
-    // Méthodes pour les transferts
-    public List<Transfert> getTransfertsByCompteId(int compteId) {
-        try {
-            String url = baseUrl + "/" + compteId + "/transferts";
-            ResponseEntity<Transfert[]> response = restTemplate.getForEntity(url, Transfert[].class);
-            return Arrays.asList(response.getBody());
-        } catch (Exception e) {
-            System.err.println("Erreur lors de la récupération des transferts pour le compte " + compteId + ": " + e.getMessage());
-            return Arrays.asList();
-        }
-    }
-
-    public Transfert createTransfert(Transfert transfert) {
-        try {
-            String url = baseUrl + "/transferts";
-            return restTemplate.postForObject(url, transfert, Transfert.class);
-        } catch (Exception e) {
-            System.err.println("Erreur lors de la création du transfert: " + e.getMessage());
-            return null;
-        }
-    }
+    
 }

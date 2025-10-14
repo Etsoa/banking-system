@@ -1,6 +1,7 @@
 package com.example.centralizer.models;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDateTime;
 
 @Entity
@@ -13,6 +14,7 @@ public class HistoriqueStatutClient {
     private Integer id;
 
     @Column(name = "date_changement", nullable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
     private LocalDateTime dateChangement;
 
     @Column(name = "id_client", nullable = false)

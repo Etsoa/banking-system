@@ -1,6 +1,7 @@
 package com.example.centralizer.models;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -14,6 +15,7 @@ public class HistoriqueTaux {
     private Integer id;
 
     @Column(name = "date_debut", nullable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
     private LocalDateTime dateDebut;
 
     @Column(name = "nom", nullable = false, length = 50)

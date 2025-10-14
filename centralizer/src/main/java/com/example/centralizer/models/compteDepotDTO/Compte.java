@@ -2,10 +2,14 @@ package com.example.centralizer.models.compteDepotDTO;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 public class Compte {
     private Integer idCompte;
+    
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
     private LocalDateTime dateOuverture;
+    
     private Integer idClient;
     private BigDecimal solde;
 

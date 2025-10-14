@@ -2,10 +2,14 @@ package com.example.centralizer.models.compteCourantDTO;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 public class Transaction {
     private Integer idTransaction;
+    
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
     private LocalDateTime dateTransaction;
+    
     private BigDecimal montant;
     private Integer idTypeTransaction;
     private Integer idCompte;

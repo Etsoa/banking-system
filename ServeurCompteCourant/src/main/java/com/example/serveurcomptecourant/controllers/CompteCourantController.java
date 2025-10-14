@@ -32,7 +32,7 @@ public class CompteCourantController {
     }
 
     @POST
-    public void create(CompteCourant compte) {
-        compteService.createCompte(compte);
+    public CompteCourant create(CompteCourant compte) {
+        return compteService.createCompte(compte);
     }
 }

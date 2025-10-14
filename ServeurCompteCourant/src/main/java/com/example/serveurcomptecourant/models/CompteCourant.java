@@ -8,6 +8,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.json.bind.annotation.JsonbDateFormat;
 
 @Entity
 @Table(name = "comptes")
@@ -19,6 +20,7 @@ public class CompteCourant {
     private Integer id;
 
     @Column(name = "date_ouverture", nullable = false)
+    @JsonbDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
     private LocalDateTime dateOuverture = LocalDateTime.now();
 
     @Column(name = "decouvert", nullable = false)

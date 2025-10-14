@@ -6,6 +6,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.json.bind.annotation.JsonbDateFormat;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -19,6 +20,7 @@ public class Remboursement {
     private Integer id;
 
     @Column(name = "date_paiement", nullable = false)
+    @JsonbDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
     private LocalDateTime datePaiement;
 
     @Column(name = "montant", nullable = false, precision = 12, scale = 2)

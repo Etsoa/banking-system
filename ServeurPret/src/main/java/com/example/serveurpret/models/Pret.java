@@ -6,6 +6,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.json.bind.annotation.JsonbDateFormat;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -25,6 +26,7 @@ public class Pret {
     private Integer dureeMois;
 
     @Column(name = "date_debut", nullable = false)
+    @JsonbDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
     private LocalDateTime dateDebut;
 
     @Column(name = "Id_statut_pret", nullable = false)

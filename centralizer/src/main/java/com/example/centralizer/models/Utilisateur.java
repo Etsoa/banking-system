@@ -1,6 +1,7 @@
 package com.example.centralizer.models;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDateTime;
 
 @Entity
@@ -28,6 +29,7 @@ public class Utilisateur {
     private String statut;
 
     @Column(name = "date_creation", nullable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
     private LocalDateTime dateCreation;
 
     // Constructors

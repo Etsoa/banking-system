@@ -28,7 +28,8 @@ public class CompteCourantService {
         return repository.find(id);
     }
 
-    public void createCompte(CompteCourant compte) {
+    public CompteCourant createCompte(CompteCourant compte) {
         repository.save(compte);
+        return compte;
     }
 }

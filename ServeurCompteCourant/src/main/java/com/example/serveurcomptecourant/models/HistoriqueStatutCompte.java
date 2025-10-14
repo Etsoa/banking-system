@@ -6,6 +6,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.json.bind.annotation.JsonbDateFormat;
 import java.time.LocalDateTime;
 
 @Entity
@@ -18,6 +19,7 @@ public class HistoriqueStatutCompte {
     private Integer id;
 
     @Column(name = "date_changement", nullable = false)
+    @JsonbDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
     private LocalDateTime dateChangement = LocalDateTime.now();
 
     @Column(name = "id_compte", nullable = false)
