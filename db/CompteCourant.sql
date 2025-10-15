@@ -34,10 +34,8 @@ CREATE TABLE transactions(
    montant NUMERIC(12,2)   NOT NULL,
    id_type_transaction INTEGER NOT NULL,
    id_compte INTEGER NOT NULL,
-   id_transfert INTEGER,
    PRIMARY KEY(id_transaction),
    FOREIGN KEY(id_type_transaction) REFERENCES types_transaction(id_type_transaction) on delete cascade on update cascade,
-   FOREIGN KEY(id_transfert) REFERENCES transferts(id_transfert) on delete cascade on update cascade,
    FOREIGN KEY(id_compte) REFERENCES comptes(id_compte) on delete cascade on update cascade
 );
 
@@ -81,3 +79,12 @@ INSERT INTO types_statut_compte (libelle, actif) VALUES
    ('Actif', TRUE),
    ('Bloqué', TRUE),
    ('Fermé', TRUE);
+
+-- Données de test pour les comptes (si pas déjà présents)
+INSERT INTO comptes (date_ouverture, decouvert, id_client, solde) VALUES
+   ('2025-10-15 17:28:33.459', TRUE, 1, 10.00)
+   ON CONFLICT (id_compte) DO NOTHING;
+
+-- Données de test pour les historiques de statut
+INSERT INTO historiques_statut_compte (date_changement, id_compte, id_type_statut_compte) VALUES
+   ('2025-10-15 17:28:33.459', 1, 1); -- Compte 1 est Actif

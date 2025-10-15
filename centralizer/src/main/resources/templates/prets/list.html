@@ -61,9 +61,11 @@
         
         <!-- Bouton d'ajout -->
         <div style="margin-top: 20px;">
-            <button onclick="location.href='/prets/nouveau'" style="background-color: #28a745; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px;">
-                + Ajouter un nouveau prêt
-            </button>
+            <form action="/prets/nouveau" method="get" style="display: inline;">
+                <button type="submit" style="background-color: #28a745; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px;">
+                    + Ajouter un nouveau prêt
+                </button>
+            </form>
         </div>
     </div>
     </div>

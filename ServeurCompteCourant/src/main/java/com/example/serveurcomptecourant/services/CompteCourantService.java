@@ -4,10 +4,12 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import com.example.serveurcomptecourant.exceptions.CompteCourantBusinessException;
 import com.example.serveurcomptecourant.exceptions.CompteCourantException;
 import com.example.serveurcomptecourant.models.CompteCourant;
+import com.example.serveurcomptecourant.models.CompteCourantAvecStatut;
 import com.example.serveurcomptecourant.repository.CompteCourantRepository;
 
 import jakarta.ejb.EJB;
@@ -29,12 +31,24 @@ public class CompteCourantService {
         }
     }
 
-    public List<CompteCourant> getComptesByClientId(Long clientId) throws CompteCourantException {
+    public List<CompteCourantAvecStatut> getAllComptesAvecStatut() throws CompteCourantException {
         try {
-            if (clientId == null || clientId <= 0) {
-                throw new CompteCourantBusinessException.ClientInexistantException(clientId);
+            List<CompteCourant> comptes = repository.findAll();
+            return comptes.stream()
+                    .map(compte -> new CompteCourantAvecStatut(compte, repository.getCurrentStatut(compte.getId())))
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Erreur lors de la récupération des comptes avec statut", e);
+            throw new CompteCourantException("Erreur lors de la récupération des comptes", e);
+        }
+    }
+
+    public List<CompteCourant> getComptesByClientId(int clientId) throws CompteCourantException {
+        try {
+            if (clientId <= 0) {
+                throw new CompteCourantBusinessException.ClientInexistantException((long)clientId);
             }
-            return repository.findByClientId(clientId);
+            return repository.findByClientId((long)clientId);
         } catch (CompteCourantBusinessException e) {
             throw e; // Re-lancer les exceptions métier
         } catch (RuntimeException e) {
@@ -43,15 +57,15 @@ public class CompteCourantService {
         }
     }
 
-    public CompteCourant getCompteById(Long id) throws CompteCourantException {
+    public CompteCourant getCompteById(int id) throws CompteCourantException {
         try {
-            if (id == null || id <= 0) {
-                throw new CompteCourantBusinessException.CompteNotFoundException(id);
+            if (id <= 0) {
+                throw new CompteCourantBusinessException.CompteNotFoundException((long)id);
             }
             
-            CompteCourant compte = repository.find(id);
+            CompteCourant compte = repository.find((long)id);
             if (compte == null) {
-                throw new CompteCourantBusinessException.CompteNotFoundException(id);
+                throw new CompteCourantBusinessException.CompteNotFoundException((long)id);
             }
             
             return compte;

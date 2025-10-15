@@ -33,10 +33,8 @@ CREATE TABLE transactions(
    montant NUMERIC(12,2)   NOT NULL,
    id_type_transaction INTEGER NOT NULL,
    id_compte INTEGER NOT NULL,
-   id_transfert INTEGER,
    PRIMARY KEY(id_transaction),
    FOREIGN KEY(id_type_transaction) REFERENCES types_transaction(id_type_transaction) on delete cascade on update cascade,
-   FOREIGN KEY(id_transfert) REFERENCES transferts(id_transfert) on delete cascade on update cascade,
    FOREIGN KEY(id_compte) REFERENCES comptes(id_compte) on delete cascade on update cascade
 );
 

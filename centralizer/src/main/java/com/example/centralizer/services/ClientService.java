@@ -6,8 +6,8 @@ import com.example.centralizer.models.Client;
 import com.example.centralizer.models.HistoriqueStatutClient;
 import com.example.centralizer.repository.ClientRepository;
 import com.example.centralizer.repository.HistoriqueStatutClientRepository;
+import com.example.centralizer.exceptions.ClientNotFoundException;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ClientService {
@@ -22,8 +22,9 @@ public class ClientService {
         return clientRepository.findAll();
     }
     
-    public Optional<Client> getClientById(Integer id) {
-        return clientRepository.findById(id);
+    public Client getClientById(Integer id) {
+        return clientRepository.findById(id)
+            .orElseThrow(() -> new ClientNotFoundException("Client non trouvé : " + id));
     }
     
     public Client saveClient(Client client) {
@@ -44,14 +45,12 @@ public class ClientService {
     
     public void deleteClient(Integer id) {
         // Vérifier que le client existe avant de le marquer comme inactif
-        Optional<Client> clientOpt = clientRepository.findById(id);
-        if (clientOpt.isPresent()) {
-            // Créer un historique de statut "inactif"
-            HistoriqueStatutClient historique = new HistoriqueStatutClient(id, "inactif");
-            historiqueStatutClientRepository.save(historique);
-        } else {
-            throw new RuntimeException("Client introuvable avec l'ID: " + id);
-        }
+        Client client = clientRepository.findById(id)
+            .orElseThrow(() -> new ClientNotFoundException("Client introuvable avec l'ID: " + id));
+        
+        // Créer un historique de statut "inactif"
+        HistoriqueStatutClient historique = new HistoriqueStatutClient(id, "inactif");
+        historiqueStatutClientRepository.save(historique);
     }
     
     public List<Client> searchClientsByNom(String nom) {

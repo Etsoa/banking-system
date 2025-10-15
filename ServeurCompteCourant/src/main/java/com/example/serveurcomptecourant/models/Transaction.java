@@ -32,9 +32,6 @@ public class Transaction {
     @Column(name = "id_compte", nullable = false)
     private Integer idCompte;
 
-    @Column(name = "id_transfert")
-    private Integer idTransfert;
-
     // Constructors
     public Transaction() {}
 
@@ -84,13 +81,5 @@ public class Transaction {
 
     public void setIdCompte(Integer idCompte) {
         this.idCompte = idCompte;
-    }
-
-    public Integer getIdTransfert() {
-        return idTransfert;
-    }
-
-    public void setIdTransfert(Integer idTransfert) {
-        this.idTransfert = idTransfert;
     }
 }

@@ -8,10 +8,18 @@
     <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 20px;">
         <h1>Centralizer</h1>
         <div style="margin-top: 30px; display: flex; gap: 20px;">
-            <button onclick="location.href='/clients'">Clients</button>
-            <button onclick="location.href='/prets'">Prêts</button>
-            <button onclick="location.href='/comptes-courant'">Comptes Courant</button>
-            <button onclick="location.href='/comptes-depot'">Comptes Dépôt</button>
+            <form action="/clients" method="get" style="display: inline;">
+                <button type="submit">Clients</button>
+            </form>
+            <form action="/prets" method="get" style="display: inline;">
+                <button type="submit">Prêts</button>
+            </form>
+            <form action="/comptes-courant" method="get" style="display: inline;">
+                <button type="submit">Comptes Courant</button>
+            </form>
+            <form action="/comptes-depot" method="get" style="display: inline;">
+                <button type="submit">Comptes Dépôt</button>
+            </form>
         </div>
     </div>
 </body>

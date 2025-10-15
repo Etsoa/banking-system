@@ -89,7 +89,6 @@ namespace ServeurCompteDepot.Services
             existingTransaction.Montant = transaction.Montant;
             existingTransaction.IdTypeTransaction = transaction.IdTypeTransaction;
             existingTransaction.IdCompte = transaction.IdCompte;
-            existingTransaction.IdTransfert = transaction.IdTransfert;
 
             await _context.SaveChangesAsync();
             return existingTransaction;

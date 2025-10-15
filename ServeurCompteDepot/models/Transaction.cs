@@ -26,18 +26,12 @@ namespace ServeurCompteDepot.Models
         [Column("id_compte")]
         public int IdCompte { get; set; }
 
-        [Column("id_transfert")]
-        public int? IdTransfert { get; set; }
-
         // Navigation properties
         [ForeignKey("IdTypeTransaction")]
         public virtual TypeTransaction TypeTransaction { get; set; } = null!;
 
         [ForeignKey("IdCompte")]
         public virtual Compte Compte { get; set; } = null!;
-
-        [ForeignKey("IdTransfert")]
-        public virtual Transfert? Transfert { get; set; }
 
         public virtual ICollection<HistoriqueSolde> HistoriquesSolde { get; set; } = new List<HistoriqueSolde>();
     }

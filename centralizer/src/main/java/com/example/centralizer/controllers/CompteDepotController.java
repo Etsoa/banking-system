@@ -36,11 +36,11 @@ public class CompteDepotController {
         return "comptes-depot/list";
     }
 
-    @GetMapping("/comptes-depot/{id}")
+    @GetMapping("/comptes-depot/details")
     @ResponseBody
-    public Compte getCompteDepotById(@PathVariable int id) {
+    public Compte getCompteDepotById(@RequestParam int id) {
         try {
-            return compteDepotService.getCompteById((long) id);
+            return compteDepotService.getCompteById(id);
         } catch (ServerApplicationException e) {
             throw new RuntimeException(exceptionHandlingService.getUserFriendlyMessage(e));
         }
@@ -57,9 +57,9 @@ public class CompteDepotController {
     }
 
     /* ENDPOINTS NON IMPLÉMENTÉS DANS LE SERVEUR - COMMENTÉS
-    @PutMapping("/comptes-depot/{id}")
+    @PutMapping("/comptes-depot/update")
     @ResponseBody
-    public Compte updateCompteDepot(@PathVariable int id, @RequestBody Compte compte) {
+    public Compte updateCompteDepot(@RequestParam int id, @RequestBody Compte compte) {
         try {
             return compteDepotService.updateCompte((long) id, compte);
         } catch (ServerApplicationException e) {
@@ -67,9 +67,9 @@ public class CompteDepotController {
         }
     }
 
-    @PutMapping("/comptes-depot/{id}/depot")
+    @PutMapping("/comptes-depot/depot")
     @ResponseBody
-    public Compte effectuerDepot(@PathVariable int id, @RequestParam double montant) {
+    public Compte effectuerDepot(@RequestParam int id, @RequestParam double montant) {
         try {
             return compteDepotService.effectuerDepot((long) id, montant);
         } catch (ServerApplicationException e) {
@@ -77,9 +77,9 @@ public class CompteDepotController {
         }
     }
 
-    @PutMapping("/comptes-depot/{id}/retrait")
+    @PutMapping("/comptes-depot/retrait")
     @ResponseBody
-    public Compte effectuerRetrait(@PathVariable int id, @RequestParam double montant) {
+    public Compte effectuerRetrait(@RequestParam int id, @RequestParam double montant) {
         try {
             return compteDepotService.effectuerRetrait((long) id, montant);
         } catch (ServerApplicationException e) {

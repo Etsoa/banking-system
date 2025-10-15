@@ -37,9 +37,9 @@ public class PretController {
     }
 
     /* ENDPOINT NON IMPLÉMENTÉ DANS LE SERVEUR - COMMENTÉ
-    @GetMapping("/prets/{id}")
+    @GetMapping("/prets/details")
     @ResponseBody
-    public Pret getPretById(@PathVariable int id) {
+    public Pret getPretById(@RequestParam int id) {
         try {
             return pretService.getPretById((long) id);
         } catch (ServerApplicationException e) {
@@ -59,9 +59,9 @@ public class PretController {
     }
 
     /* ENDPOINTS NON IMPLÉMENTÉS DANS LE SERVEUR - COMMENTÉS
-    @PutMapping("/prets/{id}")
+    @PutMapping("/prets/update")
     @ResponseBody
-    public Pret updatePret(@PathVariable int id, @RequestBody Pret pret) {
+    public Pret updatePret(@RequestParam int id, @RequestBody Pret pret) {
         try {
             return pretService.updatePret((long) id, pret);
         } catch (ServerApplicationException e) {
@@ -69,9 +69,9 @@ public class PretController {
         }
     }
 
-    @PutMapping("/prets/{id}/remboursement")
+    @PutMapping("/prets/remboursement")
     @ResponseBody
-    public Pret effectuerRemboursement(@PathVariable int id, @RequestParam double montant) {
+    public Pret effectuerRemboursement(@RequestParam int id, @RequestParam double montant) {
         try {
             return pretService.effectuerRemboursement((long) id, montant);
         } catch (ServerApplicationException e) {

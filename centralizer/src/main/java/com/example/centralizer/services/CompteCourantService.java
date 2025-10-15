@@ -1,6 +1,7 @@
 package com.example.centralizer.services;
 
 import com.example.centralizer.models.compteCourantDTO.CompteCourant;
+import com.example.centralizer.models.compteCourantDTO.CompteCourantAvecStatut;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -56,7 +57,7 @@ public class CompteCourantService {
     /**
      * Récupère les comptes d'un client spécifique
      */
-    public List<CompteCourant> getComptesByClientId(Long clientId) {
+    public List<CompteCourant> getComptesByClientId(int clientId) {
         try {
             String url = serverUrl + "/client/" + clientId;
             LOGGER.info("Appel GET vers: " + url);
@@ -79,7 +80,7 @@ public class CompteCourantService {
     /**
      * Récupère un compte par son ID
      */
-    public CompteCourant getCompteById(Long id) {
+    public CompteCourant getCompteById(int id) {
         try {
             String url = serverUrl + "/" + id;
             LOGGER.info("Appel GET vers: " + url);
@@ -104,7 +105,30 @@ public class CompteCourantService {
             ResponseEntity<CompteCourant> response = restTemplate.postForEntity(url, compte, CompteCourant.class);
             return response.getBody();
         } catch (RestClientException e) {
-            LOGGER.severe("Erreur lors de la création du compte: " + e.getMessage());
+            LOGGER.severe("Erreur lors de la creation de compte: " + e.getMessage());
+            exceptionHandlingService.handleServerException(e, "ServeurCompteCourant");
+            return null;
+        }
+    }
+
+    /**
+     * Récupère tous les comptes courants avec leur statut
+     */
+    public List<CompteCourantAvecStatut> getAllComptesAvecStatut() {
+        try {
+            String url = serverUrl + "/avec-statut";
+            LOGGER.info("Appel GET vers: " + url);
+            
+            ResponseEntity<List<CompteCourantAvecStatut>> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<CompteCourantAvecStatut>>() {}
+            );
+            
+            return response.getBody();
+        } catch (RestClientException e) {
+            LOGGER.severe("Erreur lors de la récupération des comptes avec statut: " + e.getMessage());
             exceptionHandlingService.handleServerException(e, "ServeurCompteCourant");
             return null;
         }

@@ -19,18 +19,34 @@ public class CompteCourantRepository {
         }
     }
 
-    public CompteCourant find(Long id) {
-        return em.find(CompteCourant.class, id);
+    public CompteCourant find(long id) {
+        return em.find(CompteCourant.class, (int)id);
     }
 
     public List<CompteCourant> findAll() {
         return em.createQuery("SELECT c FROM CompteCourant c", CompteCourant.class).getResultList();
     }
 
-    public List<CompteCourant> findByClientId(Long clientId) {
+    public List<CompteCourant> findByClientId(long clientId) {
         return em.createQuery("SELECT c FROM CompteCourant c WHERE c.idClient = :clientId", CompteCourant.class)
-                .setParameter("clientId", clientId)
+                .setParameter("clientId", (int)clientId)
                 .getResultList();
+    }
+
+    public String getCurrentStatut(int compteId) {
+        try {
+            String statutLibelle = em.createQuery(
+                "SELECT ts.libelle FROM HistoriqueStatutCompte h " +
+                "JOIN TypeStatutCompte ts ON h.idTypeStatutCompte = ts.idTypeStatutCompte " +
+                "WHERE h.idCompte = :compteId " +
+                "ORDER BY h.dateChangement DESC", String.class)
+                .setParameter("compteId", compteId)
+                .setMaxResults(1)
+                .getSingleResult();
+            return statutLibelle;
+        } catch (Exception e) {
+            return "Actif"; // Statut par défaut si aucun historique
+        }
     }
 
     public void delete(CompteCourant compte) {

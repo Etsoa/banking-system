@@ -56,7 +56,7 @@ public class CompteDepotService {
     /**
      * Récupère les comptes dépôt d'un client spécifique
      */
-    public List<Compte> getComptesByClientId(Long clientId) {
+    public List<Compte> getComptesByClientId(int clientId) {
         try {
             String url = serverUrl + "/client/" + clientId;
             LOGGER.info("Appel GET vers: " + url);
@@ -79,7 +79,7 @@ public class CompteDepotService {
     /**
      * Récupère un compte dépôt par son ID
      */
-    public Compte getCompteById(Long id) {
+    public Compte getCompteById(int id) {
         try {
             String url = serverUrl + "/" + id;
             LOGGER.info("Appel GET vers: " + url);

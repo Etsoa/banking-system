@@ -38,12 +38,8 @@
                         <td style="padding: 10px;">[[${#temporals.format(compte.dateOuverture, 'dd/MM/yyyy HH:mm')}]]</td>
                         <td style="padding: 10px;" th:style="${compte.solde < 0} ? 'color: red;' : 'color: green;'">[[${#numbers.formatCurrency(compte.solde)}]]</td>
                         <td style="padding: 10px;">
-                            <button style="background-color: #007bff; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer;">Voir</button>
-                            <button style="background-color: #28a745; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer;">Modifier</button>
                             <button style="background-color: #17a2b8; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer;">Transactions</button>
                             <button style="background-color: #ffc107; color: black; border: none; padding: 5px 10px; margin: 2px; cursor: pointer;">Transferts</button>
-                            <button style="background-color: #6f42c1; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer;">Dépôt</button>
-                            <button style="background-color: #fd7e14; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer;">Retrait</button>
                             <button style="background-color: #dc3545; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer;">Supprimer</button>
                         </td>
                     </tr>
@@ -58,9 +54,11 @@
         
         <!-- Bouton d'ajout -->
         <div style="margin-top: 20px;">
-            <button onclick="location.href='/comptes-depot/new'" style="background-color: #28a745; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px;">
-                + Ouvrir un nouveau compte dépôt
-            </button>
+            <form action="/comptes-depot/new" method="get" style="display: inline;">
+                <button type="submit" style="background-color: #28a745; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px;">
+                    + Ouvrir un nouveau compte dépôt
+                </button>
+            </form>
         </div>
     </div>
     </div>

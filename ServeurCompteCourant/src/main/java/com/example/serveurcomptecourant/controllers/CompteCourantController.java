@@ -1,6 +1,7 @@
 package com.example.serveurcomptecourant.controllers;
 
 import com.example.serveurcomptecourant.models.CompteCourant;
+import com.example.serveurcomptecourant.models.CompteCourantAvecStatut;
 import com.example.serveurcomptecourant.services.CompteCourantService;
 import com.example.serveurcomptecourant.exceptions.CompteCourantException;
 import jakarta.ejb.EJB;
@@ -22,14 +23,20 @@ public class CompteCourantController {
     }
 
     @GET
+    @Path("/avec-statut")
+    public List<CompteCourantAvecStatut> getAllAvecStatut() throws CompteCourantException {
+        return compteService.getAllComptesAvecStatut();
+    }
+
+    @GET
     @Path("/client/{clientId}")
-    public List<CompteCourant> getByClientId(@PathParam("clientId") Long clientId) throws CompteCourantException {
+    public List<CompteCourant> getByClientId(@PathParam("clientId") int clientId) throws CompteCourantException {
         return compteService.getComptesByClientId(clientId);
     }
 
     @GET
     @Path("/{id}")
-    public CompteCourant getById(@PathParam("id") Long id) throws CompteCourantException {
+    public CompteCourant getById(@PathParam("id") int id) throws CompteCourantException {
         return compteService.getCompteById(id);
     }
 

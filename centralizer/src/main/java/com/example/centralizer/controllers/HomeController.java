@@ -85,8 +85,7 @@ public class HomeController {
     @GetMapping("/clients/edit")
     public String showEditClientForm(@RequestParam("id") Integer id, Model model) {
         try {
-            Client client = clientService.getClientById(id)
-                .orElseThrow(() -> new RuntimeException("Client introuvable avec l'ID: " + id));
+            Client client = clientService.getClientById(id);
             model.addAttribute("client", client);
             
             // Ajouter le statut actuel du client
@@ -109,8 +108,7 @@ public class HomeController {
         
         try {
             // Récupérer le client existant
-            Client clientExistant = clientService.getClientById(id)
-                .orElseThrow(() -> new RuntimeException("Client introuvable avec l'ID: " + id));
+            Client clientExistant = clientService.getClientById(id);
             
             // Mettre à jour uniquement les champs non-vides
             if (clientForm.getNom() != null && !clientForm.getNom().trim().isEmpty()) {
@@ -149,7 +147,7 @@ public class HomeController {
             model.addAttribute("error", "Erreur lors de la modification du client: " + e.getMessage());
             // Recharger les données pour le formulaire
             try {
-                Client client = clientService.getClientById(id).orElse(new Client());
+                Client client = clientService.getClientById(id);
                 model.addAttribute("client", client);
                 String statutActuel = clientService.getStatutClient(id);
                 model.addAttribute("statutActuel", statutActuel);
@@ -165,8 +163,7 @@ public class HomeController {
     public String viewClient(@RequestParam("id") Integer id, Model model) {
         try {
             // Récupérer le client
-            Client client = clientService.getClientById(id)
-                .orElseThrow(() -> new RuntimeException("Client introuvable avec l'ID: " + id));
+            Client client = clientService.getClientById(id);
             model.addAttribute("client", client);
             
             // Récupérer le statut du client
@@ -175,7 +172,7 @@ public class HomeController {
             
             // Récupérer les comptes courants du client spécifique
             try {
-                List<CompteCourant> comptesCourant = compteCourantService.getComptesByClientId((long) id);
+                List<CompteCourant> comptesCourant = compteCourantService.getComptesByClientId(id);
                 model.addAttribute("comptesCourant", comptesCourant);
             } catch (Exception e) {
                 model.addAttribute("comptesCourant", null);
@@ -184,7 +181,7 @@ public class HomeController {
             
             // Récupérer les comptes dépôt du client spécifique
             try {
-                List<Compte> comptesDepot = compteDepotService.getComptesByClientId((long) id);
+                List<Compte> comptesDepot = compteDepotService.getComptesByClientId(id);
                 model.addAttribute("comptesDepot", comptesDepot);
             } catch (Exception e) {
                 model.addAttribute("comptesDepot", null);

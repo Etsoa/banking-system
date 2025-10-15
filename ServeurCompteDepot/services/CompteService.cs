@@ -6,7 +6,9 @@ namespace ServeurCompteDepot.Services
     public interface ICompteService
     {
         Task<IEnumerable<Compte>> GetAllComptesAsync();
+        Task<IEnumerable<CompteAvecStatut>> GetAllComptesAvecStatutAsync();
         Task<Compte?> GetCompteByIdAsync(int id);
+        Task<CompteAvecStatut?> GetCompteAvecStatutByIdAsync(int id);
         Task<IEnumerable<Compte>> GetComptesByClientAsync(int idClient);
         Task<Compte> CreateCompteAsync(Compte compte);
         Task<Compte?> UpdateCompteAsync(int id, Compte compte);
@@ -92,6 +94,59 @@ namespace ServeurCompteDepot.Services
             compte.Solde = nouveauSolde;
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        public async Task<IEnumerable<CompteAvecStatut>> GetAllComptesAvecStatutAsync()
+        {
+            var comptes = await _context.Comptes
+                .Include(c => c.HistoriquesStatut)
+                    .ThenInclude(h => h.TypeStatutCompte)
+                .ToListAsync();
+
+            var comptesAvecStatut = comptes.Select(compte =>
+            {
+                var dernierStatut = compte.HistoriquesStatut
+                    .OrderByDescending(h => h.DateChangement)
+                    .FirstOrDefault();
+
+                return new CompteAvecStatut
+                {
+                    IdCompte = compte.IdCompte,
+                    DateOuverture = compte.DateOuverture,
+                    IdClient = compte.IdClient,
+                    Solde = compte.Solde,
+                    StatutActuel = dernierStatut?.TypeStatutCompte?.Libelle ?? "Actif",
+                    DateChangementStatut = dernierStatut?.DateChangement,
+                    EstActif = dernierStatut?.TypeStatutCompte?.Libelle == "Actif" || dernierStatut == null
+                };
+            }).ToList();
+
+            return comptesAvecStatut;
+        }
+
+        public async Task<CompteAvecStatut?> GetCompteAvecStatutByIdAsync(int id)
+        {
+            var compte = await _context.Comptes
+                .Include(c => c.HistoriquesStatut)
+                    .ThenInclude(h => h.TypeStatutCompte)
+                .FirstOrDefaultAsync(c => c.IdCompte == id);
+
+            if (compte == null) return null;
+
+            var dernierStatut = compte.HistoriquesStatut
+                .OrderByDescending(h => h.DateChangement)
+                .FirstOrDefault();
+
+            return new CompteAvecStatut
+            {
+                IdCompte = compte.IdCompte,
+                DateOuverture = compte.DateOuverture,
+                IdClient = compte.IdClient,
+                Solde = compte.Solde,
+                StatutActuel = dernierStatut?.TypeStatutCompte?.Libelle ?? "Actif",
+                DateChangementStatut = dernierStatut?.DateChangement,
+                EstActif = dernierStatut?.TypeStatutCompte?.Libelle == "Actif" || dernierStatut == null
+            };
         }
     }
 }

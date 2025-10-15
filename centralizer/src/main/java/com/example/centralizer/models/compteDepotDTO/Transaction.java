@@ -9,19 +9,17 @@ public class Transaction {
     private BigDecimal montant;
     private Integer idTypeTransaction;
     private Integer idCompte;
-    private Integer idTransfert;
 
     // Constructors
     public Transaction() {}
 
     public Transaction(Integer idTransaction, LocalDateTime dateTransaction, BigDecimal montant,
-                      Integer idTypeTransaction, Integer idCompte, Integer idTransfert) {
+                      Integer idTypeTransaction, Integer idCompte) {
         this.idTransaction = idTransaction;
         this.dateTransaction = dateTransaction;
         this.montant = montant;
         this.idTypeTransaction = idTypeTransaction;
         this.idCompte = idCompte;
-        this.idTransfert = idTransfert;
     }
 
     // Getters & Setters
@@ -39,7 +37,4 @@ public class Transaction {
 
     public Integer getIdCompte() { return idCompte; }
     public void setIdCompte(Integer idCompte) { this.idCompte = idCompte; }
-
-    public Integer getIdTransfert() { return idTransfert; }
-    public void setIdTransfert(Integer idTransfert) { this.idTransfert = idTransfert; }
 }
