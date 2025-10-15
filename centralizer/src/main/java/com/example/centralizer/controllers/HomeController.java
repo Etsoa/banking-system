@@ -9,9 +9,9 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.example.centralizer.services.ClientService;
-import com.example.centralizer.services.CompteCourantProxyService;
-import com.example.centralizer.services.CompteDepotProxyService;
-import com.example.centralizer.services.PretProxyService;
+import com.example.centralizer.services.CompteCourantService;
+import com.example.centralizer.services.CompteDepotService;
+import com.example.centralizer.services.PretService;
 import com.example.centralizer.models.Client;
 import com.example.centralizer.models.compteCourantDTO.CompteCourant;
 import com.example.centralizer.models.compteDepotDTO.Compte;
@@ -27,13 +27,13 @@ public class HomeController {
     private ClientService clientService;
     
     @Autowired
-    private CompteCourantProxyService compteCourantProxyService;
+    private CompteCourantService compteCourantService;
     
     @Autowired
-    private CompteDepotProxyService compteDepotProxyService;
+    private CompteDepotService compteDepotService;
     
     @Autowired
-    private PretProxyService pretProxyService;
+    private PretService pretService;
 
     @GetMapping("/")
     public String index() {
@@ -175,7 +175,7 @@ public class HomeController {
             
             // Récupérer les comptes courants du client spécifique
             try {
-                List<CompteCourant> comptesCourant = compteCourantProxyService.getComptesCourantByClientId(id);
+                List<CompteCourant> comptesCourant = compteCourantService.getComptesByClientId((long) id);
                 model.addAttribute("comptesCourant", comptesCourant);
             } catch (Exception e) {
                 model.addAttribute("comptesCourant", null);
@@ -184,7 +184,7 @@ public class HomeController {
             
             // Récupérer les comptes dépôt du client spécifique
             try {
-                List<Compte> comptesDepot = compteDepotProxyService.getComptesDepotByClientId(id);
+                List<Compte> comptesDepot = compteDepotService.getComptesByClientId((long) id);
                 model.addAttribute("comptesDepot", comptesDepot);
             } catch (Exception e) {
                 model.addAttribute("comptesDepot", null);
@@ -193,7 +193,7 @@ public class HomeController {
             
             // Récupérer les prêts du client spécifique
             try {
-                List<Pret> prets = pretProxyService.getPretsByClientId(id);
+                List<Pret> prets = pretService.getPretsByClientId((long) id);
                 model.addAttribute("prets", prets);
             } catch (Exception e) {
                 model.addAttribute("prets", null);

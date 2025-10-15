@@ -1,9 +1,9 @@
 package com.example.centralizer.controllers;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -15,23 +15,29 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.example.centralizer.exceptions.ServerApplicationException;
 import com.example.centralizer.models.Client;
 import com.example.centralizer.models.compteCourantDTO.CompteCourant;
 import com.example.centralizer.services.ClientService;
-import com.example.centralizer.services.CompteCourantProxyService;
+import com.example.centralizer.services.CompteCourantService;
+import com.example.centralizer.services.ExceptionHandlingService;
 
 @Controller
 public class CompteCourantController {
-    @Autowired
-    private CompteCourantProxyService compteCourantProxyService;
     
     @Autowired
     private ClientService clientService;
 
+    @Autowired
+    private CompteCourantService compteCourantService;
+
+    @Autowired
+    private ExceptionHandlingService exceptionHandlingService;
+
     @GetMapping("/comptes-courant")
     public String getComptesCourant(Model model) {
         try {
-            List<CompteCourant> comptesCourant = compteCourantProxyService.getAllComptesCourant();
+            List<CompteCourant> comptesCourant = compteCourantService.getAllComptes();
             model.addAttribute("comptesCourant", comptesCourant);
             
             // Récupérer tous les clients pour afficher leurs noms
@@ -42,8 +48,14 @@ public class CompteCourantController {
             }
             model.addAttribute("clientsMap", clientsMap);
             
+        } catch (ServerApplicationException e) {
+            // Gestion spécifique des erreurs de serveur
+            String userMessage = exceptionHandlingService.getUserFriendlyMessage(e);
+            model.addAttribute("comptesCourant", null);
+            model.addAttribute("error", userMessage);
+            model.addAttribute("errorDetails", e.getFormattedMessage());
         } catch (Exception e) {
-            // En cas d'erreur de connexion au service
+            // Autres erreurs
             model.addAttribute("comptesCourant", null);
             model.addAttribute("error", "Erreur lors de la récupération des comptes courant: " + e.getMessage());
         }
@@ -72,8 +84,8 @@ public class CompteCourantController {
             // Définir la date d'ouverture au moment actuel
             compteCourant.setDateOuverture(LocalDateTime.now());
             
-            // Créer le compte via le service proxy
-            CompteCourant nouveauCompte = compteCourantProxyService.createCompteCourant(compteCourant);
+            // Créer le compte via le nouveau service avec gestion d'exceptions
+            CompteCourant nouveauCompte = compteCourantService.createCompte(compteCourant);
             
             if (nouveauCompte != null) {
                 redirectAttributes.addFlashAttribute("success", "Compte courant créé avec succès !");
@@ -83,6 +95,17 @@ public class CompteCourantController {
                 model.addAttribute("clients", clientService.getAllClients());
                 return "comptes-courant/compte-form";
             }
+        } catch (ServerApplicationException e) {
+            // Gestion spécifique des erreurs de serveur
+            String userMessage = exceptionHandlingService.getUserFriendlyMessage(e);
+            model.addAttribute("error", userMessage);
+            model.addAttribute("errorDetails", e.getFormattedMessage());
+            try {
+                model.addAttribute("clients", clientService.getAllClients());
+            } catch (Exception clientEx) {
+                model.addAttribute("clients", null);
+            }
+            return "comptes-courant/compte-form";
         } catch (Exception e) {
             model.addAttribute("error", "Erreur lors de la création du compte courant: " + e.getMessage());
             try {
@@ -97,8 +120,11 @@ public class CompteCourantController {
     @GetMapping("/comptes-courant/{id}")
     @ResponseBody
     public CompteCourant getCompteCourantById(@PathVariable int id) {
-        return compteCourantProxyService.getCompteCourantById(id);
+        try {
+            return compteCourantService.getCompteById((long) id);
+        } catch (ServerApplicationException e) {
+            // Pour les endpoints REST, on peut retourner null ou lever l'exception
+            throw new RuntimeException(exceptionHandlingService.getUserFriendlyMessage(e));
+        }
     }
-
-    
 }

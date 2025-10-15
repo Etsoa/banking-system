@@ -12,7 +12,11 @@ public class CompteCourantRepository {
     private EntityManager em;
 
     public void save(CompteCourant compte) {
-        em.persist(compte);
+        if (compte.getId() == null) {
+            em.persist(compte);
+        } else {
+            em.merge(compte);
+        }
     }
 
     public CompteCourant find(Long id) {
@@ -27,5 +31,9 @@ public class CompteCourantRepository {
         return em.createQuery("SELECT c FROM CompteCourant c WHERE c.idClient = :clientId", CompteCourant.class)
                 .setParameter("clientId", clientId)
                 .getResultList();
+    }
+
+    public void delete(CompteCourant compte) {
+        em.remove(em.contains(compte) ? compte : em.merge(compte));
     }
 }
