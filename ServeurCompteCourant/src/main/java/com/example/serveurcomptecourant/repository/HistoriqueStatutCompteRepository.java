@@ -47,7 +47,7 @@ public class HistoriqueStatutCompteRepository {
     /**
      * Trouve tous les historiques de statut d'un compte
      */
-    public List<HistoriqueStatutCompte> findByCompte(Integer idCompte) {
+    public List<HistoriqueStatutCompte> findByCompte(String idCompte) {
         TypedQuery<HistoriqueStatutCompte> query = em.createQuery(
             "SELECT h FROM HistoriqueStatutCompte h WHERE h.idCompte = :idCompte ORDER BY h.dateChangement DESC", 
             HistoriqueStatutCompte.class
@@ -84,7 +84,7 @@ public class HistoriqueStatutCompteRepository {
     /**
      * Trouve le statut actuel d'un compte (le plus récent)
      */
-    public HistoriqueStatutCompte findCurrentStatutByCompte(Integer idCompte) {
+    public HistoriqueStatutCompte findCurrentStatutByCompte(String idCompte) {
         TypedQuery<HistoriqueStatutCompte> query = em.createQuery(
             "SELECT h FROM HistoriqueStatutCompte h WHERE h.idCompte = :idCompte ORDER BY h.dateChangement DESC", 
             HistoriqueStatutCompte.class
@@ -98,7 +98,7 @@ public class HistoriqueStatutCompteRepository {
     /**
      * Trouve l'historique complet d'un compte (chronologique)
      */
-    public List<HistoriqueStatutCompte> findHistoriqueCompletByCompte(Integer idCompte) {
+    public List<HistoriqueStatutCompte> findHistoriqueCompletByCompte(String idCompte) {
         TypedQuery<HistoriqueStatutCompte> query = em.createQuery(
             "SELECT h FROM HistoriqueStatutCompte h WHERE h.idCompte = :idCompte ORDER BY h.dateChangement ASC", 
             HistoriqueStatutCompte.class
@@ -133,7 +133,7 @@ public class HistoriqueStatutCompteRepository {
     /**
      * Compte le nombre d'historiques de statut pour un compte
      */
-    public long countByCompte(Integer idCompte) {
+    public long countByCompte(String idCompte) {
         TypedQuery<Long> query = em.createQuery(
             "SELECT COUNT(h) FROM HistoriqueStatutCompte h WHERE h.idCompte = :idCompte", 
             Long.class

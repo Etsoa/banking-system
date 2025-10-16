@@ -36,7 +36,7 @@ public class CompteCourantController {
 
     @GET
     @Path("/{id}")
-    public CompteCourant getById(@PathParam("id") int id) throws CompteCourantException {
+    public CompteCourant getById(@PathParam("id") String id) throws CompteCourantException {
         return compteService.getCompteById(id);
     }
 

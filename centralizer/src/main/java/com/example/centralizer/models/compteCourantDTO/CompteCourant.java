@@ -5,7 +5,8 @@ import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 public class CompteCourant {
-    private Integer id;
+    private String idCompte;
+    private Integer idNum;
     
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
     private LocalDateTime dateOuverture;
@@ -17,9 +18,10 @@ public class CompteCourant {
     // Constructors
     public CompteCourant() {}
 
-    public CompteCourant(Integer id, LocalDateTime dateOuverture, Boolean decouvert, 
+    public CompteCourant(String idCompte, Integer idNum, LocalDateTime dateOuverture, Boolean decouvert, 
                         Integer idClient, BigDecimal solde) {
-        this.id = id;
+        this.idCompte = idCompte;
+        this.idNum = idNum;
         this.dateOuverture = dateOuverture;
         this.decouvert = decouvert;
         this.idClient = idClient;
@@ -27,8 +29,11 @@ public class CompteCourant {
     }
 
     // Getters & Setters
-    public Integer getId() { return id; }
-    public void setId(Integer id) { this.id = id; }
+    public String getIdCompte() { return idCompte; }
+    public void setIdCompte(String idCompte) { this.idCompte = idCompte; }
+
+    public Integer getIdNum() { return idNum; }
+    public void setIdNum(Integer idNum) { this.idNum = idNum; }
 
     public LocalDateTime getDateOuverture() { return dateOuverture; }
     public void setDateOuverture(LocalDateTime dateOuverture) { this.dateOuverture = dateOuverture; }

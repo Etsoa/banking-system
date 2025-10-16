@@ -26,16 +26,16 @@ public class Transaction {
     @Column(name = "montant", nullable = false, precision = 12, scale = 2)
     private BigDecimal montant;
 
-    @Column(name = "Id_type_transaction", nullable = false)
+    @Column(name = "id_type_transaction", nullable = false)
     private Integer idTypeTransaction;
 
-    @Column(name = "id_compte", nullable = false)
-    private Integer idCompte;
+    @Column(name = "id_compte", nullable = false, length = 10)
+    private String idCompte;
 
     // Constructors
     public Transaction() {}
 
-    public Transaction(BigDecimal montant, Integer idTypeTransaction, Integer idCompte) {
+    public Transaction(BigDecimal montant, Integer idTypeTransaction, String idCompte) {
         this.montant = montant;
         this.idTypeTransaction = idTypeTransaction;
         this.idCompte = idCompte;
@@ -75,11 +75,11 @@ public class Transaction {
         this.idTypeTransaction = idTypeTransaction;
     }
 
-    public Integer getIdCompte() {
+    public String getIdCompte() {
         return idCompte;
     }
 
-    public void setIdCompte(Integer idCompte) {
+    public void setIdCompte(String idCompte) {
         this.idCompte = idCompte;
     }
 }

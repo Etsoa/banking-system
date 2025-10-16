@@ -13,7 +13,7 @@ public class TypeStatutCompte {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "Id_type_statut_compte")
+    @Column(name = "id_type_statut_compte")
     private Integer id;
 
     @Column(name = "libelle", nullable = false, length = 50)

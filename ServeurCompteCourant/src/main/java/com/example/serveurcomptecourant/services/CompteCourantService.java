@@ -35,7 +35,7 @@ public class CompteCourantService {
         try {
             List<CompteCourant> comptes = repository.findAll();
             return comptes.stream()
-                    .map(compte -> new CompteCourantAvecStatut(compte, repository.getCurrentStatut(compte.getId())))
+                    .map(compte -> new CompteCourantAvecStatut(compte, repository.getCurrentStatut(compte.getIdCompte())))
                     .collect(Collectors.toList());
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Erreur lors de la récupération des comptes avec statut", e);
@@ -48,7 +48,7 @@ public class CompteCourantService {
             if (clientId <= 0) {
                 throw new CompteCourantBusinessException.ClientInexistantException((long)clientId);
             }
-            return repository.findByClientId((long)clientId);
+            return repository.findByClientId(clientId);
         } catch (CompteCourantBusinessException e) {
             throw e; // Re-lancer les exceptions métier
         } catch (RuntimeException e) {
@@ -57,15 +57,15 @@ public class CompteCourantService {
         }
     }
 
-    public CompteCourant getCompteById(int id) throws CompteCourantException {
+    public CompteCourant getCompteById(String id) throws CompteCourantException {
         try {
-            if (id <= 0) {
-                throw new CompteCourantBusinessException.CompteNotFoundException((long)id);
+            if (id == null || id.trim().isEmpty()) {
+                throw new CompteCourantBusinessException.CompteNotFoundException(0L);
             }
             
-            CompteCourant compte = repository.find((long)id);
+            CompteCourant compte = repository.find(id);
             if (compte == null) {
-                throw new CompteCourantBusinessException.CompteNotFoundException((long)id);
+                throw new CompteCourantBusinessException.CompteNotFoundException(0L);
             }
             
             return compte;

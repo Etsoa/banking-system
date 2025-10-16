@@ -24,17 +24,25 @@ public class Transfert {
     @Column(name = "montant", nullable = false, precision = 12, scale = 2)
     private BigDecimal montant;
 
-    @Column(name = "envoyer", nullable = false)
-    private Integer envoyer;
+    @Column(name = "id_transaction_envoyeur", nullable = false, length = 10)
+    private String idTransactionEnvoyeur;
 
-    @Column(name = "receveur", nullable = false)
-    private Integer receveur;
+    @Column(name = "id_transaction_receveur", nullable = false, length = 10)
+    private String idTransactionReceveur;
+
+    @Column(name = "envoyer", nullable = false, length = 10)
+    private String envoyer;
+
+    @Column(name = "receveur", nullable = false, length = 10)
+    private String receveur;
 
     // Constructors
     public Transfert() {}
 
-    public Transfert(BigDecimal montant, Integer envoyer, Integer receveur) {
+    public Transfert(BigDecimal montant, String idTransactionEnvoyeur, String idTransactionReceveur, String envoyer, String receveur) {
         this.montant = montant;
+        this.idTransactionEnvoyeur = idTransactionEnvoyeur;
+        this.idTransactionReceveur = idTransactionReceveur;
         this.envoyer = envoyer;
         this.receveur = receveur;
         this.dateTransfert = LocalDate.now();
@@ -65,19 +73,35 @@ public class Transfert {
         this.montant = montant;
     }
 
-    public Integer getEnvoyer() {
+    public String getIdTransactionEnvoyeur() {
+        return idTransactionEnvoyeur;
+    }
+
+    public void setIdTransactionEnvoyeur(String idTransactionEnvoyeur) {
+        this.idTransactionEnvoyeur = idTransactionEnvoyeur;
+    }
+
+    public String getIdTransactionReceveur() {
+        return idTransactionReceveur;
+    }
+
+    public void setIdTransactionReceveur(String idTransactionReceveur) {
+        this.idTransactionReceveur = idTransactionReceveur;
+    }
+
+    public String getEnvoyer() {
         return envoyer;
     }
 
-    public void setEnvoyer(Integer envoyer) {
+    public void setEnvoyer(String envoyer) {
         this.envoyer = envoyer;
     }
 
-    public Integer getReceveur() {
+    public String getReceveur() {
         return receveur;
     }
 
-    public void setReceveur(Integer receveur) {
+    public void setReceveur(String receveur) {
         this.receveur = receveur;
     }
 }

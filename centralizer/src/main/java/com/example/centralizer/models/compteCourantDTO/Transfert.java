@@ -7,17 +7,22 @@ public class Transfert {
     private Integer idTransfert;
     private LocalDate dateTransfert;
     private BigDecimal montant;
-    private Integer envoyer;
-    private Integer receveur;
+    private String idTransactionEnvoyeur;
+    private String idTransactionReceveur;
+    private String envoyer;
+    private String receveur;
 
     // Constructors
     public Transfert() {}
 
     public Transfert(Integer idTransfert, LocalDate dateTransfert, BigDecimal montant,
-                    Integer envoyer, Integer receveur) {
+                    String idTransactionEnvoyeur, String idTransactionReceveur, 
+                    String envoyer, String receveur) {
         this.idTransfert = idTransfert;
         this.dateTransfert = dateTransfert;
         this.montant = montant;
+        this.idTransactionEnvoyeur = idTransactionEnvoyeur;
+        this.idTransactionReceveur = idTransactionReceveur;
         this.envoyer = envoyer;
         this.receveur = receveur;
     }
@@ -32,9 +37,15 @@ public class Transfert {
     public BigDecimal getMontant() { return montant; }
     public void setMontant(BigDecimal montant) { this.montant = montant; }
 
-    public Integer getEnvoyer() { return envoyer; }
-    public void setEnvoyer(Integer envoyer) { this.envoyer = envoyer; }
+    public String getIdTransactionEnvoyeur() { return idTransactionEnvoyeur; }
+    public void setIdTransactionEnvoyeur(String idTransactionEnvoyeur) { this.idTransactionEnvoyeur = idTransactionEnvoyeur; }
 
-    public Integer getReceveur() { return receveur; }
-    public void setReceveur(Integer receveur) { this.receveur = receveur; }
+    public String getIdTransactionReceveur() { return idTransactionReceveur; }
+    public void setIdTransactionReceveur(String idTransactionReceveur) { this.idTransactionReceveur = idTransactionReceveur; }
+
+    public String getEnvoyer() { return envoyer; }
+    public void setEnvoyer(String envoyer) { this.envoyer = envoyer; }
+
+    public String getReceveur() { return receveur; }
+    public void setReceveur(String receveur) { this.receveur = receveur; }
 }

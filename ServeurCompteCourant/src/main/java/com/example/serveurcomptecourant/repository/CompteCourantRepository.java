@@ -1,10 +1,12 @@
 package com.example.serveurcomptecourant.repository;
 
+import java.util.List;
+
 import com.example.serveurcomptecourant.models.CompteCourant;
+
 import jakarta.ejb.Stateless;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import java.util.List;
 
 @Stateless
 public class CompteCourantRepository {
@@ -12,28 +14,28 @@ public class CompteCourantRepository {
     private EntityManager em;
 
     public void save(CompteCourant compte) {
-        if (compte.getId() == null) {
+        if (compte.getIdCompte() == null) {
             em.persist(compte);
         } else {
             em.merge(compte);
         }
     }
 
-    public CompteCourant find(long id) {
-        return em.find(CompteCourant.class, (int)id);
+    public CompteCourant find(String id) {
+        return em.find(CompteCourant.class, id);
     }
 
     public List<CompteCourant> findAll() {
         return em.createQuery("SELECT c FROM CompteCourant c", CompteCourant.class).getResultList();
     }
 
-    public List<CompteCourant> findByClientId(long clientId) {
+    public List<CompteCourant> findByClientId(int clientId) {
         return em.createQuery("SELECT c FROM CompteCourant c WHERE c.idClient = :clientId", CompteCourant.class)
-                .setParameter("clientId", (int)clientId)
+                .setParameter("clientId", clientId)
                 .getResultList();
     }
 
-    public String getCurrentStatut(int compteId) {
+    public String getCurrentStatut(String compteId) {
         try {
             String statutLibelle = em.createQuery(
                 "SELECT ts.libelle FROM HistoriqueStatutCompte h " +

@@ -47,7 +47,7 @@ public class HistoriqueSoldeRepository {
     /**
      * Trouve tous les historiques de solde d'un compte
      */
-    public List<HistoriqueSolde> findByCompte(Integer idCompte) {
+    public List<HistoriqueSolde> findByCompte(String idCompte) {
         TypedQuery<HistoriqueSolde> query = em.createQuery(
             "SELECT h FROM HistoriqueSolde h WHERE h.idCompte = :idCompte ORDER BY h.dateChangement DESC", 
             HistoriqueSolde.class
@@ -84,7 +84,7 @@ public class HistoriqueSoldeRepository {
     /**
      * Trouve le dernier historique de solde d'un compte
      */
-    public HistoriqueSolde findLastByCompte(Integer idCompte) {
+    public HistoriqueSolde findLastByCompte(String idCompte) {
         TypedQuery<HistoriqueSolde> query = em.createQuery(
             "SELECT h FROM HistoriqueSolde h WHERE h.idCompte = :idCompte ORDER BY h.dateChangement DESC", 
             HistoriqueSolde.class
@@ -121,7 +121,7 @@ public class HistoriqueSoldeRepository {
     /**
      * Compte le nombre d'historiques de solde pour un compte
      */
-    public long countByCompte(Integer idCompte) {
+    public long countByCompte(String idCompte) {
         TypedQuery<Long> query = em.createQuery(
             "SELECT COUNT(h) FROM HistoriqueSolde h WHERE h.idCompte = :idCompte", 
             Long.class

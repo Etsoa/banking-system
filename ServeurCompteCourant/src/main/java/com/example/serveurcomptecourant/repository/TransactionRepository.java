@@ -17,13 +17,13 @@ public class TransactionRepository {
                 .getResultList();
     }
 
-    public List<Transaction> findByCompteId(int compteId) {
+    public List<Transaction> findByCompteId(String compteId) {
         return em.createQuery("SELECT t FROM Transaction t WHERE t.idCompte = :compteId ORDER BY t.dateTransaction DESC", Transaction.class)
                 .setParameter("compteId", compteId)
                 .getResultList();
     }
 
-    public List<Transaction> findByCompteIdAndTypeTransaction(int compteId, int typeId) {
+    public List<Transaction> findByCompteIdAndTypeTransaction(String compteId, int typeId) {
         return em.createQuery("SELECT t FROM Transaction t WHERE t.idCompte = :compteId AND t.idTypeTransaction = :typeId ORDER BY t.dateTransaction DESC", Transaction.class)
                 .setParameter("compteId", compteId)
                 .setParameter("typeId", typeId)

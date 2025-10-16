@@ -4,8 +4,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.json.bind.annotation.JsonbDateFormat;
@@ -14,10 +12,13 @@ import jakarta.json.bind.annotation.JsonbDateFormat;
 @Table(name = "comptes")
 public class CompteCourant {
 
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_compte")
-    private Integer id;
+    @Column(name = "id_compte", length = 10)
+    private String idCompte;
+
+    @Column(name = "id_num")
+    private Integer idNum;
 
     @Column(name = "date_ouverture", nullable = false)
     @JsonbDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
@@ -33,6 +34,7 @@ public class CompteCourant {
     private BigDecimal solde = BigDecimal.ZERO;
 
     // Constructors
+
     public CompteCourant() {}
 
     public CompteCourant(Boolean decouvert, Integer idClient, BigDecimal solde) {
@@ -43,12 +45,21 @@ public class CompteCourant {
     }
 
     // Getters & Setters
-    public Integer getId() {
-        return id;
+
+    public String getIdCompte() {
+        return idCompte;
     }
 
-    public void setId(Integer id) {
-        this.id = id;
+    public void setIdCompte(String idCompte) {
+        this.idCompte = idCompte;
+    }
+
+    public Integer getIdNum() {
+        return idNum;
+    }
+
+    public void setIdNum(Integer idNum) {
+        this.idNum = idNum;
     }
 
     public LocalDateTime getDateOuverture() {

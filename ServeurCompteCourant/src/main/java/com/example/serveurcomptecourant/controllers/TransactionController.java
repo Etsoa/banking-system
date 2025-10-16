@@ -2,8 +2,7 @@ package com.example.serveurcomptecourant.controllers;
 
 import com.example.serveurcomptecourant.models.Transaction;
 import com.example.serveurcomptecourant.models.TypeTransaction;
-import com.example.serveurcomptecourant.repository.TransactionRepository;
-import com.example.serveurcomptecourant.repository.TypeTransactionRepository;
+import com.example.serveurcomptecourant.services.TransactionService;
 import com.example.serveurcomptecourant.exceptions.CompteCourantException;
 import jakarta.ejb.EJB;
 import jakarta.ws.rs.*;
@@ -16,33 +15,31 @@ import java.util.List;
 public class TransactionController {
     
     @EJB
-    private TransactionRepository transactionRepository;
-    
-    @EJB
-    private TypeTransactionRepository typeTransactionRepository;
+    private TransactionService transactionService;
 
     @GET
     @Path("/compte/{compteId}")
-    public List<Transaction> getTransactionsByCompte(@PathParam("compteId") int compteId) throws CompteCourantException {
-        return transactionRepository.findByCompteId(compteId);
-    }
-
-    @GET
-    @Path("/compte/{compteId}/type/{typeId}")
-    public List<Transaction> getTransactionsByCompteAndType(
-            @PathParam("compteId") int compteId,
-            @PathParam("typeId") int typeId) throws CompteCourantException {
-        return transactionRepository.findByCompteIdAndTypeTransaction(compteId, typeId);
+    public List<Transaction> getTransactionsByCompte(@PathParam("compteId") String compteId) throws CompteCourantException {
+        return transactionService.getTransactionsByCompte(compteId);
     }
 
     @GET
     @Path("/types")
     public List<TypeTransaction> getAllTypesTransaction() throws CompteCourantException {
-        return typeTransactionRepository.findAll();
+        return transactionService.getAllTypesTransaction();
     }
 
     @POST
     public Transaction createTransaction(Transaction transaction) throws CompteCourantException {
-        return transactionRepository.save(transaction);
+        return transactionService.createTransaction(transaction);
+    }
+
+    @POST
+    @Path("/transfert/{compteEnvoyeur}/{compteReceveur}/{montant}")
+    public com.example.serveurcomptecourant.models.Transfert createTransfert(
+            @PathParam("compteEnvoyeur") String compteEnvoyeur,
+            @PathParam("compteReceveur") String compteReceveur,
+            @PathParam("montant") java.math.BigDecimal montant) throws CompteCourantException {
+        return transactionService.createTransfert(compteEnvoyeur, compteReceveur, montant);
     }
 }

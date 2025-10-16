@@ -4,7 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public class CompteCourantAvecStatut {
-    private Integer id;
+    private String idCompte;
+    private Integer idNum;
     private LocalDateTime dateOuverture;
     private Boolean decouvert;
     private Integer idClient;
@@ -15,12 +16,20 @@ public class CompteCourantAvecStatut {
     public CompteCourantAvecStatut() {}
     
     // Getters & Setters
-    public Integer getId() {
-        return id;
+    public String getIdCompte() {
+        return idCompte;
     }
     
-    public void setId(Integer id) {
-        this.id = id;
+    public void setIdCompte(String idCompte) {
+        this.idCompte = idCompte;
+    }
+
+    public Integer getIdNum() {
+        return idNum;
+    }
+    
+    public void setIdNum(Integer idNum) {
+        this.idNum = idNum;
     }
     
     public LocalDateTime getDateOuverture() {

@@ -22,16 +22,16 @@ public class HistoriqueStatutCompte {
     @JsonbDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
     private LocalDateTime dateChangement = LocalDateTime.now();
 
-    @Column(name = "id_compte", nullable = false)
-    private Integer idCompte;
+    @Column(name = "id_compte", nullable = false, length = 10)
+    private String idCompte;
 
-    @Column(name = "Id_type_statut_compte", nullable = false)
+    @Column(name = "id_type_statut_compte", nullable = false)
     private Integer idTypeStatutCompte;
 
     // Constructors
     public HistoriqueStatutCompte() {}
 
-    public HistoriqueStatutCompte(Integer idCompte, Integer idTypeStatutCompte) {
+    public HistoriqueStatutCompte(String idCompte, Integer idTypeStatutCompte) {
         this.idCompte = idCompte;
         this.idTypeStatutCompte = idTypeStatutCompte;
         this.dateChangement = LocalDateTime.now();
@@ -54,11 +54,11 @@ public class HistoriqueStatutCompte {
         this.dateChangement = dateChangement;
     }
 
-    public Integer getIdCompte() {
+    public String getIdCompte() {
         return idCompte;
     }
 
-    public void setIdCompte(Integer idCompte) {
+    public void setIdCompte(String idCompte) {
         this.idCompte = idCompte;
     }
 

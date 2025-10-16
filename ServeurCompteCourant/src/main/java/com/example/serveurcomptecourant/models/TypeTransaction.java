@@ -13,7 +13,7 @@ public class TypeTransaction {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "Id_type_transaction")
+    @Column(name = "id_type_transaction")
     private Integer id;
 
     @Column(name = "libelle", nullable = false, length = 50)

@@ -26,8 +26,8 @@ public class HistoriqueSolde {
     @JsonbDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
     private LocalDateTime dateChangement = LocalDateTime.now();
 
-    @Column(name = "id_compte", nullable = false)
-    private Integer idCompte;
+    @Column(name = "id_compte", nullable = false, length = 10)
+    private String idCompte;
 
     @Column(name = "id_transaction", nullable = false)
     private Integer idTransaction;
@@ -35,7 +35,7 @@ public class HistoriqueSolde {
     // Constructors
     public HistoriqueSolde() {}
 
-    public HistoriqueSolde(BigDecimal montant, Integer idCompte, Integer idTransaction) {
+    public HistoriqueSolde(BigDecimal montant, String idCompte, Integer idTransaction) {
         this.montant = montant;
         this.idCompte = idCompte;
         this.idTransaction = idTransaction;
@@ -67,11 +67,11 @@ public class HistoriqueSolde {
         this.dateChangement = dateChangement;
     }
 
-    public Integer getIdCompte() {
+    public String getIdCompte() {
         return idCompte;
     }
 
-    public void setIdCompte(Integer idCompte) {
+    public void setIdCompte(String idCompte) {
         this.idCompte = idCompte;
     }
 
