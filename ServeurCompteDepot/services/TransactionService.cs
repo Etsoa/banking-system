@@ -12,6 +12,7 @@ namespace ServeurCompteDepot.Services
         Task<IEnumerable<Transaction>> GetTransactionsByTypeAsync(int idTypeTransaction);
         Task<IEnumerable<Transaction>> GetTransactionsByDateAsync(DateTime dateDebut, DateTime dateFin);
         Task<Transaction> CreateTransactionAsync(Transaction transaction);
+        Task<Transaction> ExecuteTransactionAsync(Transaction transaction);
         Task<Transfert> CreateTransfertAsync(string compteEnvoyeur, string compteReceveur, decimal montant);
         Task<Transaction?> UpdateTransactionAsync(int id, Transaction transaction);
         Task<bool> DeleteTransactionAsync(int id);
@@ -32,7 +33,6 @@ namespace ServeurCompteDepot.Services
             return await _context.Transactions
                 .Include(t => t.TypeTransaction)
                 .Include(t => t.Compte)
-                .Include(t => t.Transfert)
                 .OrderByDescending(t => t.DateTransaction)
                 .ToListAsync();
         }
@@ -42,7 +42,6 @@ namespace ServeurCompteDepot.Services
             return await _context.Transactions
                 .Include(t => t.TypeTransaction)
                 .Include(t => t.Compte)
-                .Include(t => t.Transfert)
                 .FirstOrDefaultAsync(t => t.IdTransaction == id);
         }
 
@@ -50,7 +49,6 @@ namespace ServeurCompteDepot.Services
         {
             return await _context.Transactions
                 .Include(t => t.TypeTransaction)
-                .Include(t => t.Transfert)
                 .Where(t => t.IdCompte == idCompte)
                 .OrderByDescending(t => t.DateTransaction)
                 .ToListAsync();
@@ -60,7 +58,6 @@ namespace ServeurCompteDepot.Services
         {
             return await _context.Transactions
                 .Include(t => t.Compte)
-                .Include(t => t.Transfert)
                 .Where(t => t.IdTypeTransaction == idTypeTransaction)
                 .OrderByDescending(t => t.DateTransaction)
                 .ToListAsync();

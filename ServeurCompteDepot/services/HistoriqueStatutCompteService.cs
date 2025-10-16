@@ -7,14 +7,14 @@ namespace ServeurCompteDepot.Services
     {
         Task<IEnumerable<HistoriqueStatutCompte>> GetAllHistoriquesStatutCompteAsync();
         Task<HistoriqueStatutCompte?> GetHistoriqueStatutCompteByIdAsync(int id);
-        Task<IEnumerable<HistoriqueStatutCompte>> GetHistoriquesStatutCompteByCompteAsync(int idCompte);
+        Task<IEnumerable<HistoriqueStatutCompte>> GetHistoriquesStatutCompteByCompteAsync(string idCompte);
         Task<IEnumerable<HistoriqueStatutCompte>> GetHistoriquesStatutCompteByTypeAsync(int idTypeStatutCompte);
         Task<IEnumerable<HistoriqueStatutCompte>> GetHistoriquesStatutCompteByDateAsync(DateTime dateDebut, DateTime dateFin);
         Task<HistoriqueStatutCompte> CreateHistoriqueStatutCompteAsync(HistoriqueStatutCompte historiqueStatutCompte);
         Task<HistoriqueStatutCompte?> UpdateHistoriqueStatutCompteAsync(int id, HistoriqueStatutCompte historiqueStatutCompte);
         Task<bool> DeleteHistoriqueStatutCompteAsync(int id);
-        Task<HistoriqueStatutCompte?> GetStatutActuelCompteAsync(int idCompte);
-        Task<IEnumerable<HistoriqueStatutCompte>> GetHistoriqueCompletAsync(int idCompte);
+        Task<HistoriqueStatutCompte?> GetStatutActuelCompteAsync(string idCompte);
+        Task<IEnumerable<HistoriqueStatutCompte>> GetHistoriqueCompletAsync(string idCompte);
     }
 
     public class HistoriqueStatutCompteService : IHistoriqueStatutCompteService
@@ -43,7 +43,7 @@ namespace ServeurCompteDepot.Services
                 .FirstOrDefaultAsync(h => h.IdHistoriqueStatutCompte == id);
         }
 
-        public async Task<IEnumerable<HistoriqueStatutCompte>> GetHistoriquesStatutCompteByCompteAsync(int idCompte)
+        public async Task<IEnumerable<HistoriqueStatutCompte>> GetHistoriquesStatutCompteByCompteAsync(string idCompte)
         {
             return await _context.HistoriquesStatutCompte
                 .Include(h => h.TypeStatutCompte)
@@ -101,7 +101,7 @@ namespace ServeurCompteDepot.Services
             return true;
         }
 
-        public async Task<HistoriqueStatutCompte?> GetStatutActuelCompteAsync(int idCompte)
+        public async Task<HistoriqueStatutCompte?> GetStatutActuelCompteAsync(string idCompte)
         {
             return await _context.HistoriquesStatutCompte
                 .Include(h => h.TypeStatutCompte)
@@ -110,7 +110,7 @@ namespace ServeurCompteDepot.Services
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<IEnumerable<HistoriqueStatutCompte>> GetHistoriqueCompletAsync(int idCompte)
+        public async Task<IEnumerable<HistoriqueStatutCompte>> GetHistoriqueCompletAsync(string idCompte)
         {
             return await _context.HistoriquesStatutCompte
                 .Include(h => h.TypeStatutCompte)
