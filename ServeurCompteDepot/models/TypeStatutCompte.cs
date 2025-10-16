@@ -7,7 +7,7 @@ namespace ServeurCompteDepot.Models
     public class TypeStatutCompte
     {
         [Key]
-        [Column("Id_type_statut_compte")]
+        [Column("id_type_statut_compte")]
         public int IdTypeStatutCompte { get; set; }
 
         [Required]

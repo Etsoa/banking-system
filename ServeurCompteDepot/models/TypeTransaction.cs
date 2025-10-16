@@ -7,7 +7,7 @@ namespace ServeurCompteDepot.Models
     public class TypeTransaction
     {
         [Key]
-        [Column("Id_type_transaction")]
+        [Column("id_type_transaction")]
         public int IdTypeTransaction { get; set; }
 
         [Required]

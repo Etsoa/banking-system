@@ -19,12 +19,12 @@ namespace ServeurCompteDepot.Models
         public decimal Montant { get; set; }
 
         [Required]
-        [Column("Id_type_transaction")]
+        [Column("id_type_transaction")]
         public int IdTypeTransaction { get; set; }
 
         [Required]
         [Column("id_compte")]
-        public int IdCompte { get; set; }
+        public string IdCompte { get; set; } = string.Empty;
 
         // Navigation properties
         [ForeignKey("IdTypeTransaction")]

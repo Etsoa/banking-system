@@ -7,13 +7,13 @@ namespace ServeurCompteDepot.Services
     {
         Task<IEnumerable<HistoriqueSolde>> GetAllHistoriquesSoldeAsync();
         Task<HistoriqueSolde?> GetHistoriqueSoldeByIdAsync(int id);
-        Task<IEnumerable<HistoriqueSolde>> GetHistoriquesSoldeByCompteAsync(int idCompte);
+        Task<IEnumerable<HistoriqueSolde>> GetHistoriquesSoldeByCompteAsync(string idCompte);
         Task<IEnumerable<HistoriqueSolde>> GetHistoriquesSoldeByTransactionAsync(int idTransaction);
         Task<IEnumerable<HistoriqueSolde>> GetHistoriquesSoldeByDateAsync(DateTime dateDebut, DateTime dateFin);
-        Task<HistoriqueSolde> CreateHistoriqueSoldeAsync(HistoriqueSolde historiqueSolde);
+        Task<HistoriqueSolde> CreateHistoriqueSoldeAsync(string idCompte, int idTransaction, decimal montant);
         Task<HistoriqueSolde?> UpdateHistoriqueSoldeAsync(int id, HistoriqueSolde historiqueSolde);
         Task<bool> DeleteHistoriqueSoldeAsync(int id);
-        Task<HistoriqueSolde?> GetDernierHistoriqueSoldeAsync(int idCompte);
+        Task<HistoriqueSolde?> GetDernierHistoriqueSoldeAsync(string idCompte);
     }
 
     public class HistoriqueSoldeService : IHistoriqueSoldeService
@@ -42,7 +42,7 @@ namespace ServeurCompteDepot.Services
                 .FirstOrDefaultAsync(h => h.IdHistoriqueSolde == id);
         }
 
-        public async Task<IEnumerable<HistoriqueSolde>> GetHistoriquesSoldeByCompteAsync(int idCompte)
+        public async Task<IEnumerable<HistoriqueSolde>> GetHistoriquesSoldeByCompteAsync(string idCompte)
         {
             return await _context.HistoriquesSolde
                 .Include(h => h.Transaction)
@@ -70,8 +70,16 @@ namespace ServeurCompteDepot.Services
                 .ToListAsync();
         }
 
-        public async Task<HistoriqueSolde> CreateHistoriqueSoldeAsync(HistoriqueSolde historiqueSolde)
+        public async Task<HistoriqueSolde> CreateHistoriqueSoldeAsync(string idCompte, int idTransaction, decimal montant)
         {
+            var historiqueSolde = new HistoriqueSolde
+            {
+                IdCompte = idCompte,
+                IdTransaction = idTransaction,
+                Montant = montant,
+                DateChangement = DateTime.UtcNow
+            };
+            
             _context.HistoriquesSolde.Add(historiqueSolde);
             await _context.SaveChangesAsync();
             return historiqueSolde;
@@ -101,7 +109,7 @@ namespace ServeurCompteDepot.Services
             return true;
         }
 
-        public async Task<HistoriqueSolde?> GetDernierHistoriqueSoldeAsync(int idCompte)
+        public async Task<HistoriqueSolde?> GetDernierHistoriqueSoldeAsync(string idCompte)
         {
             return await _context.HistoriquesSolde
                 .Include(h => h.Transaction)

@@ -20,7 +20,7 @@ namespace ServeurCompteDepot.Models
 
         [Required]
         [Column("id_compte")]
-        public int IdCompte { get; set; }
+        public string IdCompte { get; set; } = string.Empty;
 
         [Required]
         [Column("id_transaction")]

@@ -22,6 +22,7 @@ import com.example.centralizer.models.compteCourantDTO.CompteCourant;
 import com.example.centralizer.models.compteCourantDTO.CompteCourantAvecStatut;
 import com.example.centralizer.models.compteCourantDTO.Transaction;
 import com.example.centralizer.models.compteCourantDTO.TypeTransaction;
+import com.example.centralizer.models.compteCourantDTO.Transfert;
 import com.example.centralizer.services.ClientService;
 import com.example.centralizer.services.CompteCourantService;
 import com.example.centralizer.services.TransactionCompteCourantService;
@@ -127,7 +128,7 @@ public class CompteCourantController {
 
     @GetMapping("/comptes-courant/details")
     @ResponseBody
-    public CompteCourant getCompteCourantById(@RequestParam int id) {
+    public CompteCourant getCompteCourantById(@RequestParam String id) {
         try {
             return compteCourantService.getCompteById(id);
         } catch (ServerApplicationException e) {
@@ -137,7 +138,7 @@ public class CompteCourantController {
     }
 
     @GetMapping("/comptes-courant/transactions")
-    public String getTransactionsByCompte(@RequestParam int compteId, 
+    public String getTransactionsByCompte(@RequestParam String compteId, 
                                         @RequestParam(required = false) Integer typeId,
                                         Model model) {
         try {
@@ -188,7 +189,7 @@ public class CompteCourantController {
 
     @PostMapping("/comptes-courant/transactions/add")
     public String addTransaction(
-            @RequestParam int compteId,
+            @RequestParam String compteId,
             @RequestParam int typeTransaction,
             @RequestParam double montant,
             RedirectAttributes redirectAttributes) {
@@ -214,5 +215,93 @@ public class CompteCourantController {
         }
         
         return "redirect:/comptes-courant/transactions?compteId=" + compteId;
+    }
+
+    @GetMapping("/comptes-courant/transferts")
+    public String showTransfertForm(@RequestParam String compteId, Model model) {
+        try {
+            // Récupérer le compte envoyeur
+            CompteCourant compte = compteCourantService.getCompteById(compteId);
+            model.addAttribute("compteEnvoyeur", compte);
+            
+            // Récupérer tous les comptes pour le choix du destinataire
+            List<CompteCourantAvecStatut> comptes = compteCourantService.getAllComptesAvecStatut();
+            // Exclure le compte envoyeur de la liste
+            comptes.removeIf(c -> c.getIdCompte().equals(compteId));
+            model.addAttribute("comptesDisponibles", comptes);
+            
+            // Récupérer tous les clients pour afficher leurs noms
+            List<Client> clients = clientService.getAllClients();
+            Map<Integer, Client> clientsMap = new HashMap<>();
+            for (Client client : clients) {
+                clientsMap.put(client.getId(), client);
+            }
+            model.addAttribute("clientsMap", clientsMap);
+            
+        } catch (Exception e) {
+            model.addAttribute("error", "Erreur lors de la préparation du formulaire de transfert: " + e.getMessage());
+        }
+        
+        return "comptes-courant/transfert-form";
+    }
+
+    @PostMapping("/comptes-courant/transferts/add")
+    public String addTransfert(
+            @RequestParam String compteEnvoyeur,
+            @RequestParam String compteReceveur,
+            @RequestParam double montant,
+            RedirectAttributes redirectAttributes) {
+        try {
+            // Appeler le service pour créer le transfert
+            Transfert result = transactionService.createTransfert(compteEnvoyeur, compteReceveur, BigDecimal.valueOf(montant));
+            
+            if (result != null) {
+                redirectAttributes.addFlashAttribute("success", "Transfert effectué avec succès !");
+            } else {
+                redirectAttributes.addFlashAttribute("error", "Erreur lors du transfert");
+            }
+            
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Erreur lors du transfert: " + e.getMessage());
+        }
+        
+        return "redirect:/comptes-courant/transactions?compteId=" + compteEnvoyeur;
+    }
+
+    @GetMapping("/comptes-courant/transferts/list")
+    public String getTransferts(@RequestParam(required = false) String compteId, Model model) {
+        try {
+            List<Transfert> transferts;
+            if (compteId != null && !compteId.trim().isEmpty()) {
+                transferts = transactionService.getTransfertsByCompte(compteId);
+                CompteCourant compte = compteCourantService.getCompteById(compteId);
+                model.addAttribute("compte", compte);
+            } else {
+                transferts = transactionService.getAllTransferts();
+            }
+            model.addAttribute("transferts", transferts);
+            
+            // Récupérer tous les comptes pour l'affichage
+            List<CompteCourantAvecStatut> comptes = compteCourantService.getAllComptesAvecStatut();
+            Map<String, CompteCourantAvecStatut> comptesMap = new HashMap<>();
+            for (CompteCourantAvecStatut compte : comptes) {
+                comptesMap.put(compte.getIdCompte(), compte);
+            }
+            model.addAttribute("comptesMap", comptesMap);
+            
+            // Récupérer tous les clients pour afficher leurs noms
+            List<Client> clients = clientService.getAllClients();
+            Map<Integer, Client> clientsMap = new HashMap<>();
+            for (Client client : clients) {
+                clientsMap.put(client.getId(), client);
+            }
+            model.addAttribute("clientsMap", clientsMap);
+            
+        } catch (Exception e) {
+            model.addAttribute("transferts", null);
+            model.addAttribute("error", "Erreur lors de la récupération des transferts: " + e.getMessage());
+        }
+        
+        return "comptes-courant/transferts";
     }
 }

@@ -14,17 +14,25 @@ namespace ServeurCompteDepot.Models
         [Column("date_transfert")]
         public DateTime DateTransfert { get; set; } = DateTime.UtcNow.Date;
 
-    [Required]
-    [Column("montant", TypeName = "decimal(12,2)")]
-    public decimal Montant { get; set; }
+        [Required]
+        [Column("id_transaction_envoyeur")]
+        public string IdTransactionEnvoyeur { get; set; } = string.Empty;
+
+        [Required]
+        [Column("id_transaction_receveur")]
+        public string IdTransactionReceveur { get; set; } = string.Empty;
+
+        [Required]
+        [Column("montant", TypeName = "decimal(12,2)")]
+        public decimal Montant { get; set; }
 
         [Required]
         [Column("envoyer")]
-        public int Envoyer { get; set; }
+        public string Envoyer { get; set; } = string.Empty;
 
         [Required]
         [Column("receveur")]
-        public int Receveur { get; set; }
+        public string Receveur { get; set; } = string.Empty;
 
         // Navigation properties
         [ForeignKey("Envoyer")]

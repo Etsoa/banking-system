@@ -4,7 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public class CompteDepotAvecStatut {
-    private Integer idCompte;
+    private Integer idNum;
+    private String idCompte;
     private LocalDateTime dateOuverture;
     private Integer idClient;
     private BigDecimal solde;
@@ -16,11 +17,19 @@ public class CompteDepotAvecStatut {
     public CompteDepotAvecStatut() {}
 
     // Getters et Setters
-    public Integer getIdCompte() {
+    public Integer getIdNum() {
+        return idNum;
+    }
+
+    public void setIdNum(Integer idNum) {
+        this.idNum = idNum;
+    }
+
+    public String getIdCompte() {
         return idCompte;
     }
 
-    public void setIdCompte(Integer idCompte) {
+    public void setIdCompte(String idCompte) {
         this.idCompte = idCompte;
     }
 

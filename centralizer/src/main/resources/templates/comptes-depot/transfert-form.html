@@ -1,0 +1,116 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Nouveau Transfert - Compte Dépôt</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="container" style="max-width: 800px; margin: 0 auto; padding: 20px;">
+        <h1>Effectuer un Transfert - Compte Dépôt</h1>
+        
+        <div style="margin-bottom: 20px;">
+            <a th:href="@{'/comptes-depot/transactions?compteId=' + ${compteId}}" style="color: #007bff; text-decoration: none;">← Retour aux transactions</a>
+        </div>
+        
+        <!-- Informations du compte émetteur -->
+        <div th:if="${compteEmetteur}" style="background-color: #f8f9fa; padding: 15px; margin-bottom: 20px;">
+            <h3>Compte Émetteur</h3>
+            <p><strong>ID Compte:</strong> [[${compteEmetteur.idCompte}]]</p>
+            <p><strong>Solde disponible:</strong> 
+                <span th:style="${compteEmetteur.solde < 0} ? 'color: red;' : 'color: green;'">[[${#numbers.formatCurrency(compteEmetteur.solde)}]]</span>
+            </p>
+        </div>
+
+        <!-- Messages d'erreur ou succès -->
+        <div th:if="${error}" style="margin-bottom: 20px; padding: 15px; background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24;">
+            <strong>Erreur:</strong> [[${error}]]
+        </div>
+        
+        <div th:if="${success}" style="margin-bottom: 20px; padding: 15px; background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724;">
+            <strong>Succès:</strong> [[${success}]]
+        </div>
+
+        <!-- Formulaire de transfert -->
+        <div style="background-color: #ffffff; padding: 20px; border: 1px solid #ddd;">
+            <h3>Détails du Transfert</h3>
+            
+            <form th:action="@{/comptes-depot/transferts/execute}" method="post">
+                <input type="hidden" name="compteEmetteurId" th:value="${compteId}" />
+                
+                <div style="margin-bottom: 15px;">
+                    <label for="compteRecepteurId" style="display: block; margin-bottom: 5px;">
+                        <strong>Compte Récepteur *</strong>
+                    </label>
+                    <input type="text" 
+                           id="compteRecepteurId" 
+                           name="compteRecepteurId" 
+                           required 
+                           placeholder="Ex: C1, C2, D1, D2, etc."
+                           style="width: 300px; padding: 5px; border: 1px solid #ddd;"
+                           th:value="${param.compteRecepteurId}" />
+                    <br/>
+                    <small>Entrez l'ID du compte récepteur (C pour compte courant, D pour compte dépôt)</small>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label for="montant" style="display: block; margin-bottom: 5px;">
+                        <strong>Montant à transférer (€) *</strong>
+                    </label>
+                    <input type="number" 
+                           id="montant" 
+                           name="montant" 
+                           step="0.01" 
+                           min="0.01" 
+                           required
+                           placeholder="0.00"
+                           style="width: 200px; padding: 5px; border: 1px solid #ddd;"
+                           th:value="${param.montant}" />
+                    <br/>
+                    <small>Montant minimum: 0.01 €</small>
+                </div>
+                
+                <!-- Informations importantes -->
+                <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; margin-bottom: 15px;">
+                    <strong>⚠️ Informations importantes:</strong>
+                    <ul style="margin: 5px 0 0 20px;">
+                        <li>Les comptes dépôt ne permettent pas de découvert</li>
+                        <li>Le transfert sera refusé si le solde devient négatif</li>
+                        <li>Vérifiez bien l'ID du compte récepteur avant de valider</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <button type="submit" 
+                            style="background-color: #28a745; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; text-decoration: none; display: inline-block;">
+                        Effectuer le Transfert
+                    </button>
+                    
+                    <a th:href="@{'/comptes-depot/transactions?compteId=' + ${compteId}}" 
+                       style="background-color: #6c757d; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; text-decoration: none; display: inline-block;">
+                        Annuler
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Raccourcis -->
+        <div style="margin-top: 20px; padding: 15px; background-color: #f8f9fa;">
+            <h4>Raccourcis utiles</h4>
+            <div>
+                <a th:href="@{'/comptes-depot/transactions?compteId=' + ${compteId}}" 
+                   style="background-color: #17a2b8; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; text-decoration: none; display: inline-block;">
+                   Voir les transactions
+                </a>
+                <a th:href="@{'/comptes-depot/transferts/list?compteId=' + ${compteId}}" 
+                   style="background-color: #ffc107; color: black; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; text-decoration: none; display: inline-block;">
+                   Historique des transferts
+                </a>
+                <a href="/comptes-depot" 
+                   style="background-color: #6c757d; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; text-decoration: none; display: inline-block;">
+                   Tous les comptes dépôt
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

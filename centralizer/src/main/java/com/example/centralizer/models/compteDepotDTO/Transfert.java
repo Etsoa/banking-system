@@ -6,17 +6,21 @@ import java.time.LocalDate;
 public class Transfert {
     private Integer idTransfert;
     private LocalDate dateTransfert;
+    private String idTransactionEnvoyeur;
+    private String idTransactionReceveur;
     private BigDecimal montant;
-    private Integer envoyer;
-    private Integer receveur;
+    private String envoyer;
+    private String receveur;
 
     // Constructors
     public Transfert() {}
 
-    public Transfert(Integer idTransfert, LocalDate dateTransfert, BigDecimal montant,
-                    Integer envoyer, Integer receveur) {
+    public Transfert(Integer idTransfert, LocalDate dateTransfert, String idTransactionEnvoyeur, 
+                    String idTransactionReceveur, BigDecimal montant, String envoyer, String receveur) {
         this.idTransfert = idTransfert;
         this.dateTransfert = dateTransfert;
+        this.idTransactionEnvoyeur = idTransactionEnvoyeur;
+        this.idTransactionReceveur = idTransactionReceveur;
         this.montant = montant;
         this.envoyer = envoyer;
         this.receveur = receveur;
@@ -29,12 +33,18 @@ public class Transfert {
     public LocalDate getDateTransfert() { return dateTransfert; }
     public void setDateTransfert(LocalDate dateTransfert) { this.dateTransfert = dateTransfert; }
 
+    public String getIdTransactionEnvoyeur() { return idTransactionEnvoyeur; }
+    public void setIdTransactionEnvoyeur(String idTransactionEnvoyeur) { this.idTransactionEnvoyeur = idTransactionEnvoyeur; }
+
+    public String getIdTransactionReceveur() { return idTransactionReceveur; }
+    public void setIdTransactionReceveur(String idTransactionReceveur) { this.idTransactionReceveur = idTransactionReceveur; }
+
     public BigDecimal getMontant() { return montant; }
     public void setMontant(BigDecimal montant) { this.montant = montant; }
 
-    public Integer getEnvoyer() { return envoyer; }
-    public void setEnvoyer(Integer envoyer) { this.envoyer = envoyer; }
+    public String getEnvoyer() { return envoyer; }
+    public void setEnvoyer(String envoyer) { this.envoyer = envoyer; }
 
-    public Integer getReceveur() { return receveur; }
-    public void setReceveur(Integer receveur) { this.receveur = receveur; }
+    public String getReceveur() { return receveur; }
+    public void setReceveur(String receveur) { this.receveur = receveur; }
 }

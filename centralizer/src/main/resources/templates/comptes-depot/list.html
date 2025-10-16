@@ -38,9 +38,18 @@
                         <td style="padding: 10px;">[[${#temporals.format(compte.dateOuverture, 'dd/MM/yyyy HH:mm')}]]</td>
                         <td style="padding: 10px;" th:style="${compte.solde < 0} ? 'color: red;' : 'color: green;'">[[${#numbers.formatCurrency(compte.solde)}]]</td>
                         <td style="padding: 10px;">
-                            <button style="background-color: #17a2b8; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer;">Transactions</button>
-                            <button style="background-color: #ffc107; color: black; border: none; padding: 5px 10px; margin: 2px; cursor: pointer;">Transferts</button>
-                            <button style="background-color: #dc3545; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer;">Supprimer</button>
+                            <a th:href="@{'/comptes-depot/transactions?compteId=' + ${compte.idCompte}}" 
+                               style="background-color: #17a2b8; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; text-decoration: none; display: inline-block;">
+                               Transactions
+                            </a>
+                            <a th:href="@{'/comptes-depot/transferts?compteId=' + ${compte.idCompte}}" 
+                               style="background-color: #ffc107; color: black; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; text-decoration: none; display: inline-block;">
+                               Transferts
+                            </a>
+                            <a th:href="@{'/comptes-depot/transferts/list?compteId=' + ${compte.idCompte}}" 
+                               style="background-color: #28a745; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; text-decoration: none; display: inline-block;">
+                               Historique
+                            </a>
                         </td>
                     </tr>
                 </tbody>

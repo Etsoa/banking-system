@@ -3,86 +3,270 @@ using ServeurCompteDepot.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace ServeurCompteDepot.controllers
+namespace ServeurCompteDepot.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/compte-depot")]
     public class CompteDepotController : ControllerBase
     {
-        private readonly CompteDepotContext _context;
         private readonly ICompteService _compteService;
+        private readonly ITransactionService _transactionService;
+        private readonly ITransfertService _transfertService;
+        private readonly IHistoriqueSoldeService _historiqueSoldeService;
 
-        public CompteDepotController(CompteDepotContext context, ICompteService compteService)
+        public CompteDepotController(
+            ICompteService compteService, 
+            ITransactionService transactionService,
+            ITransfertService transfertService,
+            IHistoriqueSoldeService historiqueSoldeService)
         {
-            _context = context;
             _compteService = compteService;
+            _transactionService = transactionService;
+            _transfertService = transfertService;
+            _historiqueSoldeService = historiqueSoldeService;
         }
 
+        // ========== ENDPOINTS COMPTES ==========
+        
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Compte>>> GetAll()
+        public async Task<ActionResult<IEnumerable<Compte>>> GetAllComptes()
         {
-            return await _context.Comptes.ToListAsync();
+            try
+            {
+                var comptes = await _compteService.GetAllComptesAsync();
+                return Ok(comptes);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erreur serveur: {ex.Message}");
+            }
         }
 
         [HttpGet("avec-statut")]
-        public async Task<ActionResult<IEnumerable<CompteAvecStatut>>> GetAllAvecStatut()
+        public async Task<ActionResult<IEnumerable<CompteAvecStatut>>> GetAllComptesAvecStatut()
         {
-            var comptes = await _compteService.GetAllComptesAvecStatutAsync();
-            return Ok(comptes);
+            try
+            {
+                var comptes = await _compteService.GetAllComptesAvecStatutAsync();
+                return Ok(comptes);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erreur serveur: {ex.Message}");
+            }
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Compte>> GetById(int id)
+        public async Task<ActionResult<Compte>> GetCompteById(string id)
         {
-            var compte = await _context.Comptes.FindAsync(id);
-            if (compte == null)
-                return NotFound();
-            return compte;
+            try
+            {
+                var compte = await _compteService.GetCompteByIdAsync(id);
+                if (compte == null)
+                    return NotFound($"Compte {id} non trouvé");
+                return Ok(compte);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erreur serveur: {ex.Message}");
+            }
         }
 
         [HttpGet("{id}/avec-statut")]
-        public async Task<ActionResult<CompteAvecStatut>> GetByIdAvecStatut(int id)
+        public async Task<ActionResult<CompteAvecStatut>> GetCompteAvecStatutById(string id)
         {
-            var compte = await _compteService.GetCompteAvecStatutByIdAsync(id);
-            if (compte == null)
-                return NotFound();
-            return Ok(compte);
+            try
+            {
+                var compte = await _compteService.GetCompteAvecStatutByIdAsync(id);
+                if (compte == null)
+                    return NotFound($"Compte {id} non trouvé");
+                return Ok(compte);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erreur serveur: {ex.Message}");
+            }
         }
 
         [HttpPost]
-        public async Task<ActionResult<Compte>> Create(Compte compte)
+        public async Task<ActionResult<Compte>> CreateCompte([FromBody] Compte compte)
         {
-            _context.Comptes.Add(compte);
-            await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetAll), new { id = compte.IdCompte }, compte);
+            try
+            {
+                var nouveauCompte = await _compteService.CreateCompteAsync(compte);
+                return CreatedAtAction(nameof(GetCompteById), new { id = nouveauCompte.IdCompte }, nouveauCompte);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erreur lors de la création du compte: {ex.Message}");
+            }
         }
 
         [HttpGet("client/{clientId}")]
-        public async Task<ActionResult<IEnumerable<Compte>>> GetByClientId(int clientId)
+        public async Task<ActionResult<IEnumerable<Compte>>> GetComptesByClient(int clientId)
         {
-            var comptes = await _context.Comptes
-                .Where(c => c.IdClient == clientId)
-                .ToListAsync();
-            return Ok(comptes);
+            try
+            {
+                var comptes = await _compteService.GetComptesByClientAsync(clientId);
+                return Ok(comptes);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erreur serveur: {ex.Message}");
+            }
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> DeleteCompte(string id)
         {
-            var compte = await _context.Comptes.FindAsync(id);
-            if (compte == null)
-                return NotFound();
-            _context.Comptes.Remove(compte);
-            await _context.SaveChangesAsync();
-            return NoContent();
+            try
+            {
+                var success = await _compteService.DeleteCompteAsync(id);
+                if (!success)
+                    return NotFound($"Compte {id} non trouvé");
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erreur lors de la suppression: {ex.Message}");
+            }
         }
-    }
-}
 
-        [HttpGet("test")]
-        public IActionResult Test()
+        // ========== ENDPOINTS TRANSACTIONS ==========
+
+        [HttpGet("{compteId}/transactions")]
+        public async Task<ActionResult<IEnumerable<Transaction>>> GetTransactionsByCompte(string compteId)
         {
-            return Ok("API CompteDepot OK");
+            try
+            {
+                var transactions = await _transactionService.GetTransactionsByCompteAsync(compteId);
+                return Ok(transactions);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erreur serveur: {ex.Message}");
+            }
+        }
+
+        [HttpGet("{compteId}/transactions/type/{typeId}")]
+        public async Task<ActionResult<IEnumerable<Transaction>>> GetTransactionsByCompteAndType(string compteId, int typeId)
+        {
+            try
+            {
+                var transactions = await _transactionService.GetTransactionsByCompteAndTypeAsync(compteId, typeId);
+                return Ok(transactions);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erreur serveur: {ex.Message}");
+            }
+        }
+
+        [HttpPost("transactions")]
+        public async Task<ActionResult<Transaction>> CreateTransaction([FromBody] Transaction transaction)
+        {
+            try
+            {
+                transaction.DateTransaction = DateTime.UtcNow;
+                var nouvelleTransaction = await _transactionService.ExecuteTransactionAsync(transaction);
+                return CreatedAtAction(nameof(GetTransactionsByCompte), 
+                    new { compteId = transaction.IdCompte }, nouvelleTransaction);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erreur lors de la création de la transaction: {ex.Message}");
+            }
+        }
+
+        // ========== ENDPOINTS TRANSFERTS ==========
+
+        [HttpPost("transactions/transfert/{compteEnvoyeur}/{compteReceveur}/{montant}")]
+        public async Task<ActionResult<Transfert>> CreateTransfert(string compteEnvoyeur, string compteReceveur, decimal montant)
+        {
+            try
+            {
+                var transfert = await _transactionService.CreateTransfertAsync(compteEnvoyeur, compteReceveur, montant);
+                return CreatedAtAction(nameof(GetTransfertsByCompte), 
+                    new { compteId = compteEnvoyeur }, transfert);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erreur lors du transfert: {ex.Message}");
+            }
+        }
+
+        [HttpGet("transferts")]
+        public async Task<ActionResult<IEnumerable<Transfert>>> GetAllTransferts()
+        {
+            try
+            {
+                var transferts = await _transfertService.GetAllTransfertsAsync();
+                return Ok(transferts);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erreur serveur: {ex.Message}");
+            }
+        }
+
+        [HttpGet("transferts/compte/{compteId}")]
+        public async Task<ActionResult<IEnumerable<Transfert>>> GetTransfertsByCompte(string compteId)
+        {
+            try
+            {
+                var transferts = await _transfertService.GetTransfertsByCompteAsync(compteId);
+                return Ok(transferts);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erreur serveur: {ex.Message}");
+            }
+        }
+
+        // ========== ENDPOINTS HISTORIQUE SOLDE ==========
+
+        [HttpGet("{compteId}/historique-solde")]
+        public async Task<ActionResult<IEnumerable<HistoriqueSolde>>> GetHistoriqueSoldeByCompte(string compteId)
+        {
+            try
+            {
+                var historique = await _historiqueSoldeService.GetHistoriquesSoldeByCompteAsync(compteId);
+                return Ok(historique);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erreur serveur: {ex.Message}");
+            }
+        }
+
+        [HttpGet("{compteId}/solde")]
+        public async Task<ActionResult<decimal>> GetSoldeCompte(string compteId)
+        {
+            try
+            {
+                var solde = await _compteService.GetSoldeAsync(compteId);
+                return Ok(solde);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erreur serveur: {ex.Message}");
+            }
         }
     }
 }

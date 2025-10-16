@@ -6,9 +6,13 @@ namespace ServeurCompteDepot.Models
     [Table("comptes")]
     public class Compte
     {
+        [Column("id_num")]
+        public int IdNum { get; set; }
+
         [Key]
         [Column("id_compte")]
-        public int IdCompte { get; set; }
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        public string IdCompte { get; set; } = string.Empty;
 
         [Required]
         [Column("date_ouverture")]
@@ -18,9 +22,9 @@ namespace ServeurCompteDepot.Models
         [Column("id_client")]
         public int IdClient { get; set; }
 
-    [Required]
-    [Column("solde", TypeName = "decimal(12,2)")]
-    public decimal Solde { get; set; } = 0;
+        [Required]
+        [Column("solde", TypeName = "decimal(12,2)")]
+        public decimal Solde { get; set; } = 0;
 
         // Navigation properties
         public virtual ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();

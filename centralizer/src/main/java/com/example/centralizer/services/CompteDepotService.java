@@ -79,7 +79,7 @@ public class CompteDepotService {
     /**
      * Récupère un compte dépôt par son ID
      */
-    public Compte getCompteById(int id) {
+    public Compte getCompteById(String id) {
         try {
             String url = serverUrl + "/" + id;
             LOGGER.info("Appel GET vers: " + url);

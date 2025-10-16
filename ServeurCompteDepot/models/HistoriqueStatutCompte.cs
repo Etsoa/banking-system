@@ -16,10 +16,10 @@ namespace ServeurCompteDepot.Models
 
         [Required]
         [Column("id_compte")]
-        public int IdCompte { get; set; }
+        public string IdCompte { get; set; } = string.Empty;
 
         [Required]
-        [Column("Id_type_statut_compte")]
+        [Column("id_type_statut_compte")]
         public int IdTypeStatutCompte { get; set; }
 
         // Navigation properties

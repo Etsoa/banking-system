@@ -80,7 +80,7 @@ public class CompteCourantService {
     /**
      * Récupère un compte par son ID
      */
-    public CompteCourant getCompteById(int id) {
+    public CompteCourant getCompteById(String id) {
         try {
             String url = serverUrl + "/" + id;
             LOGGER.info("Appel GET vers: " + url);

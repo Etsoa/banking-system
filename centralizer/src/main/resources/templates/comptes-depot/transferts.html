@@ -1,0 +1,190 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Historique des Transferts - Compte Dépôt</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 20px;">
+        <h1>Historique des Transferts - Compte Dépôt</h1>
+        
+        <div style="margin-bottom: 20px;">
+            <a th:href="@{'/comptes-depot/transactions?compteId=' + ${compteId}}" style="color: #007bff; text-decoration: none;">← Retour aux transactions</a>
+        </div>
+        
+        <!-- Informations du compte -->
+        <div th:if="${compte}" style="background-color: #f8f9fa; padding: 15px; margin-bottom: 20px;">
+            <h3>Informations du Compte</h3>
+            <p><strong>ID Compte:</strong> [[${compte.idCompte}]]</p>
+            <p><strong>Solde actuel:</strong> 
+                <span th:style="${compte.solde < 0} ? 'color: red;' : 'color: green;'">[[${#numbers.formatCurrency(compte.solde)}]]</span>
+            </p>
+            <p><strong>Date d'ouverture:</strong> [[${#temporals.format(compte.dateOuverture, 'dd/MM/yyyy')}]]</p>
+        </div>
+
+        <!-- Actions rapides -->
+        <div style="margin-bottom: 20px;">
+            <h3>Actions</h3>
+            <div>
+                <a th:href="@{'/comptes-depot/transferts?compteId=' + ${compteId}}" 
+                   style="background-color: #28a745; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; text-decoration: none; display: inline-block;">
+                   Nouveau Transfert
+                </a>
+                <a th:href="@{'/comptes-depot/transactions?compteId=' + ${compteId}}" 
+                   style="background-color: #17a2b8; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; text-decoration: none; display: inline-block;">
+                   Voir les Transactions
+                </a>
+                <a href="/comptes-depot" 
+                   style="background-color: #6c757d; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; text-decoration: none; display: inline-block;">
+                   Tous les Comptes Dépôt
+                </a>
+            </div>
+        </div>
+
+        <!-- Filtres -->
+        <div style="margin-bottom: 20px;">
+            <h3>Filtrer les transferts</h3>
+            <div>
+                <a th:href="@{'/comptes-depot/transferts/list?compteId=' + ${compteId}}" 
+                   style="background-color: #f8f9fa; color: black; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; text-decoration: none; display: inline-block;">
+                   Tous les transferts
+                </a>
+                <a th:href="@{'/comptes-depot/transferts/list?compteId=' + ${compteId} + '&direction=emis'}" 
+                   style="background-color: #dc3545; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; text-decoration: none; display: inline-block;">
+                   Transferts émis
+                </a>
+                <a th:href="@{'/comptes-depot/transferts/list?compteId=' + ${compteId} + '&direction=recus'}" 
+                   style="background-color: #28a745; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; text-decoration: none; display: inline-block;">
+                   Transferts reçus
+                </a>
+            </div>
+        </div>
+
+        <!-- Statistiques -->
+        <div th:if="${stats != null}" style="margin-bottom: 20px;">
+            <h3>Statistiques</h3>
+            <div style="background-color: #f8f9fa; padding: 10px;">
+                <p><strong>Transferts Reçus:</strong> [[${stats.nombreRecus}]] - Total: [[${#numbers.formatCurrency(stats.montantTotalRecus)}]]</p>
+                <p><strong>Transferts Émis:</strong> [[${stats.nombreEmis}]] - Total: [[${#numbers.formatCurrency(stats.montantTotalEmis)}]]</p>
+            </div>
+        </div>
+
+        <!-- Liste des transferts -->
+        <div>
+            <h3>Transferts 
+                <span th:if="${filtreType == 'emis'}">(Émis uniquement)</span>
+                <span th:if="${filtreType == 'recus'}">(Reçus uniquement)</span>
+                <span th:if="${filtreType == null}">(Tous)</span>
+            </h3>
+            
+            <div th:if="${transferts != null and not #lists.isEmpty(transferts)}">
+                <table border="1" style="border-collapse: collapse; width: 100%; margin-top: 20px;">
+                    <thead style="background-color: #f8f9fa;">
+                        <tr>
+                            <th style="padding: 10px; text-align: left;">ID</th>
+                            <th style="padding: 10px; text-align: left;">Date</th>
+                            <th style="padding: 10px; text-align: left;">Type</th>
+                            <th style="padding: 10px; text-align: left;">Compte Émetteur</th>
+                            <th style="padding: 10px; text-align: left;">Compte Récepteur</th>
+                            <th style="padding: 10px; text-align: left;">Montant</th>
+                            <th style="padding: 10px; text-align: left;">Statut</th>
+                        </tr>
+                    </thead>
+                        <tbody>
+                            <tr th:each="transfert : ${transferts}" 
+                                style="border-bottom: 1px solid #dee2e6;"
+                                th:style="${transfert.envoyer == compteId} ? 'background-color: #fff5f5;' : 'background-color: #f0fff4;'">
+                                
+                                <td style="padding: 10px;">[[${transfert.idTransfert}]]</td>
+                                
+                                <td style="padding: 10px;">[[${#temporals.format(transfert.dateTransfert, 'dd/MM/yyyy')}]]</td>
+                                
+                                <td style="padding: 10px;">
+                                    <span th:if="${transfert.envoyer == compteId}" style="color: red;">
+                                        Émis
+                                    </span>
+                                    <span th:if="${transfert.receveur == compteId}" style="color: green;">
+                                        Reçu
+                                    </span>
+                                </td>
+                                
+                                <td style="padding: 10px;">
+                                    [[${transfert.envoyer}]]
+                                    <span th:if="${transfert.envoyer == compteId}" style="color: red;"> (Vous)</span>
+                                </td>
+                                
+                                <td style="padding: 10px;">
+                                    [[${transfert.receveur}]]
+                                    <span th:if="${transfert.receveur == compteId}" style="color: green;"> (Vous)</span>
+                                </td>
+                                
+                                <td style="padding: 10px;" th:style="${transfert.envoyer == compteId} ? 'color: red;' : 'color: green;'">
+                                    [[${#numbers.formatCurrency(transfert.montant)}]]
+                                </td>
+                                
+                                <td style="padding: 10px;">
+                                    Effectué
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Résumé en bas de page -->
+                <div style="margin-top: 20px; padding: 15px; background-color: #e9ecef; border-radius: 5px;">
+                    <p style="margin: 0; font-weight: bold;">
+                        Total affiché: <span th:text="${#lists.size(transferts)}"></span> transfert(s)
+                        <span th:if="${filtreType == 'emis'}"> émis</span>
+                        <span th:if="${filtreType == 'recus'}"> reçus</span>
+                    </p>
+                </div>
+            </div>
+            
+            <div th:if="${transferts == null or #lists.isEmpty(transferts)}" 
+                 style="padding: 40px; text-align: center; background-color: #f8f9fa; border-radius: 5px; margin-top: 20px;">
+                <div style="font-size: 48px; margin-bottom: 15px;">📭</div>
+                <h3 style="margin-bottom: 10px; color: #6c757d;">Aucun transfert trouvé</h3>
+                <p style="color: #6c757d; margin-bottom: 20px;">
+                    <span th:if="${filtreType == 'emis'}">Aucun transfert émis par ce compte.</span>
+                    <span th:if="${filtreType == 'recus'}">Aucun transfert reçu par ce compte.</span>
+                    <span th:if="${filtreType == null}">Ce compte n'a encore effectué aucun transfert.</span>
+                </p>
+                <a th:href="@{'/comptes-depot/transferts?compteId=' + ${compteId}}" 
+                   style="background-color: #28a745; color: white; padding: 12px 20px; text-decoration: none; border-radius: 4px;">
+                   ➕ Effectuer le premier transfert
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .btn-active {
+            background-color: #007bff !important;
+            color: white !important;
+            border-color: #007bff !important;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px !important;
+            }
+            
+            table {
+                font-size: 14px;
+            }
+            
+            th, td {
+                padding: 8px !important;
+            }
+        }
+    </style>
+
+    <script>
+        // Calcul des statistiques côté client si nécessaire
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ajouter des interactions ou animations si nécessaire
+            console.log('Historique des transferts chargé');
+        });
+    </script>
+</body>
+</html>

@@ -7,14 +7,14 @@ namespace ServeurCompteDepot.Services
     {
         Task<IEnumerable<Compte>> GetAllComptesAsync();
         Task<IEnumerable<CompteAvecStatut>> GetAllComptesAvecStatutAsync();
-        Task<Compte?> GetCompteByIdAsync(int id);
-        Task<CompteAvecStatut?> GetCompteAvecStatutByIdAsync(int id);
+        Task<Compte?> GetCompteByIdAsync(string id);
+        Task<CompteAvecStatut?> GetCompteAvecStatutByIdAsync(string id);
         Task<IEnumerable<Compte>> GetComptesByClientAsync(int idClient);
         Task<Compte> CreateCompteAsync(Compte compte);
-        Task<Compte?> UpdateCompteAsync(int id, Compte compte);
-        Task<bool> DeleteCompteAsync(int id);
-        Task<decimal> GetSoldeAsync(int idCompte);
-        Task<bool> UpdateSoldeAsync(int idCompte, decimal nouveauSolde);
+        Task<Compte?> UpdateCompteAsync(string id, Compte compte);
+        Task<bool> DeleteCompteAsync(string id);
+        Task<decimal> GetSoldeAsync(string idCompte);
+        Task<bool> UpdateSoldeAsync(string idCompte, decimal nouveauSolde);
     }
 
     public class CompteService : ICompteService
@@ -34,7 +34,7 @@ namespace ServeurCompteDepot.Services
                 .ToListAsync();
         }
 
-        public async Task<Compte?> GetCompteByIdAsync(int id)
+        public async Task<Compte?> GetCompteByIdAsync(string id)
         {
             return await _context.Comptes
                 .Include(c => c.Transactions)
@@ -58,9 +58,9 @@ namespace ServeurCompteDepot.Services
             return compte;
         }
 
-        public async Task<Compte?> UpdateCompteAsync(int id, Compte compte)
+        public async Task<Compte?> UpdateCompteAsync(string id, Compte compte)
         {
-            var existingCompte = await _context.Comptes.FindAsync(id);
+            var existingCompte = await _context.Comptes.FirstOrDefaultAsync(c => c.IdCompte == id);
             if (existingCompte == null) return null;
 
             existingCompte.IdClient = compte.IdClient;
@@ -70,9 +70,9 @@ namespace ServeurCompteDepot.Services
             return existingCompte;
         }
 
-        public async Task<bool> DeleteCompteAsync(int id)
+        public async Task<bool> DeleteCompteAsync(string id)
         {
-            var compte = await _context.Comptes.FindAsync(id);
+            var compte = await _context.Comptes.FirstOrDefaultAsync(c => c.IdCompte == id);
             if (compte == null) return false;
 
             _context.Comptes.Remove(compte);
@@ -80,15 +80,15 @@ namespace ServeurCompteDepot.Services
             return true;
         }
 
-        public async Task<decimal> GetSoldeAsync(int idCompte)
+        public async Task<decimal> GetSoldeAsync(string idCompte)
         {
-            var compte = await _context.Comptes.FindAsync(idCompte);
+            var compte = await _context.Comptes.FirstOrDefaultAsync(c => c.IdCompte == idCompte);
             return compte?.Solde ?? 0;
         }
 
-        public async Task<bool> UpdateSoldeAsync(int idCompte, decimal nouveauSolde)
+        public async Task<bool> UpdateSoldeAsync(string idCompte, decimal nouveauSolde)
         {
-            var compte = await _context.Comptes.FindAsync(idCompte);
+            var compte = await _context.Comptes.FirstOrDefaultAsync(c => c.IdCompte == idCompte);
             if (compte == null) return false;
 
             compte.Solde = nouveauSolde;
@@ -111,6 +111,7 @@ namespace ServeurCompteDepot.Services
 
                 return new CompteAvecStatut
                 {
+                    IdNum = compte.IdNum,
                     IdCompte = compte.IdCompte,
                     DateOuverture = compte.DateOuverture,
                     IdClient = compte.IdClient,
@@ -124,7 +125,7 @@ namespace ServeurCompteDepot.Services
             return comptesAvecStatut;
         }
 
-        public async Task<CompteAvecStatut?> GetCompteAvecStatutByIdAsync(int id)
+        public async Task<CompteAvecStatut?> GetCompteAvecStatutByIdAsync(string id)
         {
             var compte = await _context.Comptes
                 .Include(c => c.HistoriquesStatut)
@@ -139,6 +140,7 @@ namespace ServeurCompteDepot.Services
 
             return new CompteAvecStatut
             {
+                IdNum = compte.IdNum,
                 IdCompte = compte.IdCompte,
                 DateOuverture = compte.DateOuverture,
                 IdClient = compte.IdClient,

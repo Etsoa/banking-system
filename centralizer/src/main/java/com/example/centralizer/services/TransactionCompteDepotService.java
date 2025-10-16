@@ -1,8 +1,7 @@
 package com.example.centralizer.services;
 
-import com.example.centralizer.models.compteCourantDTO.Transaction;
-import com.example.centralizer.models.compteCourantDTO.TypeTransaction;
-import com.example.centralizer.models.compteCourantDTO.Transfert;
+import com.example.centralizer.models.compteDepotDTO.Transaction;
+import com.example.centralizer.models.compteDepotDTO.Transfert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -17,13 +16,14 @@ import java.util.List;
 import java.util.logging.Logger;
 
 /**
- * Service pour communiquer avec le ServeurCompteCourant pour les transactions
+ * Service pour gérer les transactions des comptes dépôt
+ * Communique avec le ServeurCompteDepot (.NET)
  */
 @Service
-public class TransactionCompteCourantService {
-    private static final Logger LOGGER = Logger.getLogger(TransactionCompteCourantService.class.getName());
+public class TransactionCompteDepotService {
+    private static final Logger LOGGER = Logger.getLogger(TransactionCompteDepotService.class.getName());
 
-    @Value("${serveur.comptecourant.url}")
+    @Value("${serveur.compteDepot.url}")
     private String serverUrl;
 
     @Autowired
@@ -37,8 +37,8 @@ public class TransactionCompteCourantService {
      */
     public List<Transaction> getTransactionsByCompte(String compteId) {
         try {
-            String baseUrl = serverUrl.replace("/compte-courant", "");
-            String url = baseUrl + "/transactions/compte/" + compteId;
+            String baseUrl = serverUrl.replace("/api/compte-depot", "");
+            String url = baseUrl + "/api/transaction/compte/" + compteId;
             LOGGER.info("Appel GET vers: " + url);
             
             ResponseEntity<List<Transaction>> response = restTemplate.exchange(
@@ -50,19 +50,19 @@ public class TransactionCompteCourantService {
             
             return response.getBody();
         } catch (RestClientException e) {
-            LOGGER.severe("Erreur lors de la récupération des transactions du compte " + compteId + ": " + e.getMessage());
-            exceptionHandlingService.handleServerException(e, "ServeurCompteCourant");
+            LOGGER.severe("Erreur lors de la récupération des transactions: " + e.getMessage());
+            exceptionHandlingService.handleServerException(e, "ServeurCompteDepot");
             return null;
         }
     }
 
     /**
-     * Récupère les transactions d'un compte filtrées par type
+     * Récupère les transactions d'un compte par type
      */
     public List<Transaction> getTransactionsByCompteAndType(String compteId, Integer typeId) {
         try {
-            String baseUrl = serverUrl.replace("/compte-courant", "");
-            String url = baseUrl + "/transactions/compte/" + compteId + "/type/" + typeId;
+            String baseUrl = serverUrl.replace("/api/compte-depot", "");
+            String url = baseUrl + "/api/transaction/compte/" + compteId + "/type/" + typeId;
             LOGGER.info("Appel GET vers: " + url);
             
             ResponseEntity<List<Transaction>> response = restTemplate.exchange(
@@ -74,32 +74,8 @@ public class TransactionCompteCourantService {
             
             return response.getBody();
         } catch (RestClientException e) {
-            LOGGER.severe("Erreur lors de la récupération des transactions filtrées du compte " + compteId + ": " + e.getMessage());
-            exceptionHandlingService.handleServerException(e, "ServeurCompteCourant");
-            return null;
-        }
-    }
-
-    /**
-     * Récupère tous les types de transaction
-     */
-    public List<TypeTransaction> getAllTypesTransaction() {
-        try {
-            String baseUrl = serverUrl.replace("/compte-courant", "");
-            String url = baseUrl + "/transactions/types";
-            LOGGER.info("Appel GET vers: " + url);
-            
-            ResponseEntity<List<TypeTransaction>> response = restTemplate.exchange(
-                url,
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<List<TypeTransaction>>() {}
-            );
-            
-            return response.getBody();
-        } catch (RestClientException e) {
-            LOGGER.severe("Erreur lors de la récupération des types de transaction: " + e.getMessage());
-            exceptionHandlingService.handleServerException(e, "ServeurCompteCourant");
+            LOGGER.severe("Erreur lors de la récupération des transactions par type: " + e.getMessage());
+            exceptionHandlingService.handleServerException(e, "ServeurCompteDepot");
             return null;
         }
     }
@@ -109,33 +85,33 @@ public class TransactionCompteCourantService {
      */
     public Transaction createTransaction(Transaction transaction) {
         try {
-            String baseUrl = serverUrl.replace("/compte-courant", "");
-            String url = baseUrl + "/transactions";
+            String baseUrl = serverUrl.replace("/api/compte-depot", "");
+            String url = baseUrl + "/api/transaction";
             LOGGER.info("Appel POST vers: " + url);
             
             Transaction result = restTemplate.postForObject(url, transaction, Transaction.class);
             return result;
         } catch (RestClientException e) {
             LOGGER.severe("Erreur lors de la création de la transaction: " + e.getMessage());
-            exceptionHandlingService.handleServerException(e, "ServeurCompteCourant");
+            exceptionHandlingService.handleServerException(e, "ServeurCompteDepot");
             return null;
         }
     }
 
     /**
-     * Créer un transfert entre deux comptes
+     * Créer un transfert entre deux comptes dépôt
      */
     public Transfert createTransfert(String compteEnvoyeur, String compteReceveur, BigDecimal montant) {
         try {
-            String baseUrl = serverUrl.replace("/compte-courant", "");
-            String url = baseUrl + "/transactions/transfert/" + compteEnvoyeur + "/" + compteReceveur + "/" + montant;
+            String baseUrl = serverUrl.replace("/api/compte-depot", "");
+            String url = baseUrl + "/api/transaction/transfert/" + compteEnvoyeur + "/" + compteReceveur + "/" + montant;
             LOGGER.info("Appel POST vers: " + url);
             
             Transfert result = restTemplate.postForObject(url, null, Transfert.class);
             return result;
         } catch (RestClientException e) {
             LOGGER.severe("Erreur lors de la création du transfert: " + e.getMessage());
-            exceptionHandlingService.handleServerException(e, "ServeurCompteCourant");
+            exceptionHandlingService.handleServerException(e, "ServeurCompteDepot");
             return null;
         }
     }
@@ -145,8 +121,8 @@ public class TransactionCompteCourantService {
      */
     public List<Transfert> getAllTransferts() {
         try {
-            String baseUrl = serverUrl.replace("/compte-courant", "");
-            String url = baseUrl + "/transferts";
+            String baseUrl = serverUrl.replace("/api/compte-depot", "");
+            String url = baseUrl + "/api/transfert";
             LOGGER.info("Appel GET vers: " + url);
             
             ResponseEntity<List<Transfert>> response = restTemplate.exchange(
@@ -159,7 +135,7 @@ public class TransactionCompteCourantService {
             return response.getBody();
         } catch (RestClientException e) {
             LOGGER.severe("Erreur lors de la récupération des transferts: " + e.getMessage());
-            exceptionHandlingService.handleServerException(e, "ServeurCompteCourant");
+            exceptionHandlingService.handleServerException(e, "ServeurCompteDepot");
             return null;
         }
     }
@@ -169,8 +145,8 @@ public class TransactionCompteCourantService {
      */
     public List<Transfert> getTransfertsByCompte(String compteId) {
         try {
-            String baseUrl = serverUrl.replace("/compte-courant", "");
-            String url = baseUrl + "/transferts/compte/" + compteId;
+            String baseUrl = serverUrl.replace("/api/compte-depot", "");
+            String url = baseUrl + "/api/transfert/compte/" + compteId;
             LOGGER.info("Appel GET vers: " + url);
             
             ResponseEntity<List<Transfert>> response = restTemplate.exchange(
@@ -183,7 +159,7 @@ public class TransactionCompteCourantService {
             return response.getBody();
         } catch (RestClientException e) {
             LOGGER.severe("Erreur lors de la récupération des transferts du compte " + compteId + ": " + e.getMessage());
-            exceptionHandlingService.handleServerException(e, "ServeurCompteCourant");
+            exceptionHandlingService.handleServerException(e, "ServeurCompteDepot");
             return null;
         }
     }
