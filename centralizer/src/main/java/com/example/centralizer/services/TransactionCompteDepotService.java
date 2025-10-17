@@ -37,7 +37,7 @@ public class TransactionCompteDepotService {
      */
     public List<Transaction> getTransactionsByCompte(String compteId) {
         try {
-            String baseUrl = serverUrl.replace("/api/compte-depot", "");
+            String baseUrl = serverUrl.replace("/api/CompteDepot", "");
             String url = baseUrl + "/api/transaction/compte/" + compteId;
             LOGGER.info("Appel GET vers: " + url);
             
@@ -61,7 +61,7 @@ public class TransactionCompteDepotService {
      */
     public List<Transaction> getTransactionsByCompteAndType(String compteId, Integer typeId) {
         try {
-            String baseUrl = serverUrl.replace("/api/compte-depot", "");
+            String baseUrl = serverUrl.replace("/api/CompteDepot", "");
             String url = baseUrl + "/api/transaction/compte/" + compteId + "/type/" + typeId;
             LOGGER.info("Appel GET vers: " + url);
             
@@ -85,7 +85,7 @@ public class TransactionCompteDepotService {
      */
     public Transaction createTransaction(Transaction transaction) {
         try {
-            String baseUrl = serverUrl.replace("/api/compte-depot", "");
+            String baseUrl = serverUrl.replace("/api/CompteDepot", "");
             String url = baseUrl + "/api/transaction";
             LOGGER.info("Appel POST vers: " + url);
             
@@ -103,7 +103,7 @@ public class TransactionCompteDepotService {
      */
     public Transfert createTransfert(String compteEnvoyeur, String compteReceveur, BigDecimal montant) {
         try {
-            String baseUrl = serverUrl.replace("/api/compte-depot", "");
+            String baseUrl = serverUrl.replace("/api/CompteDepot", "");
             String url = baseUrl + "/api/transaction/transfert/" + compteEnvoyeur + "/" + compteReceveur + "/" + montant;
             LOGGER.info("Appel POST vers: " + url);
             
@@ -121,7 +121,7 @@ public class TransactionCompteDepotService {
      */
     public List<Transfert> getAllTransferts() {
         try {
-            String baseUrl = serverUrl.replace("/api/compte-depot", "");
+            String baseUrl = serverUrl.replace("/api/CompteDepot", "");
             String url = baseUrl + "/api/transfert";
             LOGGER.info("Appel GET vers: " + url);
             
@@ -145,7 +145,7 @@ public class TransactionCompteDepotService {
      */
     public List<Transfert> getTransfertsByCompte(String compteId) {
         try {
-            String baseUrl = serverUrl.replace("/api/compte-depot", "");
+            String baseUrl = serverUrl.replace("/api/CompteDepot", "");
             String url = baseUrl + "/api/transfert/compte/" + compteId;
             LOGGER.info("Appel GET vers: " + url);
             

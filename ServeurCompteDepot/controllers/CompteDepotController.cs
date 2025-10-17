@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace ServeurCompteDepot.Controllers
 {
     [ApiController]
-    [Route("api/compte-depot")]
+    [Route("api/CompteDepot")]
     public class CompteDepotController : ControllerBase
     {
         private readonly ICompteService _compteService;

@@ -36,6 +36,9 @@ public class CompteDepotService {
     public List<Compte> getAllComptes() {
         try {
             String url = serverUrl;
+            LOGGER.info("=== DEBUG CompteDepotService ===");
+            LOGGER.info("serverUrl configuré: " + serverUrl);
+            LOGGER.info("URL finale utilisée: " + url);
             LOGGER.info("Appel GET vers: " + url);
             
             ResponseEntity<List<Compte>> response = restTemplate.exchange(
@@ -45,9 +48,13 @@ public class CompteDepotService {
                 new ParameterizedTypeReference<List<Compte>>() {}
             );
             
+            LOGGER.info("Réponse reçue avec succès, nombre de comptes: " + (response.getBody() != null ? response.getBody().size() : 0));
             return response.getBody();
         } catch (RestClientException e) {
-            LOGGER.severe("Erreur lors de la récupération des comptes dépôt: " + e.getMessage());
+            LOGGER.severe("=== ERREUR RestClient ===");
+            LOGGER.severe("Type d'exception: " + e.getClass().getSimpleName());
+            LOGGER.severe("Message d'erreur: " + e.getMessage());
+            LOGGER.severe("Cause: " + (e.getCause() != null ? e.getCause().getMessage() : "Aucune"));
             exceptionHandlingService.handleServerException(e, "ServeurCompteDepot");
             return null;
         }

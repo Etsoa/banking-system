@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ServeurCompteDepot.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/transfert")]
     public class TransfertController : ControllerBase
     {
         private readonly ITransfertService _transfertService;

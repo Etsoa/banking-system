@@ -1,5 +1,6 @@
 using ServeurCompteDepot.Models;
 using ServeurCompteDepot.Services;
+using ServeurCompteDepot.Config;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,7 +19,13 @@ builder.Services.AddScoped<ITypeTransactionService, TypeTransactionService>();
 builder.Services.AddScoped<ITypeStatutCompteService, TypeStatutCompteService>();
 
 // Active la prise en charge des contrôleurs API
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // Convertisseur personnalisé pour DateTime avec millisecondes
+        options.JsonSerializerOptions.Converters.Add(new DateTimeConverter());
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+    });
 
 // Configuration CORS pour le centralizer
 builder.Services.AddCors(options =>

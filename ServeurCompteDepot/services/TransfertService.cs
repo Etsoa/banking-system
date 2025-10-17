@@ -64,7 +64,6 @@ namespace ServeurCompteDepot.Services
         {
             return await _context.Transferts
                 .Include(t => t.CompteReceveur)
-                .Include(t => t.Transactions)
                 .Where(t => t.Envoyer == idCompteEnvoyeur)
                 .OrderByDescending(t => t.DateTransfert)
                 .ToListAsync();

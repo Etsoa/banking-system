@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ServeurCompteDepot.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/transaction")]
     public class TransactionController : ControllerBase
     {
         private readonly ITransactionService _transactionService;
