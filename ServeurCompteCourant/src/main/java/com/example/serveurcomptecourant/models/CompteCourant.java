@@ -2,23 +2,30 @@ package com.example.serveurcomptecourant.models;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+
+import org.hibernate.annotations.Generated;
+import org.hibernate.annotations.GenerationTime;
+
+import jakarta.json.bind.annotation.JsonbDateFormat;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.json.bind.annotation.JsonbDateFormat;
 
 @Entity
 @Table(name = "comptes")
 public class CompteCourant {
 
-
     @Id
-    @Column(name = "id_compte", length = 10)
-    private String idCompte;
-
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_num")
     private Integer idNum;
+
+    @Generated(GenerationTime.INSERT)
+    @Column(name = "id_compte", length = 10, insertable = false, updatable = false)
+    private String idCompte;
 
     @Column(name = "date_ouverture", nullable = false)
     @JsonbDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")

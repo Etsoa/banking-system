@@ -24,6 +24,12 @@ public class TransactionController {
     }
 
     @GET
+    @Path("/compte/{compteId}/type/{typeId}")
+    public List<Transaction> getTransactionsByCompteAndType(@PathParam("compteId") String compteId, @PathParam("typeId") Integer typeId) throws CompteCourantException {
+        return transactionService.getTransactionsByCompteAndType(compteId, typeId);
+    }
+
+    @GET
     @Path("/types")
     public List<TypeTransaction> getAllTypesTransaction() throws CompteCourantException {
         return transactionService.getAllTypesTransaction();

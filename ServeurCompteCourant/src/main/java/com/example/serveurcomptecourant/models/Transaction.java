@@ -1,14 +1,15 @@
 package com.example.serveurcomptecourant.models;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+import jakarta.json.bind.annotation.JsonbDateFormat;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.json.bind.annotation.JsonbDateFormat;
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "transactions")
@@ -49,6 +50,14 @@ public class Transaction {
 
     public void setId(Integer id) {
         this.id = id;
+    }
+
+    public Integer getIdTransaction() {
+        return id;
+    }
+
+    public void setIdTransaction(Integer idTransaction) {
+        this.id = idTransaction;
     }
 
     public LocalDateTime getDateTransaction() {

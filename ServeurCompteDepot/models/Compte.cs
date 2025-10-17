@@ -6,10 +6,11 @@ namespace ServeurCompteDepot.Models
     [Table("comptes")]
     public class Compte
     {
+        [Key]
         [Column("id_num")]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int IdNum { get; set; }
 
-        [Key]
         [Column("id_compte")]
         [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         public string IdCompte { get; set; } = string.Empty;

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Centralizer - Nouveau Transfert</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 20px;">
+        <h1>Nouveau Transfert entre Comptes Courant</h1>
+        <div style="margin-bottom: 20px;">
+            <a th:href="@{/comptes-courant}" style="color: #007bff; text-decoration: none;">← Retour aux comptes</a>
+        </div>
+
+        <!-- Informations du compte envoyeur -->
+        <div th:if="${compteEnvoyeur}" style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px;">
+            <h3>Compte Envoyeur N°: [[${compteEnvoyeur.idCompte}]]</h3>
+            <p>
+                <strong>Client:</strong> 
+                <span th:if="${clientsMap != null and clientsMap.containsKey(compteEnvoyeur.idClient)}">
+                    [[${clientsMap[compteEnvoyeur.idClient].nom}]] [[${clientsMap[compteEnvoyeur.idClient].prenom}]]
+                </span>
+                <span th:unless="${clientsMap != null and clientsMap.containsKey(compteEnvoyeur.idClient)}">
+                    ID: [[${compteEnvoyeur.idClient}]]
+                </span><br>
+                <strong>Solde disponible:</strong> 
+                <span th:style="${compteEnvoyeur.solde < 0} ? 'color: red;' : 'color: green;'">
+                    [[${#numbers.formatCurrency(compteEnvoyeur.solde)}]]
+                </span>
+            </p>
+        </div>
+
+        <!-- Formulaire de transfert -->
+        <div th:if="${compteEnvoyeur != null}" style="margin-bottom: 20px; padding: 20px; background-color: #e7f3ff; border: 1px solid #b3d9ff; border-radius: 5px;">
+            <h4>Effectuer un transfert</h4>
+            <form action="/comptes-courant/transferts/add" method="post">
+                <input type="hidden" name="compteEnvoyeur" th:value="${compteEnvoyeur.idCompte}">
+                
+                <div style="margin-bottom: 15px;">
+                    <label for="compteReceveur">Compte destinataire :</label><br>
+                    <select id="compteReceveur" name="compteReceveur" required style="padding: 8px; min-width: 300px; margin-top: 5px;">
+                        <option value="">Sélectionner un compte destinataire...</option>
+                        <option th:each="compte : ${comptesDisponibles}" 
+                                th:value="${compte.idCompte}" 
+                                th:text="${compte.idCompte + ' - ' + (clientsMap != null and clientsMap.containsKey(compte.idClient) ? (clientsMap[compte.idClient].nom + ' ' + clientsMap[compte.idClient].prenom) : 'Client ID: ' + compte.idClient)}">
+                        </option>
+                    </select>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label for="montant">Montant du transfert (€) :</label><br>
+                    <input type="number" id="montant" name="montant" step="0.01" min="0.01" required 
+                           style="padding: 8px; min-width: 200px; margin-top: 5px;" placeholder="0.00">
+                    <small style="display: block; margin-top: 5px; color: #6c757d;">
+                        Montant maximum recommandé : [[${#numbers.formatCurrency(compteEnvoyeur.solde)}]]
+                    </small>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <button type="submit" style="background-color: #28a745; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px; margin-right: 10px;">
+                        Effectuer le Transfert
+                    </button>
+                    <a th:href="@{/comptes-courant/transactions(compteId=${compteEnvoyeur.idCompte})}" 
+                       style="background-color: #6c757d; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px; text-decoration: none;">
+                        Annuler
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Messages -->
+        <div th:if="${success}" style="margin-bottom: 20px; padding: 15px; background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 5px; color: #155724;">
+            <strong>Succès:</strong> <span th:text="${success}"></span>
+        </div>
+
+        <div th:if="${error}" style="margin-bottom: 20px; padding: 15px; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 5px; color: #721c24;">
+            <strong>Erreur:</strong> <span th:text="${error}"></span>
+        </div>
+
+        <!-- Liste des transferts récents -->
+        <div style="margin-top: 20px;">
+            <h4>Historique des transferts :</h4>
+            
+            <div th:if="${transferts != null and not #lists.isEmpty(transferts)}">
+                <div style="max-height: 400px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 5px;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead style="background-color: #f8f9fa; position: sticky; top: 0;">
+                            <tr>
+                                <th style="padding: 10px; text-align: left; border-bottom: 1px solid #dee2e6;">ID</th>
+                                <th style="padding: 10px; text-align: left; border-bottom: 1px solid #dee2e6;">Date</th>
+                                <th style="padding: 10px; text-align: left; border-bottom: 1px solid #dee2e6;">De</th>
+                                <th style="padding: 10px; text-align: left; border-bottom: 1px solid #dee2e6;">Vers</th>
+                                <th style="padding: 10px; text-align: left; border-bottom: 1px solid #dee2e6;">Montant</th>
+                                <th style="padding: 10px; text-align: left; border-bottom: 1px solid #dee2e6;">Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="transfert : ${transferts}" style="border-bottom: 1px solid #f8f9fa;">
+                                <td style="padding: 8px;">[[${transfert.idTransfert}]]</td>
+                                <td style="padding: 8px;">[[${#temporals.format(transfert.dateTransfert, 'dd/MM/yyyy')}]]</td>
+                                <td style="padding: 8px;">
+                                    [[${transfert.envoyer}]]
+                                    <br><small style="color: #6c757d;">
+                                        <span th:if="${comptesMap != null and comptesMap.containsKey(transfert.envoyer)}">
+                                            <span th:if="${clientsMap != null and clientsMap.containsKey(comptesMap[transfert.envoyer].idClient)}">
+                                                [[${clientsMap[comptesMap[transfert.envoyer].idClient].nom}]] [[${clientsMap[comptesMap[transfert.envoyer].idClient].prenom}]]
+                                            </span>
+                                        </span>
+                                    </small>
+                                </td>
+                                <td style="padding: 8px;">
+                                    [[${transfert.receveur}]]
+                                    <br><small style="color: #6c757d;">
+                                        <span th:if="${comptesMap != null and comptesMap.containsKey(transfert.receveur)}">
+                                            <span th:if="${clientsMap != null and clientsMap.containsKey(comptesMap[transfert.receveur].idClient)}">
+                                                [[${clientsMap[comptesMap[transfert.receveur].idClient].nom}]] [[${clientsMap[comptesMap[transfert.receveur].idClient].prenom}]]
+                                            </span>
+                                        </span>
+                                    </small>
+                                </td>
+                                <td style="padding: 8px; color: #007bff; font-weight: bold;">
+                                    [[${#numbers.formatCurrency(transfert.montant)}]]
+                                </td>
+                                <td style="padding: 8px;">
+                                    <span style="color: green;">✓ Effectué</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Résumé -->
+                <div style="margin-top: 15px; padding: 10px; background-color: #d1ecf1; border: 1px solid #bee5eb; border-radius: 5px; color: #0c5460;">
+                    <strong>[[${#lists.size(transferts)}]] transfert(s)</strong> impliquant ce compte
+                </div>
+            </div>
+
+            <div th:if="${transferts == null or #lists.isEmpty(transferts)}" style="padding: 20px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px; text-align: center; color: #6c757d;">
+                <p style="margin: 0;">Aucun transfert effectué pour ce compte.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

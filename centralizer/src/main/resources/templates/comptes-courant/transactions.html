@@ -14,7 +14,7 @@
     <div>
         <!-- Informations du compte -->
         <div th:if="${compte}" style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px;">
-            <h3>Compte N°: [[${compte.id}]]</h3>
+            <h3>Compte N°: [[${compte.idCompte}]]</h3>
             <p>
                 <strong>Client:</strong> 
                 <span th:if="${client}">[[${client.nom}]] [[${client.prenom}]]</span>
@@ -30,13 +30,14 @@
         <div th:if="${compte != null}" style="margin-bottom: 20px; padding: 15px; background-color: #e7f3ff; border: 1px solid #b3d9ff; border-radius: 5px;">
             <h4>Ajouter une nouvelle transaction</h4>
             <form action="/comptes-courant/transactions/add" method="post">
-                <input type="hidden" name="compteId" th:value="${compte.id}">
+                <input type="hidden" name="compteId" th:value="${compte.idCompte}">
                 <div style="margin-bottom: 15px;">
                     <div style="display: inline-block; margin-right: 20px;">
                         <label for="typeTransaction">Type de transaction:</label><br>
                         <select id="typeTransaction" name="typeTransaction" required style="padding: 5px; min-width: 150px;">
                             <option value="">Sélectionner...</option>
                             <option th:each="type : ${typesTransaction}" 
+                                    th:if="${type.libelle == 'Depot' or type.libelle == 'Retrait'}"
                                     th:value="${type.idTypeTransaction}" 
                                     th:text="${type.libelle + ' (' + type.signe + ')'}">
                             </option>
@@ -61,7 +62,7 @@
         <div th:if="${compte != null}" style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px;">
             <h4>Filtrer les transactions</h4>
             <form action="/comptes-courant/transactions" method="get">
-                <input type="hidden" name="compteId" th:value="${compte.id}">
+                <input type="hidden" name="compteId" th:value="${compte.idCompte}">
                 <div style="margin-bottom: 10px;">
                     <label for="typeId">Type de transaction:</label>
                     <select id="typeId" name="typeId" style="margin-left: 10px; padding: 5px;">
@@ -75,7 +76,7 @@
                 </div>
                 <div>
                     <button type="submit" style="background-color: #17a2b8; color: white; border: none; padding: 5px 15px; cursor: pointer; border-radius: 3px; margin-right: 10px;">Filtrer</button>
-                    <a th:href="@{/comptes-courant/transactions(compteId=${compte.id})}" style="background-color: #6c757d; color: white; border: none; padding: 5px 15px; cursor: pointer; border-radius: 3px; text-decoration: none;">Réinitialiser</a>
+                    <a th:href="@{/comptes-courant/transactions(compteId=${compte.idCompte})}" style="background-color: #6c757d; color: white; border: none; padding: 5px 15px; cursor: pointer; border-radius: 3px; text-decoration: none;">Réinitialiser</a>
                 </div>
             </form>
         </div>

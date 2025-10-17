@@ -14,15 +14,21 @@ public class CompteCourantRepository {
     private EntityManager em;
 
     public void save(CompteCourant compte) {
-        if (compte.getIdCompte() == null) {
+        if (compte.getIdNum() == null) {
             em.persist(compte);
         } else {
             em.merge(compte);
         }
     }
 
-    public CompteCourant find(String id) {
-        return em.find(CompteCourant.class, id);
+    public CompteCourant find(String idCompte) {
+        try {
+            return em.createQuery("SELECT c FROM CompteCourant c WHERE c.idCompte = :idCompte", CompteCourant.class)
+                    .setParameter("idCompte", idCompte)
+                    .getSingleResult();
+        } catch (jakarta.persistence.NoResultException e) {
+            return null;
+        }
     }
 
     public List<CompteCourant> findAll() {

@@ -35,7 +35,7 @@
                 </thead>
                 <tbody>
                     <tr th:each="compte : ${comptesCourant}" style="border-bottom: 1px solid #dee2e6;">
-                        <td style="padding: 10px;">[[${compte.id}]]</td>
+                        <td style="padding: 10px;">[[${compte.idCompte}]]</td>
                         <td style="padding: 10px;">
                             <span th:if="${clientsMap != null and clientsMap.containsKey(compte.idClient)}">
                                 <strong>[[${clientsMap[compte.idClient].nom}]] [[${clientsMap[compte.idClient].prenom}]]</strong><br>
@@ -59,11 +59,12 @@
                         </td>
                         <td style="padding: 10px;">
                             <form action="/comptes-courant/transactions" method="get" style="display: inline;">
-                                <input type="hidden" name="compteId" th:value="${compte.id}">
+                                <input type="hidden" name="compteId" th:value="${compte.idCompte}">
                                 <button type="submit" style="background-color: #17a2b8; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; border-radius: 3px;">Transactions</button>
                             </form>
-                            <form style="display: inline;">
-                                <button type="button" style="background-color: #ffc107; color: black; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; border-radius: 3px;">Transferts</button>
+                            <form action="/comptes-courant/transferts" method="get" style="display: inline;">
+                                <input type="hidden" name="compteId" th:value="${compte.idCompte}">
+                                <button type="submit" style="background-color: #ffc107; color: black; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; border-radius: 3px;">Transferts</button>
                             </form>
                             <form style="display: inline;">
                                 <button type="button" style="background-color: #dc3545; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; border-radius: 3px;">Supprimer</button>

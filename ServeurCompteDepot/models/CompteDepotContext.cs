@@ -20,18 +20,45 @@ namespace ServeurCompteDepot.Models
         {
             base.OnModelCreating(modelBuilder);
 
+            // Configuration de la clé primaire et de la colonne calculée pour Compte
+            modelBuilder.Entity<Compte>()
+                .HasKey(c => c.IdNum);
+
+            modelBuilder.Entity<Compte>()
+                .Property(c => c.IdCompte)
+                .ValueGeneratedOnAdd();
+
             // Configuration des relations pour Transfert
             modelBuilder.Entity<Transfert>()
                 .HasOne(t => t.CompteEnvoyeur)
                 .WithMany(c => c.TransfertsEnvoyes)
                 .HasForeignKey(t => t.Envoyer)
+                .HasPrincipalKey(c => c.IdCompte)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<Transfert>()
-                .HasOne(t => t.CompteReceveur)
-                .WithMany(c => c.TransfertsRecus)
-                .HasForeignKey(t => t.Receveur)
-                .OnDelete(DeleteBehavior.Restrict);
+            // Configuration des relations pour Transaction
+            modelBuilder.Entity<Transaction>()
+                .HasOne(t => t.Compte)
+                .WithMany(c => c.Transactions)
+                .HasForeignKey(t => t.IdCompte)
+                .HasPrincipalKey(c => c.IdCompte)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configuration des relations pour HistoriqueSolde
+            modelBuilder.Entity<HistoriqueSolde>()
+                .HasOne(h => h.Compte)
+                .WithMany(c => c.HistoriquesSolde)
+                .HasForeignKey(h => h.IdCompte)
+                .HasPrincipalKey(c => c.IdCompte)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configuration des relations pour HistoriqueStatutCompte
+            modelBuilder.Entity<HistoriqueStatutCompte>()
+                .HasOne(h => h.Compte)
+                .WithMany(c => c.HistoriquesStatut)
+                .HasForeignKey(h => h.IdCompte)
+                .HasPrincipalKey(c => c.IdCompte)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Configuration des contraintes de précision pour les décimales
             modelBuilder.Entity<Compte>()
