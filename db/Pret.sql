@@ -9,14 +9,6 @@ CREATE TABLE types_remboursement(
    actif BOOLEAN NOT NULL DEFAULT TRUE
 );
 
--- Table des modalites de remboursement
-CREATE TABLE modalites(
-   id_modalite SERIAL PRIMARY KEY,
-   libelle VARCHAR(50) NOT NULL,
-   nombre_mois INTEGER NOT NULL,
-   actif BOOLEAN NOT NULL DEFAULT TRUE
-);
-
 -- Table des statuts de pret
 CREATE TABLE statuts_pret(
    id_statut_pret SERIAL PRIMARY KEY,
@@ -31,13 +23,32 @@ CREATE TABLE methodes_remboursement(
    actif BOOLEAN NOT NULL DEFAULT TRUE
 );
 
+-- Table des modalites
+CREATE TABLE modalites(
+   id_modalite SERIAL PRIMARY KEY,
+   libelle VARCHAR(50) NOT NULL,
+   nombre_mois INTEGER NOT NULL,  -- mois entre chaque paiement
+   actif BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+-- Table pour definir la plage de montant et duree en mois
+CREATE TABLE plage_duree_pret(
+    id_plage SERIAL PRIMARY KEY,
+    montant_min NUMERIC(12,2) NOT NULL,
+    montant_max NUMERIC(12,2) NOT NULL,
+    duree_min_mois INTEGER NOT NULL,
+    duree_max_mois INTEGER NOT NULL,
+    actif BOOLEAN NOT NULL DEFAULT TRUE
+);
+
 -- Table des prets
 CREATE TABLE prets(
    id_pret SERIAL PRIMARY KEY,
+   id_client VARCHAR(50) NOT NULL,    -- id_client en string
    montant NUMERIC(12,2) NOT NULL,
-   duree_periode INTEGER NOT NULL,
+   duree_mois INTEGER NOT NULL,       -- duree totale en mois
+   duree_periode INTEGER NOT NULL,    -- nombre de periodes calculees selon modalite
    date_debut DATE NOT NULL,
-   client_id VARCHAR(50) NOT NULL,
    id_statut_pret INTEGER NOT NULL,
    id_modalite INTEGER NOT NULL,
    id_type_remboursement INTEGER NOT NULL,
@@ -67,7 +78,7 @@ CREATE TABLE remboursements(
    FOREIGN KEY(id_pret) REFERENCES prets(id_pret) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
--- Table du tableau d'amortissement (annuites)
+-- Tableau d'amortissement
 CREATE TABLE amortissement_pret(
     id_amortissement SERIAL PRIMARY KEY,
     id_pret INTEGER NOT NULL,
@@ -81,35 +92,57 @@ CREATE TABLE amortissement_pret(
     FOREIGN KEY(id_pret) REFERENCES prets(id_pret) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+-- Table pour stocker le taux d'interet d'un pret
+CREATE TABLE taux_interet (
+    id_taux SERIAL PRIMARY KEY,
+    taux_annuel NUMERIC(5,2) NOT NULL,
+    date_debut DATE NOT NULL
+);
+
+CREATE TABLE frais(
+   id_frais SERIAL,
+   date_debut TIMESTAMP NOT NULL,
+   nom VARCHAR(50)  NOT NULL,
+   valeur INTEGER  NOT NULL,
+   PRIMARY KEY(id_frais)
+);
+
 -- INDEX pour accelerer les recherches par id_pret
 CREATE INDEX idx_remboursements_id_pret ON remboursements(id_pret);
 CREATE INDEX idx_amortissement_id_pret ON amortissement_pret(id_pret);
 
--- Donnees de test pour les types de remboursement
+-- Donnees exemple pour types de remboursement
 INSERT INTO types_remboursement (nom, actif) VALUES
    ('Annuite constante', TRUE),
    ('Amortissement constante', TRUE);
 
--- Donnees de test pour les modalites
-INSERT INTO modalites (libelle, nombre_mois, actif) VALUES
-   ('Mensuel', 1, TRUE),
-   ('Trimestriel', 3, TRUE),
-   ('Semestriel', 6, TRUE),
-   ('Annuel', 12, TRUE);
-
--- Donnees de test pour les statuts de pret (sans 'En retard')
+-- Donnees exemple pour statuts de pret
 INSERT INTO statuts_pret (libelle, actif) VALUES
    ('En cours', TRUE),
    ('Rembourse', TRUE);
 
--- Donnees de test pour les methodes de remboursement
+-- Donnees exemple pour methodes de remboursement
 INSERT INTO methodes_remboursement (libelle, actif) VALUES
    ('Virement bancaire', TRUE),
    ('Prelevement automatique', TRUE),
    ('Cheque', TRUE),
    ('Especes', TRUE);
 
--- Donnees de test pour les statuts de remboursement (sans 'En attente')
+-- Donnees exemple pour statuts de remboursement
 INSERT INTO statuts_remboursement(libelle, actif) VALUES
    ('Paye a temps', TRUE),
    ('En retard', TRUE);
+
+-- Donnees exemple pour modalites
+INSERT INTO modalites(libelle, nombre_mois, actif) VALUES
+   ('Mensuel', 1, TRUE),
+   ('Trimestriel', 3, TRUE),
+   ('Semestriel', 6, TRUE),
+   ('Annuel', 12, TRUE);
+
+-- Donnees exemple pour plage de montant et duree
+INSERT INTO plage_duree_pret (montant_min, montant_max, duree_min_mois, duree_max_mois, actif) VALUES
+   (0, 1000, 6, 12, TRUE),
+   (1001, 5000, 12, 24, TRUE),
+   (5001, 20000, 24, 36, TRUE),
+   (20001, 100000, 36, 60, TRUE);

@@ -72,6 +72,16 @@ CREATE TABLE historiques_statut_compte(
    FOREIGN KEY(id_type_statut_compte) REFERENCES types_statut_compte(id_type_statut_compte) on delete cascade on update cascade
 );
 
+CREATE TABLE frais(
+   id_frais SERIAL,
+   date_debut TIMESTAMP NOT NULL,
+   nom VARCHAR(50)  NOT NULL,
+   montant_min NUMERIC(12,2)   NOT NULL,
+   montant_max NUMERIC(12,2)   NOT NULL,
+   valeur INTEGER  NOT NULL,
+   PRIMARY KEY(id_frais)
+);
+
 -- Données pour les types de transaction
 INSERT INTO types_transaction (libelle, actif, signe) VALUES
    ('Depot', TRUE, '+'),

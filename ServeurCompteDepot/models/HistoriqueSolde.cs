@@ -17,7 +17,7 @@ namespace ServeurCompteDepot.Models
 
         [Required]
         [Column("date_changement")]
-        public DateTime DateChangement { get; set; } = DateTime.UtcNow;
+        public DateTime DateChangement { get; set; }
 
         [Required]
         [Column("id_compte")]

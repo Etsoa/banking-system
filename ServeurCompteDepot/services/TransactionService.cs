@@ -136,7 +136,7 @@ namespace ServeurCompteDepot.Services
                     IdCompte = transaction.IdCompte,
                     IdTransaction = transaction.IdTransaction,
                     Montant = nouveauSolde,
-                    DateChangement = DateTime.UtcNow
+                    DateChangement = transaction.DateTransaction
                 };
                 
                 _context.HistoriquesSolde.Add(historiqueSolde);

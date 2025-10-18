@@ -7,6 +7,7 @@ import com.example.serveurcomptecourant.exceptions.CompteCourantException;
 import jakarta.ejb.EJB;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+import java.math.BigDecimal;
 import java.util.List;
 
 @Path("/compte-courant/transactions")
@@ -36,7 +37,7 @@ public class TransactionController {
     }
 
     @POST
-    public Transaction createTransaction(Transaction transaction) throws CompteCourantException {
-        return transactionService.createTransaction(transaction);
+    public Transaction createTransaction(Transaction transaction, @QueryParam("revenu") BigDecimal revenu) throws CompteCourantException {
+        return transactionService.createTransaction(transaction, revenu);
     }
 }

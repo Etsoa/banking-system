@@ -15,6 +15,7 @@ namespace ServeurCompteDepot.Models
         public DbSet<HistoriqueSolde> HistoriquesSolde { get; set; }
         public DbSet<TypeStatutCompte> TypesStatutCompte { get; set; }
         public DbSet<HistoriqueStatutCompte> HistoriquesStatutCompte { get; set; }
+        public DbSet<Frais> Frais { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -77,6 +78,11 @@ namespace ServeurCompteDepot.Models
 
             modelBuilder.Entity<HistoriqueSolde>()
                 .Property(h => h.Montant)
+                .HasPrecision(12, 2);
+
+            // Configuration pour Frais
+            modelBuilder.Entity<Frais>()
+                .Property(f => f.Montant)
                 .HasPrecision(12, 2);
         }
     }

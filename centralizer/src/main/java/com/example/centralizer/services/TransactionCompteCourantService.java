@@ -3,6 +3,7 @@ package com.example.centralizer.services;
 import com.example.centralizer.models.compteCourantDTO.Transaction;
 import com.example.centralizer.models.compteCourantDTO.TypeTransaction;
 import com.example.centralizer.models.compteCourantDTO.Transfert;
+import com.example.centralizer.services.HistoriqueRevenuService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -32,6 +33,9 @@ public class TransactionCompteCourantService {
 
     @Autowired
     private ExceptionHandlingService exceptionHandlingService;
+
+    @Autowired
+    private HistoriqueRevenuService historiqueRevenuService;
 
     /**
      * Récupère toutes les transactions d'un compte
@@ -106,12 +110,31 @@ public class TransactionCompteCourantService {
     }
 
     /**
-     * Créer une nouvelle transaction
+     * Créer une nouvelle transaction en récupérant automatiquement le revenu du client
      */
-    public Transaction createTransaction(Transaction transaction) {
+    public Transaction createTransaction(Transaction transaction, Integer idClient) {
         try {
+            BigDecimal revenu = null;
+            
+            // Récupérer le revenu depuis la base de données si idClient est fourni
+            if (idClient != null) {
+                try {
+                    revenu = historiqueRevenuService.getCurrentRevenuByClient(idClient);
+                    if (revenu == null) {
+                        LOGGER.warning("Aucun revenu trouvé pour le client " + idClient + ", transaction créée sans vérification de découvert");
+                    } else {
+                        LOGGER.info("Revenu récupéré pour le client " + idClient + ": " + revenu);
+                    }
+                } catch (Exception e) {
+                    LOGGER.severe("Erreur lors de la récupération du revenu pour le client " + idClient + ": " + e.getMessage());
+                    LOGGER.warning("Transaction créée sans vérification de découvert en raison de l'erreur de récupération du revenu");
+                }
+            }
              
             String url =  serverUrl + "/transactions";
+            if (revenu != null) {
+                url += "?revenu=" + revenu;
+            }
             LOGGER.info("Appel POST vers: " + url);
             
             Transaction result = restTemplate.postForObject(url, transaction, Transaction.class);

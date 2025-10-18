@@ -19,8 +19,14 @@ public class Pret {
     @Column(name = "id_pret")
     private Integer id;
 
+    @Column(name = "id_client", nullable = false)
+    private String idClient;
+
     @Column(name = "montant", nullable = false, precision = 12, scale = 2)
     private BigDecimal montant;
+
+    @Column(name = "duree_mois", nullable = false)
+    private Integer dureeMois;
 
     @Column(name = "duree_periode", nullable = false)
     private Integer dureePeriode;
@@ -28,9 +34,6 @@ public class Pret {
     @Column(name = "date_debut", nullable = false)
     @JsonbDateFormat("yyyy-MM-dd")
     private LocalDate dateDebut;
-
-    @Column(name = "client_id", nullable = false)
-    private String clientId;
 
     @Column(name = "id_statut_pret", nullable = false)
     private Integer idStatutPret;
@@ -44,12 +47,13 @@ public class Pret {
     // Constructors
     public Pret() {}
 
-    public Pret(BigDecimal montant, Integer dureePeriode, LocalDate dateDebut, String clientId,
-                Integer idStatutPret, Integer idModalite, Integer idTypeRemboursement) {
+    public Pret(String idClient, BigDecimal montant, Integer dureeMois, Integer dureePeriode, 
+                LocalDate dateDebut, Integer idStatutPret, Integer idModalite, Integer idTypeRemboursement) {
+        this.idClient = idClient;
         this.montant = montant;
+        this.dureeMois = dureeMois;
         this.dureePeriode = dureePeriode;
         this.dateDebut = dateDebut;
-        this.clientId = clientId;
         this.idStatutPret = idStatutPret;
         this.idModalite = idModalite;
         this.idTypeRemboursement = idTypeRemboursement;
@@ -88,12 +92,20 @@ public class Pret {
         this.dateDebut = dateDebut;
     }
 
-    public String getClientId() {
-        return clientId;
+    public String getIdClient() {
+        return idClient;
     }
 
-    public void setClientId(String clientId) {
-        this.clientId = clientId;
+    public void setIdClient(String idClient) {
+        this.idClient = idClient;
+    }
+
+    public Integer getDureeMois() {
+        return dureeMois;
+    }
+
+    public void setDureeMois(Integer dureeMois) {
+        this.dureeMois = dureeMois;
     }
 
     public Integer getIdStatutPret() {
@@ -124,10 +136,11 @@ public class Pret {
     public String toString() {
         return "Pret{" +
                 "id=" + id +
+                ", idClient='" + idClient + '\'' +
                 ", montant=" + montant +
+                ", dureeMois=" + dureeMois +
                 ", dureePeriode=" + dureePeriode +
                 ", dateDebut=" + dateDebut +
-                ", clientId=" + clientId +
                 ", idStatutPret=" + idStatutPret +
                 ", idModalite=" + idModalite +
                 ", idTypeRemboursement=" + idTypeRemboursement +

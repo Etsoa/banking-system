@@ -20,9 +20,15 @@ public class PretController {
     private ExceptionHandlingService exceptionHandlingService;
 
     @GetMapping("/prets")
-    public String getAllPrets(Model model) {
+    public String getPrets(@RequestParam(required = false) String clientId, Model model) {
         try {
-            List<Pret> prets = pretService.getAllPrets();
+            List<Pret> prets;
+            if (clientId != null && !clientId.isEmpty()) {
+                prets = pretService.getPretsByClientId(clientId);
+                model.addAttribute("filterClientId", clientId);
+            } else {
+                prets = pretService.getAllPrets();
+            }
             model.addAttribute("prets", prets);
         } catch (ServerApplicationException e) {
             String userMessage = exceptionHandlingService.getUserFriendlyMessage(e);

@@ -38,14 +38,14 @@ namespace ServeurCompteDepot.Services
                 .ToListAsync();
         }
 
-        public async Task<HistoriqueSolde> CreateHistoriqueSoldeAsync(string idCompte, int idTransaction, decimal montant)
+        public async Task<HistoriqueSolde> CreateHistoriqueSoldeAsync(string idCompte, int idTransaction, decimal montant, DateTime dateChangement)
         {
             var historiqueSolde = new HistoriqueSolde
             {
                 IdCompte = idCompte,
                 IdTransaction = idTransaction,
                 Montant = montant,
-                DateChangement = DateTime.UtcNow
+                DateChangement = dateChangement
             };
             
             _context.HistoriquesSolde.Add(historiqueSolde);

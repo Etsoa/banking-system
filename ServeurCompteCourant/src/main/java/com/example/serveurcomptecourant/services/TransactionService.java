@@ -9,6 +9,8 @@ import java.util.logging.Logger;
 import com.example.serveurcomptecourant.exceptions.CompteCourantBusinessException;
 import com.example.serveurcomptecourant.exceptions.CompteCourantException;
 import com.example.serveurcomptecourant.models.CompteCourant;
+import com.example.serveurcomptecourant.models.Decouverte;
+import com.example.serveurcomptecourant.models.Frais;
 import com.example.serveurcomptecourant.models.Transaction;
 import com.example.serveurcomptecourant.models.TypeTransaction;
 import com.example.serveurcomptecourant.models.Transfert;
@@ -39,6 +41,12 @@ public class TransactionService {
     
     @EJB
     private TransfertService transfertService;
+    
+    @EJB
+    private DecouverteService decouverteService;
+    
+    @EJB
+    private FraisService fraisService;
 
     /**
      * Récupère toutes les transactions
@@ -136,14 +144,14 @@ public class TransactionService {
      * Crée un dépôt ou retrait (transaction simple)
      */
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public Transaction createTransaction(Transaction transaction) throws CompteCourantException {
+    public Transaction createTransaction(Transaction transaction, BigDecimal revenu) throws CompteCourantException {
         try {
             // Validation des données
             validateTransactionData(transaction);
             
             CompteCourant compte = compteRepository.find(transaction.getIdCompte());
             TypeTransaction typeTransaction = typeTransactionRepository.findById(transaction.getIdTypeTransaction());
-            return executeTransaction(transaction, compte, typeTransaction);
+            return executeTransaction(transaction, compte, typeTransaction, revenu);
             
         } catch (CompteCourantBusinessException e) {
             throw e;
@@ -174,7 +182,8 @@ public class TransactionService {
             transactionSortante.setIdTypeTransaction(typeSortant.getId());
             transactionSortante.setDateTransaction(dateTransfert);
 
-            Transaction savedTransactionSortante = executeTransaction(transactionSortante, envoyeur, typeSortant);
+            // Pour les transferts, pas besoin du revenu - on utilise null
+            Transaction savedTransactionSortante = executeTransaction(transactionSortante, envoyeur, typeSortant, null);
             
             // Créer la transaction entrante (crédit du compte receveur)
             Transaction transactionEntrante = new Transaction();
@@ -183,7 +192,8 @@ public class TransactionService {
             transactionEntrante.setIdTypeTransaction(typeEntrant.getId());
             transactionEntrante.setDateTransaction(dateTransfert);
             
-            Transaction savedTransactionEntrante = executeTransaction(transactionEntrante, receveur, typeEntrant);
+            // Pour les crédits, pas besoin de vérifier le découvert, donc revenu = null
+            Transaction savedTransactionEntrante = executeTransaction(transactionEntrante, receveur, typeEntrant, null);
             
             // Déléguer la création du transfert au service dédié
             return transfertService.createTransfert(compteEnvoyeur, compteReceveur, montant, 
@@ -248,31 +258,165 @@ public class TransactionService {
     /**
      * Exécute une transaction (logique commune dépôt/retrait/virement)
      */
-    private Transaction executeTransaction(Transaction transaction, CompteCourant compte, TypeTransaction typeTransaction) throws CompteCourantBusinessException {
-        // Calculer le nouveau solde
+    private Transaction executeTransaction(Transaction transaction, CompteCourant compte, TypeTransaction typeTransaction, BigDecimal revenu) throws CompteCourantBusinessException {
+        // 1. Calculer le montant signé et le nouveau solde
         BigDecimal montantSigne = calculerMontantSigne(transaction.getMontant(), typeTransaction.getSigne());
         BigDecimal nouveauSolde = compte.getSolde().add(montantSigne);
         
-        // Vérifier le découvert autorisé (uniquement pour les débits)
-        if (montantSigne.compareTo(BigDecimal.ZERO) < 0) {
-            if (!compte.getDecouvert() && nouveauSolde.compareTo(BigDecimal.ZERO) < 0) {
-                throw new CompteCourantBusinessException("Solde insuffisant - découvert non autorisé");
-            }
-        }
-
+        // 2. Vérifier les contraintes de découvert avant la transaction
+        verifierContraintesDecouverts(compte, typeTransaction, nouveauSolde, revenu, transaction.getDateTransaction());
+        
+        // 3. Sauvegarder la transaction
         Transaction savedTransaction = transactionRepository.save(transaction);
         
-        // Mettre à jour le solde du compte
-        compte.setSolde(nouveauSolde);
+        // 4. Calculer et appliquer les frais
+        BigDecimal soldeApresTransactionEtFrais = appliquerFrais(compte, typeTransaction, transaction, nouveauSolde, revenu);
+        
+        // 5. Mettre à jour le solde du compte
+        compte.setSolde(soldeApresTransactionEtFrais);
         compteRepository.save(compte);
         
+        // 6. Créer l'historique de solde
+        creerHistoriqueSolde(soldeApresTransactionEtFrais, transaction.getIdCompte(), savedTransaction.getId());
+        
+        return savedTransaction;
+    }
+    
+    /**
+     * Vérifie les contraintes de découvert pour la transaction
+     */
+    private void verifierContraintesDecouverts(CompteCourant compte, TypeTransaction typeTransaction, 
+                                             BigDecimal nouveauSolde, BigDecimal revenu, LocalDateTime dateTransaction) 
+                                             throws CompteCourantBusinessException {
+        
+        // Vérifier uniquement pour les débits
+        if (nouveauSolde.compareTo(BigDecimal.ZERO) >= 0) {
+            return; // Pas de découvert, pas de vérification nécessaire
+        }
+        
+        // Si découvert non autorisé
+        if (!compte.getDecouvert()) {
+            throw new CompteCourantBusinessException("Solde insuffisant - découvert non autorisé");
+        }
+        
+        // Si découvert autorisé, vérifier les limites pour les retraits uniquement
+        if ("Retrait".equalsIgnoreCase(typeTransaction.getLibelle())) {
+            verifierLimiteDecouvertPourRetrait(nouveauSolde, revenu, dateTransaction);
+        } else {
+            // Autres types de débits : découvert autorisé sans limite basée sur le revenu
+            LOGGER.log(Level.INFO, "Débit (" + typeTransaction.getLibelle() + ") avec découvert autorisé");
+        }
+    }
+    
+    /**
+     * Vérifie la limite de découvert pour un retrait
+     */
+    private void verifierLimiteDecouvertPourRetrait(BigDecimal nouveauSolde, BigDecimal revenu, LocalDateTime dateTransaction) 
+                                                  throws CompteCourantBusinessException {
+        if (revenu == null) {
+            throw new CompteCourantBusinessException("Le revenu doit être spécifié pour un retrait avec découvert");
+        }
+        
         try {
-            historiqueSoldeService.createHistoriqueSolde(nouveauSolde, transaction.getIdCompte(), savedTransaction.getId());
+            Decouverte decouverteActuelle = decouverteService.findCurrentDecouverte(revenu, dateTransaction);
+            if (decouverteActuelle == null) {
+                throw new CompteCourantBusinessException("Aucune limite de découvert trouvée pour le revenu: " + revenu);
+            }
+            
+            BigDecimal limiteDecouverte = decouverteActuelle.getLimiteDecouverte();
+            if (nouveauSolde.abs().compareTo(limiteDecouverte) > 0) {
+                throw new CompteCourantBusinessException(
+                    "Limite de découvert dépassée pour retrait. Limite autorisée: " + limiteDecouverte + " pour revenu: " + revenu
+                );
+            }
+        } catch (CompteCourantException e) {
+            LOGGER.log(Level.WARNING, "Erreur lors de la vérification de la limite de découvert pour retrait", e);
+            throw new CompteCourantBusinessException("Erreur lors de la vérification de la limite de découvert pour retrait");
+        }
+    }
+    
+    /**
+     * Applique les frais pour les retraits et virements sortants
+     */
+    private BigDecimal appliquerFrais(CompteCourant compte, TypeTransaction typeTransaction, Transaction transaction, 
+                                    BigDecimal nouveauSolde, BigDecimal revenu) throws CompteCourantBusinessException {
+        
+        // Les frais s'appliquent uniquement aux retraits et virements sortants
+        if (!"Retrait".equalsIgnoreCase(typeTransaction.getLibelle()) && 
+            !"Virement sortant".equalsIgnoreCase(typeTransaction.getLibelle())) {
+            return nouveauSolde;
+        }
+        
+        try {
+            LocalDateTime dateRef = transaction.getDateTransaction() != null ? 
+                                  transaction.getDateTransaction() : LocalDateTime.now();
+            
+            Frais fraisApplicables = fraisService.findCurrentFrais(typeTransaction.getLibelle(), transaction.getMontant(), dateRef);
+            
+            if (fraisApplicables == null) {
+                return nouveauSolde; // Pas de frais applicables
+            }
+            
+            BigDecimal montantFrais = BigDecimal.valueOf(fraisApplicables.getValeur());
+            BigDecimal soldeApresTransactionEtFrais = nouveauSolde.subtract(montantFrais);
+            
+            // Vérifier que l'application des frais ne dépasse pas les limites
+            verifierContraintesFrais(compte, typeTransaction, soldeApresTransactionEtFrais, montantFrais, revenu, transaction.getDateTransaction());
+            
+            LOGGER.log(Level.INFO, "Frais de " + montantFrais + " appliqués pour " + typeTransaction.getLibelle() + " de " + transaction.getMontant());
+            return soldeApresTransactionEtFrais;
+            
+        } catch (CompteCourantException e) {
+            LOGGER.log(Level.WARNING, "Erreur lors de la récupération des frais pour " + typeTransaction.getLibelle(), e);
+            return nouveauSolde; // Continue sans frais en cas d'erreur
+        }
+    }
+    
+    /**
+     * Vérifie les contraintes liées aux frais
+     */
+    private void verifierContraintesFrais(CompteCourant compte, TypeTransaction typeTransaction, 
+                                        BigDecimal soldeApresTransactionEtFrais, BigDecimal montantFrais, 
+                                        BigDecimal revenu, LocalDateTime dateTransaction) throws CompteCourantBusinessException {
+        
+        // Si le solde après frais reste positif, pas de problème
+        if (soldeApresTransactionEtFrais.compareTo(BigDecimal.ZERO) >= 0) {
+            return;
+        }
+        
+        // Si découvert non autorisé
+        if (!compte.getDecouvert()) {
+            throw new CompteCourantBusinessException("Solde insuffisant pour couvrir les frais de " + montantFrais + " - découvert non autorisé");
+        }
+        
+        // Vérifier les limites pour les retraits uniquement
+        if ("Retrait".equalsIgnoreCase(typeTransaction.getLibelle()) && revenu != null) {
+            try {
+                Decouverte decouverteActuelle = decouverteService.findCurrentDecouverte(revenu, dateTransaction);
+                if (decouverteActuelle != null) {
+                    BigDecimal limiteDecouverte = decouverteActuelle.getLimiteDecouverte();
+                    if (soldeApresTransactionEtFrais.abs().compareTo(limiteDecouverte) > 0) {
+                        throw new CompteCourantBusinessException(
+                            "Limite de découvert dépassée avec frais. Solde après frais: " + soldeApresTransactionEtFrais + ", Limite: " + limiteDecouverte
+                        );
+                    }
+                }
+            } catch (CompteCourantException e) {
+                LOGGER.log(Level.WARNING, "Erreur lors de la vérification de la limite de découvert avec frais", e);
+                throw new CompteCourantBusinessException("Erreur lors de la vérification de la limite de découvert avec frais");
+            }
+        }
+    }
+    
+    /**
+     * Crée l'historique de solde
+     */
+    private void creerHistoriqueSolde(BigDecimal nouveauSolde, String compteId, Integer transactionId) {
+        try {
+            historiqueSoldeService.createHistoriqueSolde(nouveauSolde, compteId, transactionId);
         } catch (CompteCourantException e) {
             LOGGER.log(Level.WARNING, "Erreur lors de la création de l'historique de solde", e);
         }
-        
-        return savedTransaction;
     }
 
     /**

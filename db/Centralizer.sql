@@ -11,15 +11,6 @@ CREATE TABLE clients(
    PRIMARY KEY(id_client)
 );
 
-CREATE TABLE historiques_taux(
-   id_historique_taux SERIAL,
-   date_debut TIMESTAMP NOT NULL,
-   nom VARCHAR(50)  NOT NULL,
-   valeur NUMERIC(5,2)   NOT NULL,
-   actif BOOLEAN NOT NULL,
-   PRIMARY KEY(id_historique_taux)
-);
-
 CREATE TABLE utilisateurs(
    id_utilisateur SERIAL,
    nom_utilisateur VARCHAR(50)  NOT NULL,

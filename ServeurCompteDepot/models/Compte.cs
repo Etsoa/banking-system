@@ -17,7 +17,7 @@ namespace ServeurCompteDepot.Models
 
         [Required]
         [Column("date_ouverture")]
-        public DateTime DateOuverture { get; set; } = DateTime.UtcNow;
+        public DateTime DateOuverture { get; set; }
 
         [Required]
         [Column("id_client")]
