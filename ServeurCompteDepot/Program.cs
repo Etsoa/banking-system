@@ -25,6 +25,10 @@ builder.Services.AddControllers()
         // Convertisseur personnalisé pour DateTime avec millisecondes
         options.JsonSerializerOptions.Converters.Add(new DateTimeConverter());
         options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+        
+        // Configuration pour gérer les références circulaires
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.MaxDepth = 32;
     });
 
 // Configuration CORS pour le centralizer

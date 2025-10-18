@@ -2,9 +2,13 @@ package com.example.centralizer.services;
 
 import com.example.centralizer.models.compteDepotDTO.Transaction;
 import com.example.centralizer.models.compteDepotDTO.Transfert;
+import com.example.centralizer.models.compteDepotDTO.TransfertRequest;
+import com.example.centralizer.models.compteDepotDTO.CompteRequest;
+import com.example.centralizer.models.compteDepotDTO.TransactionsByCompteAndTypeRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -37,14 +41,15 @@ public class TransactionCompteDepotService {
      */
     public List<Transaction> getTransactionsByCompte(String compteId) {
         try {
-            String baseUrl = serverUrl.replace("/api/CompteDepot", "");
-            String url = baseUrl + "/api/transaction/compte/" + compteId;
-            LOGGER.info("Appel GET vers: " + url);
+            String url = serverUrl + "/transaction/by-compte";
+            LOGGER.info("Appel POST vers: " + url);
             
+            CompteRequest request = new CompteRequest(compteId);
+            HttpEntity<CompteRequest> httpEntity = new HttpEntity<>(request);
             ResponseEntity<List<Transaction>> response = restTemplate.exchange(
                 url,
-                HttpMethod.GET,
-                null,
+                HttpMethod.POST,
+                httpEntity,
                 new ParameterizedTypeReference<List<Transaction>>() {}
             );
             
@@ -61,14 +66,15 @@ public class TransactionCompteDepotService {
      */
     public List<Transaction> getTransactionsByCompteAndType(String compteId, Integer typeId) {
         try {
-            String baseUrl = serverUrl.replace("/api/CompteDepot", "");
-            String url = baseUrl + "/api/transaction/compte/" + compteId + "/type/" + typeId;
-            LOGGER.info("Appel GET vers: " + url);
+            String url = serverUrl + "/transaction/by-compte-and-type";
+            LOGGER.info("Appel POST vers: " + url);
             
+            TransactionsByCompteAndTypeRequest request = new TransactionsByCompteAndTypeRequest(compteId, typeId);
+            HttpEntity<TransactionsByCompteAndTypeRequest> httpEntity = new HttpEntity<>(request);
             ResponseEntity<List<Transaction>> response = restTemplate.exchange(
                 url,
-                HttpMethod.GET,
-                null,
+                HttpMethod.POST,
+                httpEntity,
                 new ParameterizedTypeReference<List<Transaction>>() {}
             );
             
@@ -85,8 +91,7 @@ public class TransactionCompteDepotService {
      */
     public Transaction createTransaction(Transaction transaction) {
         try {
-            String baseUrl = serverUrl.replace("/api/CompteDepot", "");
-            String url = baseUrl + "/api/transaction";
+            String url = serverUrl + "/transaction";
             LOGGER.info("Appel POST vers: " + url);
             
             Transaction result = restTemplate.postForObject(url, transaction, Transaction.class);
@@ -103,11 +108,11 @@ public class TransactionCompteDepotService {
      */
     public Transfert createTransfert(String compteEnvoyeur, String compteReceveur, BigDecimal montant) {
         try {
-            String baseUrl = serverUrl.replace("/api/CompteDepot", "");
-            String url = baseUrl + "/api/transaction/transfert/" + compteEnvoyeur + "/" + compteReceveur + "/" + montant;
+            String url = serverUrl + "/transfert";
             LOGGER.info("Appel POST vers: " + url);
             
-            Transfert result = restTemplate.postForObject(url, null, Transfert.class);
+            TransfertRequest request = new TransfertRequest(compteEnvoyeur, compteReceveur, montant);
+            Transfert result = restTemplate.postForObject(url, request, Transfert.class);
             return result;
         } catch (RestClientException e) {
             LOGGER.severe("Erreur lors de la création du transfert: " + e.getMessage());
@@ -121,8 +126,7 @@ public class TransactionCompteDepotService {
      */
     public List<Transfert> getAllTransferts() {
         try {
-            String baseUrl = serverUrl.replace("/api/CompteDepot", "");
-            String url = baseUrl + "/api/transfert";
+            String url = serverUrl + "/transfert";
             LOGGER.info("Appel GET vers: " + url);
             
             ResponseEntity<List<Transfert>> response = restTemplate.exchange(
@@ -145,14 +149,15 @@ public class TransactionCompteDepotService {
      */
     public List<Transfert> getTransfertsByCompte(String compteId) {
         try {
-            String baseUrl = serverUrl.replace("/api/CompteDepot", "");
-            String url = baseUrl + "/api/transfert/compte/" + compteId;
-            LOGGER.info("Appel GET vers: " + url);
+            String url = serverUrl + "/transfert/by-compte";
+            LOGGER.info("Appel POST vers: " + url);
             
+            CompteRequest request = new CompteRequest(compteId);
+            HttpEntity<CompteRequest> httpEntity = new HttpEntity<>(request);
             ResponseEntity<List<Transfert>> response = restTemplate.exchange(
                 url,
-                HttpMethod.GET,
-                null,
+                HttpMethod.POST,
+                httpEntity,
                 new ParameterizedTypeReference<List<Transfert>>() {}
             );
             

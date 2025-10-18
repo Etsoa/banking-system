@@ -1,6 +1,17 @@
 ﻿{
   "$schema": "https://json.schemastore.org/launchsettings.json",
   "profiles": {
+    "Development": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": false,
+      "applicationUrl": "http://localhost:5086",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_LOGGING__CONSOLE__DISABLECOLORS": "false"
+      },
+      "hotReloadEnabled": true
+    },
     "http": {
       "commandName": "Project",
       "dotnetRunMessages": true,

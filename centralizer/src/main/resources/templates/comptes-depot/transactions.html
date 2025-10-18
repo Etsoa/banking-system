@@ -33,18 +33,7 @@
             <strong>Succès:</strong> <span th:text="${success}"></span>
         </div>
 
-        <!-- Actions rapides -->
-        <div style="margin-bottom: 20px;">
-            <h3>Actions</h3>
-            <a th:href="@{'/comptes-depot/transferts?compteId=' + ${compte?.idCompte}}" 
-               style="background-color: #28a745; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; text-decoration: none; display: inline-block;">
-               Effectuer un Transfert
-            </a>
-            <a th:href="@{'/comptes-depot/transferts/list?compteId=' + ${compte?.idCompte}}" 
-               style="background-color: #17a2b8; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; text-decoration: none; display: inline-block;">
-               Voir les Transferts
-            </a>
-        </div>
+
 
         <!-- Formulaire d'ajout de transaction -->
         <div style="background-color: #e9ecef; padding: 20px; border-radius: 5px; margin-bottom: 30px;">

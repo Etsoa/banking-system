@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace ServeurCompteDepot.Models
 {
@@ -31,8 +32,10 @@ namespace ServeurCompteDepot.Models
         public virtual TypeTransaction TypeTransaction { get; set; } = null!;
 
         [ForeignKey("IdCompte")]
+        [JsonIgnore] // Evite la référence circulaire avec Compte
         public virtual Compte Compte { get; set; } = null!;
 
+        [JsonIgnore] // On évite de sérialiser l'historique dans les transactions
         public virtual ICollection<HistoriqueSolde> HistoriquesSolde { get; set; } = new List<HistoriqueSolde>();
     }
 }

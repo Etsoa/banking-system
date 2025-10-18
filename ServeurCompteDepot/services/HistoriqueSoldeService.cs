@@ -6,13 +6,8 @@ namespace ServeurCompteDepot.Services
     public interface IHistoriqueSoldeService
     {
         Task<IEnumerable<HistoriqueSolde>> GetAllHistoriquesSoldeAsync();
-        Task<HistoriqueSolde?> GetHistoriqueSoldeByIdAsync(int id);
         Task<IEnumerable<HistoriqueSolde>> GetHistoriquesSoldeByCompteAsync(string idCompte);
-        Task<IEnumerable<HistoriqueSolde>> GetHistoriquesSoldeByTransactionAsync(int idTransaction);
-        Task<IEnumerable<HistoriqueSolde>> GetHistoriquesSoldeByDateAsync(DateTime dateDebut, DateTime dateFin);
         Task<HistoriqueSolde> CreateHistoriqueSoldeAsync(string idCompte, int idTransaction, decimal montant);
-        Task<HistoriqueSolde?> UpdateHistoriqueSoldeAsync(int id, HistoriqueSolde historiqueSolde);
-        Task<bool> DeleteHistoriqueSoldeAsync(int id);
         Task<HistoriqueSolde?> GetDernierHistoriqueSoldeAsync(string idCompte);
     }
 
@@ -34,38 +29,11 @@ namespace ServeurCompteDepot.Services
                 .ToListAsync();
         }
 
-        public async Task<HistoriqueSolde?> GetHistoriqueSoldeByIdAsync(int id)
-        {
-            return await _context.HistoriquesSolde
-                .Include(h => h.Compte)
-                .Include(h => h.Transaction)
-                .FirstOrDefaultAsync(h => h.IdHistoriqueSolde == id);
-        }
-
         public async Task<IEnumerable<HistoriqueSolde>> GetHistoriquesSoldeByCompteAsync(string idCompte)
         {
             return await _context.HistoriquesSolde
                 .Include(h => h.Transaction)
                 .Where(h => h.IdCompte == idCompte)
-                .OrderByDescending(h => h.DateChangement)
-                .ToListAsync();
-        }
-
-        public async Task<IEnumerable<HistoriqueSolde>> GetHistoriquesSoldeByTransactionAsync(int idTransaction)
-        {
-            return await _context.HistoriquesSolde
-                .Include(h => h.Compte)
-                .Where(h => h.IdTransaction == idTransaction)
-                .OrderByDescending(h => h.DateChangement)
-                .ToListAsync();
-        }
-
-        public async Task<IEnumerable<HistoriqueSolde>> GetHistoriquesSoldeByDateAsync(DateTime dateDebut, DateTime dateFin)
-        {
-            return await _context.HistoriquesSolde
-                .Include(h => h.Compte)
-                .Include(h => h.Transaction)
-                .Where(h => h.DateChangement >= dateDebut && h.DateChangement <= dateFin)
                 .OrderByDescending(h => h.DateChangement)
                 .ToListAsync();
         }
@@ -83,30 +51,6 @@ namespace ServeurCompteDepot.Services
             _context.HistoriquesSolde.Add(historiqueSolde);
             await _context.SaveChangesAsync();
             return historiqueSolde;
-        }
-
-        public async Task<HistoriqueSolde?> UpdateHistoriqueSoldeAsync(int id, HistoriqueSolde historiqueSolde)
-        {
-            var existingHistorique = await _context.HistoriquesSolde.FindAsync(id);
-            if (existingHistorique == null) return null;
-
-            existingHistorique.Montant = historiqueSolde.Montant;
-            existingHistorique.DateChangement = historiqueSolde.DateChangement;
-            existingHistorique.IdCompte = historiqueSolde.IdCompte;
-            existingHistorique.IdTransaction = historiqueSolde.IdTransaction;
-
-            await _context.SaveChangesAsync();
-            return existingHistorique;
-        }
-
-        public async Task<bool> DeleteHistoriqueSoldeAsync(int id)
-        {
-            var historiqueSolde = await _context.HistoriquesSolde.FindAsync(id);
-            if (historiqueSolde == null) return false;
-
-            _context.HistoriquesSolde.Remove(historiqueSolde);
-            await _context.SaveChangesAsync();
-            return true;
         }
 
         public async Task<HistoriqueSolde?> GetDernierHistoriqueSoldeAsync(string idCompte)

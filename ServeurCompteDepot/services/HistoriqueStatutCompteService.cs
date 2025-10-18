@@ -8,11 +8,8 @@ namespace ServeurCompteDepot.Services
         Task<IEnumerable<HistoriqueStatutCompte>> GetAllHistoriquesStatutCompteAsync();
         Task<HistoriqueStatutCompte?> GetHistoriqueStatutCompteByIdAsync(int id);
         Task<IEnumerable<HistoriqueStatutCompte>> GetHistoriquesStatutCompteByCompteAsync(string idCompte);
-        Task<IEnumerable<HistoriqueStatutCompte>> GetHistoriquesStatutCompteByTypeAsync(int idTypeStatutCompte);
-        Task<IEnumerable<HistoriqueStatutCompte>> GetHistoriquesStatutCompteByDateAsync(DateTime dateDebut, DateTime dateFin);
         Task<HistoriqueStatutCompte> CreateHistoriqueStatutCompteAsync(HistoriqueStatutCompte historiqueStatutCompte);
         Task<HistoriqueStatutCompte?> UpdateHistoriqueStatutCompteAsync(int id, HistoriqueStatutCompte historiqueStatutCompte);
-        Task<bool> DeleteHistoriqueStatutCompteAsync(int id);
         Task<HistoriqueStatutCompte?> GetStatutActuelCompteAsync(string idCompte);
         Task<IEnumerable<HistoriqueStatutCompte>> GetHistoriqueCompletAsync(string idCompte);
     }
@@ -52,25 +49,6 @@ namespace ServeurCompteDepot.Services
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<HistoriqueStatutCompte>> GetHistoriquesStatutCompteByTypeAsync(int idTypeStatutCompte)
-        {
-            return await _context.HistoriquesStatutCompte
-                .Include(h => h.Compte)
-                .Where(h => h.IdTypeStatutCompte == idTypeStatutCompte)
-                .OrderByDescending(h => h.DateChangement)
-                .ToListAsync();
-        }
-
-        public async Task<IEnumerable<HistoriqueStatutCompte>> GetHistoriquesStatutCompteByDateAsync(DateTime dateDebut, DateTime dateFin)
-        {
-            return await _context.HistoriquesStatutCompte
-                .Include(h => h.Compte)
-                .Include(h => h.TypeStatutCompte)
-                .Where(h => h.DateChangement >= dateDebut && h.DateChangement <= dateFin)
-                .OrderByDescending(h => h.DateChangement)
-                .ToListAsync();
-        }
-
         public async Task<HistoriqueStatutCompte> CreateHistoriqueStatutCompteAsync(HistoriqueStatutCompte historiqueStatutCompte)
         {
             _context.HistoriquesStatutCompte.Add(historiqueStatutCompte);
@@ -89,16 +67,6 @@ namespace ServeurCompteDepot.Services
 
             await _context.SaveChangesAsync();
             return existingHistorique;
-        }
-
-        public async Task<bool> DeleteHistoriqueStatutCompteAsync(int id)
-        {
-            var historiqueStatutCompte = await _context.HistoriquesStatutCompte.FindAsync(id);
-            if (historiqueStatutCompte == null) return false;
-
-            _context.HistoriquesStatutCompte.Remove(historiqueStatutCompte);
-            await _context.SaveChangesAsync();
-            return true;
         }
 
         public async Task<HistoriqueStatutCompte?> GetStatutActuelCompteAsync(string idCompte)

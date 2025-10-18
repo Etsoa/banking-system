@@ -1,9 +1,11 @@
 package com.example.centralizer.services;
 
 import com.example.centralizer.models.compteDepotDTO.Compte;
+import com.example.centralizer.models.compteDepotDTO.ClientRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -65,13 +67,15 @@ public class CompteDepotService {
      */
     public List<Compte> getComptesByClientId(int clientId) {
         try {
-            String url = serverUrl + "/client/" + clientId;
-            LOGGER.info("Appel GET vers: " + url);
+            String url = serverUrl + "/by-client";
+            LOGGER.info("Appel POST vers: " + url);
             
+            ClientRequest request = new ClientRequest(clientId);
+            HttpEntity<ClientRequest> httpEntity = new HttpEntity<>(request);
             ResponseEntity<List<Compte>> response = restTemplate.exchange(
                 url,
-                HttpMethod.GET,
-                null,
+                HttpMethod.POST,
+                httpEntity,
                 new ParameterizedTypeReference<List<Compte>>() {}
             );
             
@@ -116,95 +120,4 @@ public class CompteDepotService {
             return null;
         }
     }
-
-    /* ENDPOINTS NON IMPLEMENTES DANS LE SERVEUR - COMMENTES
-    
-    /**
-     * Met à jour un compte dépôt existant - ENDPOINT NON DISPONIBLE
-     */
-    /*
-    public Compte updateCompte(Long id, Compte compte) {
-        try {
-            String url = serverUrl + "/" + id;
-            LOGGER.info("Appel PUT vers: " + url);
-            
-            ResponseEntity<Compte> response = restTemplate.exchange(
-                url,
-                HttpMethod.PUT,
-                null,
-                Compte.class
-            );
-            
-            return response.getBody();
-        } catch (RestClientException e) {
-            LOGGER.severe("Erreur lors de la mise à jour du compte dépôt " + id + ": " + e.getMessage());
-            exceptionHandlingService.handleServerException(e, "ServeurCompteDepot");
-            return null;
-        }
-    }
-
-    /**
-     * Effectue un dépôt sur un compte - ENDPOINT NON DISPONIBLE
-     */
-    /*
-    public Compte effectuerDepot(Long compteId, double montant) {
-        try {
-            String url = serverUrl + "/" + compteId + "/depot?montant=" + montant;
-            LOGGER.info("Appel PUT vers: " + url);
-            
-            ResponseEntity<Compte> response = restTemplate.exchange(
-                url,
-                HttpMethod.PUT,
-                null,
-                Compte.class
-            );
-            
-            return response.getBody();
-        } catch (RestClientException e) {
-            LOGGER.severe("Erreur lors du dépôt sur le compte " + compteId + ": " + e.getMessage());
-            exceptionHandlingService.handleServerException(e, "ServeurCompteDepot");
-            return null;
-        }
-    }
-
-    /**
-     * Effectue un retrait sur un compte - ENDPOINT NON DISPONIBLE
-     */
-    /*
-    public Compte effectuerRetrait(Long compteId, double montant) {
-        try {
-            String url = serverUrl + "/" + compteId + "/retrait?montant=" + montant;
-            LOGGER.info("Appel PUT vers: " + url);
-            
-            ResponseEntity<Compte> response = restTemplate.exchange(
-                url,
-                HttpMethod.PUT,
-                null,
-                Compte.class
-            );
-            
-            return response.getBody();
-        } catch (RestClientException e) {
-            LOGGER.severe("Erreur lors du retrait sur le compte " + compteId + ": " + e.getMessage());
-            exceptionHandlingService.handleServerException(e, "ServeurCompteDepot");
-            return null;
-        }
-    }
-
-    /**
-     * Test de communication avec le serveur - ENDPOINT NON DISPONIBLE
-     */
-    /*
-    public void testException() {
-        try {
-            String url = serverUrl + "/test-exception";
-            LOGGER.info("Test d'exception vers: " + url);
-            
-            restTemplate.getForEntity(url, String.class);
-        } catch (RestClientException e) {
-            LOGGER.info("Exception de test reçue comme attendu");
-            exceptionHandlingService.handleServerException(e, "ServeurCompteDepot");
-        }
-    }
-    */
 }

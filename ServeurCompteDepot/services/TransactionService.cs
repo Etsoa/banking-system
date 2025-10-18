@@ -10,13 +10,10 @@ namespace ServeurCompteDepot.Services
         Task<IEnumerable<Transaction>> GetTransactionsByCompteAsync(string idCompte);
         Task<IEnumerable<Transaction>> GetTransactionsByCompteAndTypeAsync(string idCompte, int idTypeTransaction);
         Task<IEnumerable<Transaction>> GetTransactionsByTypeAsync(int idTypeTransaction);
-        Task<IEnumerable<Transaction>> GetTransactionsByDateAsync(DateTime dateDebut, DateTime dateFin);
         Task<Transaction> CreateTransactionAsync(Transaction transaction);
         Task<Transaction> ExecuteTransactionAsync(Transaction transaction);
         Task<Transfert> CreateTransfertAsync(string compteEnvoyeur, string compteReceveur, decimal montant);
         Task<Transaction?> UpdateTransactionAsync(int id, Transaction transaction);
-        Task<bool> DeleteTransactionAsync(int id);
-        Task<decimal> GetTotalTransactionsByCompteAsync(string idCompte, int idTypeTransaction);
     }
 
     public class TransactionService : ITransactionService
@@ -63,16 +60,6 @@ namespace ServeurCompteDepot.Services
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<Transaction>> GetTransactionsByDateAsync(DateTime dateDebut, DateTime dateFin)
-        {
-            return await _context.Transactions
-                .Include(t => t.TypeTransaction)
-                .Include(t => t.Compte)
-                .Where(t => t.DateTransaction >= dateDebut && t.DateTransaction <= dateFin)
-                .OrderByDescending(t => t.DateTransaction)
-                .ToListAsync();
-        }
-
         public async Task<Transaction> CreateTransactionAsync(Transaction transaction)
         {
             _context.Transactions.Add(transaction);
@@ -91,23 +78,6 @@ namespace ServeurCompteDepot.Services
 
             await _context.SaveChangesAsync();
             return existingTransaction;
-        }
-
-        public async Task<bool> DeleteTransactionAsync(int id)
-        {
-            var transaction = await _context.Transactions.FindAsync(id);
-            if (transaction == null) return false;
-
-            _context.Transactions.Remove(transaction);
-            await _context.SaveChangesAsync();
-            return true;
-        }
-
-        public async Task<decimal> GetTotalTransactionsByCompteAsync(string idCompte, int idTypeTransaction)
-        {
-            return await _context.Transactions
-                .Where(t => t.IdCompte == idCompte && t.IdTypeTransaction == idTypeTransaction)
-                .SumAsync(t => t.Montant);
         }
 
         public async Task<IEnumerable<Transaction>> GetTransactionsByCompteAndTypeAsync(string idCompte, int idTypeTransaction)
@@ -129,12 +99,6 @@ namespace ServeurCompteDepot.Services
                 // Vérifier que les comptes existent
                 var compteEnv = await _context.Comptes.FirstOrDefaultAsync(c => c.IdCompte == compteEnvoyeur);
                 var compteRec = await _context.Comptes.FirstOrDefaultAsync(c => c.IdCompte == compteReceveur);
-                
-                if (compteEnv == null)
-                    throw new ArgumentException($"Le compte envoyeur {compteEnvoyeur} n'existe pas");
-                
-                if (compteRec == null)
-                    throw new ArgumentException($"Le compte receveur {compteReceveur} n'existe pas");
                 
                 // Vérifier que le solde est suffisant (pas de découvert autorisé pour les comptes dépôt)
                 if (compteEnv.Solde < montant)
@@ -228,13 +192,9 @@ namespace ServeurCompteDepot.Services
             {
                 // Vérifier que le compte existe
                 var compte = await _context.Comptes.FirstOrDefaultAsync(c => c.IdCompte == transaction.IdCompte);
-                if (compte == null)
-                    throw new ArgumentException($"Le compte {transaction.IdCompte} n'existe pas");
                 
                 // Récupérer le type de transaction
                 var typeTransaction = await _context.TypesTransaction.FindAsync(transaction.IdTypeTransaction);
-                if (typeTransaction == null)
-                    throw new ArgumentException($"Le type de transaction {transaction.IdTypeTransaction} n'existe pas");
                 
                 decimal nouveauSolde = compte.Solde;
                 

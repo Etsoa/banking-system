@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace ServeurCompteDepot.Models
 {
@@ -28,9 +29,11 @@ namespace ServeurCompteDepot.Models
 
         // Navigation properties
         [ForeignKey("IdCompte")]
+        [JsonIgnore] // Evite la référence circulaire avec Compte
         public virtual Compte Compte { get; set; } = null!;
 
         [ForeignKey("IdTransaction")]
+        [JsonIgnore] // Evite la référence circulaire avec Transaction
         public virtual Transaction Transaction { get; set; } = null!;
     }
 }

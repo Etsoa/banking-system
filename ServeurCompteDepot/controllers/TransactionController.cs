@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ServeurCompteDepot.Controllers
 {
     [ApiController]
-    [Route("api/transaction")]
+    [Route("api/CompteDepot/transaction")]
     public class TransactionController : ControllerBase
     {
         private readonly ITransactionService _transactionService;
@@ -59,12 +59,26 @@ namespace ServeurCompteDepot.Controllers
             }
         }
 
-        [HttpGet("compte/{compteId}/type/{typeId}")]
-        public async Task<ActionResult<IEnumerable<Transaction>>> GetTransactionsByCompteAndType(string compteId, int typeId)
+        [HttpPost("by-compte")]
+        public async Task<ActionResult<IEnumerable<Transaction>>> GetTransactionsByComptePost([FromBody] CompteRequest request)
         {
             try
             {
-                var transactions = await _transactionService.GetTransactionsByCompteAndTypeAsync(compteId, typeId);
+                var transactions = await _transactionService.GetTransactionsByCompteAsync(request.CompteId);
+                return Ok(transactions);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erreur serveur: {ex.Message}");
+            }
+        }
+
+        [HttpPost("by-compte-and-type")]
+        public async Task<ActionResult<IEnumerable<Transaction>>> GetTransactionsByCompteAndType([FromBody] TransactionsByCompteAndTypeRequest request)
+        {
+            try
+            {
+                var transactions = await _transactionService.GetTransactionsByCompteAndTypeAsync(request.CompteId, request.TypeId);
                 return Ok(transactions);
             }
             catch (Exception ex)
@@ -94,28 +108,6 @@ namespace ServeurCompteDepot.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, $"Erreur lors de la création de la transaction: {ex.Message}");
-            }
-        }
-
-        [HttpPost("transfert/{compteEnvoyeur}/{compteReceveur}/{montant}")]
-        public async Task<ActionResult<Transfert>> CreateTransfert(string compteEnvoyeur, string compteReceveur, decimal montant)
-        {
-            try
-            {
-                var transfert = await _transactionService.CreateTransfertAsync(compteEnvoyeur, compteReceveur, montant);
-                return Ok(transfert);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Erreur lors du transfert: {ex.Message}");
             }
         }
     }

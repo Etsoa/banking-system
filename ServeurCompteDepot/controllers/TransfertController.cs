@@ -5,14 +5,16 @@ using Microsoft.AspNetCore.Mvc;
 namespace ServeurCompteDepot.Controllers
 {
     [ApiController]
-    [Route("api/transfert")]
+    [Route("api/CompteDepot/transfert")]
     public class TransfertController : ControllerBase
     {
         private readonly ITransfertService _transfertService;
+        private readonly ITransactionService _transactionService;
 
-        public TransfertController(ITransfertService transfertService)
+        public TransfertController(ITransfertService transfertService, ITransactionService transactionService)
         {
             _transfertService = transfertService;
+            _transactionService = transactionService;
         }
 
         [HttpGet]
@@ -59,12 +61,40 @@ namespace ServeurCompteDepot.Controllers
             }
         }
 
+        [HttpPost("by-compte")]
+        public async Task<ActionResult<IEnumerable<Transfert>>> GetTransfertsByComptePost([FromBody] CompteRequest request)
+        {
+            try
+            {
+                var transferts = await _transfertService.GetTransfertsByCompteAsync(request.CompteId);
+                return Ok(transferts);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erreur serveur: {ex.Message}");
+            }
+        }
+
         [HttpGet("envoyeur/{compteId}")]
         public async Task<ActionResult<IEnumerable<Transfert>>> GetTransfertsByEnvoyeur(string compteId)
         {
             try
             {
                 var transferts = await _transfertService.GetTransfertsByCompteEnvoyeurAsync(compteId);
+                return Ok(transferts);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erreur serveur: {ex.Message}");
+            }
+        }
+
+        [HttpPost("by-envoyeur")]
+        public async Task<ActionResult<IEnumerable<Transfert>>> GetTransfertsByEnvoyeurPost([FromBody] CompteRequest request)
+        {
+            try
+            {
+                var transferts = await _transfertService.GetTransfertsByCompteEnvoyeurAsync(request.CompteId);
                 return Ok(transferts);
             }
             catch (Exception ex)
@@ -87,12 +117,29 @@ namespace ServeurCompteDepot.Controllers
             }
         }
 
-        [HttpPost("{compteEnvoyeur}/{compteReceveur}/{montant}")]
-        public async Task<ActionResult<Transfert>> CreateTransfert(string compteEnvoyeur, string compteReceveur, decimal montant)
+        [HttpPost("by-receveur")]
+        public async Task<ActionResult<IEnumerable<Transfert>>> GetTransfertsByReceveurPost([FromBody] CompteRequest request)
         {
             try
             {
-                var transfert = await _transfertService.CreateTransfertAsync(compteEnvoyeur, compteReceveur, montant);
+                var transferts = await _transfertService.GetTransfertsByCompteReceveurAsync(request.CompteId);
+                return Ok(transferts);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erreur serveur: {ex.Message}");
+            }
+        }
+
+        [HttpPost]
+        public async Task<ActionResult<Transfert>> CreateTransfert([FromBody] TransfertRequest request)
+        {
+            try
+            {
+                var transfert = await _transactionService.CreateTransfertAsync(
+                    request.CompteEnvoyeur, 
+                    request.CompteReceveur, 
+                    request.Montant);
                 return CreatedAtAction(nameof(GetTransfertById), 
                     new { id = transfert.IdTransfert }, transfert);
             }
@@ -123,6 +170,39 @@ namespace ServeurCompteDepot.Controllers
                 var statistiques = new
                 {
                     CompteId = compteId,
+                    TransfertsSortants = new
+                    {
+                        Nombre = nombreSortant,
+                        MontantTotal = totalSortant
+                    },
+                    TransfertsEntrants = new
+                    {
+                        Nombre = nombreEntrant,
+                        MontantTotal = totalEntrant
+                    }
+                };
+
+                return Ok(statistiques);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erreur serveur: {ex.Message}");
+            }
+        }
+
+        [HttpPost("statistiques")]
+        public async Task<ActionResult<object>> GetStatistiquesTransfertsPost([FromBody] CompteRequest request)
+        {
+            try
+            {
+                var totalSortant = await _transfertService.GetTotalTransfertsSortantsAsync(request.CompteId);
+                var totalEntrant = await _transfertService.GetTotalTransfertsEntrantsAsync(request.CompteId);
+                var nombreSortant = await _transfertService.GetNombreTransfertsSortantsAsync(request.CompteId);
+                var nombreEntrant = await _transfertService.GetNombreTransfertsEntrantsAsync(request.CompteId);
+
+                var statistiques = new
+                {
+                    CompteId = request.CompteId,
                     TransfertsSortants = new
                     {
                         Nombre = nombreSortant,

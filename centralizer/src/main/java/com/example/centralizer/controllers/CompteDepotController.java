@@ -2,6 +2,7 @@ package com.example.centralizer.controllers;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -58,6 +60,61 @@ public class CompteDepotController {
             model.addAttribute("error", "Erreur lors de la récupération des comptes dépôt: " + e.getMessage());
         }
         return "comptes-depot/list";
+    }
+
+    @GetMapping("/comptes-depot/new")
+    public String showCreateCompteDepotForm(Model model) {
+        try {
+            // Récupérer la liste des clients pour la liste déroulante
+            List<Client> clients = clientService.getAllClients();
+            model.addAttribute("clients", clients);
+            model.addAttribute("compteDepot", new Compte());
+            return "comptes-depot/compte-form";
+        } catch (Exception e) {
+            model.addAttribute("error", "Erreur lors de la récupération des clients: " + e.getMessage());
+            return "redirect:/comptes-depot";
+        }
+    }
+
+    @PostMapping("/comptes-depot")
+    public String createCompteDepot(@ModelAttribute("compteDepot") Compte compteDepot, 
+                                   Model model, 
+                                   RedirectAttributes redirectAttributes) {
+        try {
+            // Définir la date d'ouverture au moment actuel
+            compteDepot.setDateOuverture(LocalDateTime.now());
+            
+            // Créer le compte via le service
+            Compte nouveauCompte = compteDepotService.createCompte(compteDepot);
+            
+            if (nouveauCompte != null) {
+                redirectAttributes.addFlashAttribute("success", "Compte dépôt créé avec succès !");
+                return "redirect:/comptes-depot";
+            } else {
+                model.addAttribute("error", "Erreur lors de la création du compte dépôt");
+                model.addAttribute("clients", clientService.getAllClients());
+                return "comptes-depot/compte-form";
+            }
+        } catch (ServerApplicationException e) {
+            // Gestion spécifique des erreurs de serveur
+            String userMessage = exceptionHandlingService.getUserFriendlyMessage(e);
+            model.addAttribute("error", userMessage);
+            model.addAttribute("errorDetails", e.getFormattedMessage());
+            try {
+                model.addAttribute("clients", clientService.getAllClients());
+            } catch (Exception clientEx) {
+                model.addAttribute("error", "Erreur lors de la récupération des clients: " + clientEx.getMessage());
+            }
+            return "comptes-depot/compte-form";
+        } catch (Exception e) {
+            model.addAttribute("error", "Erreur lors de la création du compte dépôt: " + e.getMessage());
+            try {
+                model.addAttribute("clients", clientService.getAllClients());
+            } catch (Exception clientEx) {
+                model.addAttribute("error", "Erreur lors de la récupération des clients: " + clientEx.getMessage());
+            }
+            return "comptes-depot/compte-form";
+        }
     }
 
     @GetMapping("/comptes-depot/details")
@@ -143,7 +200,7 @@ public class CompteDepotController {
         try {
             // Récupérer le compte émetteur
             Compte compte = compteDepotService.getCompteById(compteId);
-            model.addAttribute("compteEmetteur", compte);
+            model.addAttribute("compteEnvoyeur", compte);
             model.addAttribute("compteId", compteId);
             
             // Récupérer tous les comptes pour le choix du destinataire
@@ -160,34 +217,33 @@ public class CompteDepotController {
             }
             model.addAttribute("clientsMap", clientsMap);
             
+            // Créer une map des comptes pour l'affichage des transferts
+            Map<String, Compte> comptesMap = new HashMap<>();
+            for (Compte c : comptes) {
+                comptesMap.put(c.getIdCompte(), c);
+            }
+            comptesMap.put(compte.getIdCompte(), compte); // Ajouter le compte envoyeur
+            model.addAttribute("comptesMap", comptesMap);
+            
+            // Récupérer les transferts récents du compte (limités aux 5 derniers)
+            try {
+                List<Transfert> tousTransferts = transactionService.getAllTransferts();
+                List<Transfert> transfertsRecents = tousTransferts.stream()
+                    .filter(t -> t.getEnvoyer().equals(compteId) || t.getReceveur().equals(compteId))
+                    .sorted((t1, t2) -> t2.getDateTransfert().compareTo(t1.getDateTransfert()))
+                    .limit(5)
+                    .collect(Collectors.toList());
+                model.addAttribute("transferts", transfertsRecents);
+            } catch (Exception transfertEx) {
+                // Si erreur avec les transferts, on continue sans bloquer le formulaire
+                model.addAttribute("transferts", new ArrayList<>());
+            }
+            
         } catch (Exception e) {
             model.addAttribute("error", "Erreur lors de la préparation du formulaire de transfert: " + e.getMessage());
         }
         
         return "comptes-depot/transfert-form";
-    }
-
-    @PostMapping("/comptes-depot/transferts/execute")
-    public String executeTransfert(
-            @RequestParam String compteEmetteurId,
-            @RequestParam String compteRecepteurId,
-            @RequestParam double montant,
-            RedirectAttributes redirectAttributes) {
-        try {
-            // Appeler le service pour créer le transfert
-            Transfert result = transactionService.createTransfert(compteEmetteurId, compteRecepteurId, BigDecimal.valueOf(montant));
-            
-            if (result != null) {
-                redirectAttributes.addFlashAttribute("success", "Transfert effectué avec succès !");
-            } else {
-                redirectAttributes.addFlashAttribute("error", "Erreur lors du transfert");
-            }
-            
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Erreur lors du transfert: " + e.getMessage());
-        }
-        
-        return "redirect:/comptes-depot/transactions?compteId=" + compteEmetteurId;
     }
 
     @PostMapping("/comptes-depot/transferts/add")
@@ -210,58 +266,13 @@ public class CompteDepotController {
             redirectAttributes.addFlashAttribute("error", "Erreur lors du transfert: " + e.getMessage());
         }
         
-        return "redirect:/comptes-depot/transactions?compteId=" + compteEnvoyeur;
+        return "redirect:/comptes-depot/transferts?compteId=" + compteEnvoyeur;
     }
 
+    // Redirection vers le formulaire de transfert principal
     @GetMapping("/comptes-depot/transferts/list")
-    public String getTransferts(@RequestParam(required = false) String compteId, 
-                               @RequestParam(required = false) String direction,
-                               Model model) {
-        try {
-            List<Transfert> transferts;
-            if (compteId != null && !compteId.trim().isEmpty()) {
-                // Récupérer tous les transferts via le service complet
-                List<Transfert> tousTransferts = transactionService.getAllTransferts();
-                
-                // Filtrer pour ce compte
-                transferts = tousTransferts.stream()
-                    .filter(t -> t.getEnvoyer().equals(compteId) || t.getReceveur().equals(compteId))
-                    .collect(Collectors.toList());
-                
-                // Calculer les statistiques
-                Map<String, Object> stats = calculateTransfertStats(transferts, compteId);
-                model.addAttribute("stats", stats);
-                
-                // Appliquer le filtre de direction si spécifié
-                if ("emis".equals(direction)) {
-                    transferts = transferts.stream()
-                        .filter(t -> t.getEnvoyer().equals(compteId))
-                        .collect(Collectors.toList());
-                    model.addAttribute("filtreType", "emis");
-                } else if ("recus".equals(direction)) {
-                    transferts = transferts.stream()
-                        .filter(t -> t.getReceveur().equals(compteId))
-                        .collect(Collectors.toList());
-                    model.addAttribute("filtreType", "recus");
-                }
-                
-                Compte compte = compteDepotService.getCompteById(compteId);
-                model.addAttribute("compte", compte);
-                model.addAttribute("compteId", compteId);
-            } else {
-                transferts = transactionService.getAllTransferts();
-            }
-            
-            // Trier par date décroissante
-            transferts.sort((t1, t2) -> t2.getDateTransfert().compareTo(t1.getDateTransfert()));
-            model.addAttribute("transferts", transferts);
-            
-        } catch (Exception e) {
-            model.addAttribute("transferts", null);
-            model.addAttribute("error", "Erreur lors de la récupération des transferts: " + e.getMessage());
-        }
-        
-        return "comptes-depot/transferts";
+    public String redirectToTransfertForm(@RequestParam String compteId) {
+        return "redirect:/comptes-depot/transferts?compteId=" + compteId;
     }
     
     private Map<String, Object> calculateTransfertStats(List<Transfert> transferts, String compteId) {
