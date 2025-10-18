@@ -13,7 +13,7 @@ namespace ServeurCompteDepot.Models
 
         [Required]
         [Column("date_transfert")]
-        public DateTime DateTransfert { get; set; } = DateTime.UtcNow.Date;
+        public DateTime DateTransfert { get; set; }
 
         [Required]
         [Column("id_transaction_envoyeur")]

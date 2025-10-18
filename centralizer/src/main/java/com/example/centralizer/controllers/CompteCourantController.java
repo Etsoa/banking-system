@@ -193,7 +193,7 @@ public class CompteCourantController {
             @RequestParam String compteId,
             @RequestParam int typeTransaction,
             @RequestParam double montant,
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") LocalDateTime dateTransaction,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") LocalDateTime dateTransaction,
             RedirectAttributes redirectAttributes) {
         try {
             // Créer l'objet transaction
@@ -201,13 +201,7 @@ public class CompteCourantController {
             transaction.setIdCompte(compteId);
             transaction.setIdTypeTransaction(typeTransaction);
             transaction.setMontant(BigDecimal.valueOf(montant));
-            
-            // Utiliser la date fournie ou la date actuelle si non fournie
-            if (dateTransaction != null) {
-                transaction.setDateTransaction(dateTransaction);
-            } else {
-                transaction.setDateTransaction(LocalDateTime.now());
-            }
+            transaction.setDateTransaction(dateTransaction);
 
             // Appeler le service pour créer la transaction
             Transaction result = transactionService.createTransaction(transaction);
@@ -278,7 +272,7 @@ public class CompteCourantController {
             @RequestParam String compteEnvoyeur,
             @RequestParam String compteReceveur,
             @RequestParam double montant,
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") LocalDateTime dateTransfert,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") LocalDateTime dateTransfert,
             RedirectAttributes redirectAttributes) {
         try {
             // Appeler le service pour créer le transfert avec la date personnalisée

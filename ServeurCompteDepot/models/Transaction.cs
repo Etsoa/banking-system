@@ -13,7 +13,7 @@ namespace ServeurCompteDepot.Models
 
         [Required]
         [Column("date_transaction")]
-        public DateTime DateTransaction { get; set; } = DateTime.UtcNow;
+        public DateTime DateTransaction { get; set; }
 
         [Required]
         [Column("montant", TypeName = "decimal(12,2)")]

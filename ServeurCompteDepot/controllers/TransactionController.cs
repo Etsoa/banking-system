@@ -88,11 +88,19 @@ namespace ServeurCompteDepot.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Transaction>> CreateTransaction([FromBody] Transaction transaction)
+        public async Task<ActionResult<Transaction>> CreateTransaction([FromBody] TransactionRequest request)
         {
             try
             {
-                transaction.DateTransaction = DateTime.UtcNow;
+                // Créer l'objet Transaction à partir de la requête
+                var transaction = new Transaction
+                {
+                    DateTransaction = request.DateTransaction,
+                    Montant = request.Montant,
+                    IdTypeTransaction = request.IdTypeTransaction,
+                    IdCompte = request.IdCompte
+                };
+
                 var nouvelleTransaction = await _transactionService.ExecuteTransactionAsync(transaction);
                 return CreatedAtAction(nameof(GetTransactionById), 
                     new { id = nouvelleTransaction.IdTransaction }, nouvelleTransaction);

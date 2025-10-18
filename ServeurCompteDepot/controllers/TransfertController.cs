@@ -9,12 +9,10 @@ namespace ServeurCompteDepot.Controllers
     public class TransfertController : ControllerBase
     {
         private readonly ITransfertService _transfertService;
-        private readonly ITransactionService _transactionService;
 
-        public TransfertController(ITransfertService transfertService, ITransactionService transactionService)
+        public TransfertController(ITransfertService transfertService)
         {
             _transfertService = transfertService;
-            _transactionService = transactionService;
         }
 
         [HttpGet]
@@ -136,10 +134,11 @@ namespace ServeurCompteDepot.Controllers
         {
             try
             {
-                var transfert = await _transactionService.CreateTransfertAsync(
+                var transfert = await _transfertService.CreateTransfertAsync(
                     request.CompteEnvoyeur, 
                     request.CompteReceveur, 
-                    request.Montant);
+                    request.Montant,
+                    request.DateTransfert);
                 return CreatedAtAction(nameof(GetTransfertById), 
                     new { id = transfert.IdTransfert }, transfert);
             }

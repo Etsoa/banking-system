@@ -58,7 +58,7 @@
                 
                 <div>
                     <label for="dateTransaction" style="display: block; margin-bottom: 5px; font-weight: bold;">Date et heure:</label>
-                    <input type="datetime-local" id="dateTransaction" name="dateTransaction" 
+                    <input type="datetime-local" id="dateTransaction" name="dateTransaction" required
                            th:value="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd''T''HH:mm')}"
                            style="padding: 8px; border: 1px solid #ccc; border-radius: 3px;" />
                 </div>

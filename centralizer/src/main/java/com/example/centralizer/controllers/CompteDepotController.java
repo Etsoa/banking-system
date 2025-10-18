@@ -162,7 +162,7 @@ public class CompteDepotController {
             @RequestParam String compteId,
             @RequestParam Integer typeTransaction,
             @RequestParam double montant,
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") LocalDateTime dateTransaction,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") LocalDateTime dateTransaction,
             RedirectAttributes redirectAttributes) {
         
         try {
@@ -171,13 +171,7 @@ public class CompteDepotController {
             transaction.setIdCompte(compteId);
             transaction.setIdTypeTransaction(typeTransaction);
             transaction.setMontant(BigDecimal.valueOf(montant));
-            
-            // Utiliser la date fournie ou la date actuelle si non fournie
-            if (dateTransaction != null) {
-                transaction.setDateTransaction(dateTransaction);
-            } else {
-                transaction.setDateTransaction(LocalDateTime.now());
-            }
+            transaction.setDateTransaction(dateTransaction);
 
             // Appeler le service pour créer la transaction
             Transaction result = transactionService.createTransaction(transaction);
@@ -251,10 +245,11 @@ public class CompteDepotController {
             @RequestParam String compteEnvoyeur,
             @RequestParam String compteReceveur,
             @RequestParam double montant,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") LocalDateTime dateTransfert,
             RedirectAttributes redirectAttributes) {
         try {
-            // Appeler le service pour créer le transfert
-            Transfert result = transactionService.createTransfert(compteEnvoyeur, compteReceveur, BigDecimal.valueOf(montant));
+            // Appeler le service pour créer le transfert avec la date
+            Transfert result = transactionService.createTransfert(compteEnvoyeur, compteReceveur, BigDecimal.valueOf(montant), dateTransfert);
             
             if (result != null) {
                 redirectAttributes.addFlashAttribute("success", "Transfert effectué avec succès !");
@@ -309,20 +304,14 @@ public class CompteDepotController {
     public Compte effectuerDepot(
             @RequestParam String compteId, 
             @RequestParam double montant,
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") LocalDateTime dateTransaction) {
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") LocalDateTime dateTransaction) {
         try {
             // Utiliser le système de transaction pour effectuer un dépôt
             Transaction transaction = new Transaction();
             transaction.setIdCompte(compteId);
             transaction.setIdTypeTransaction(1); // Type 1 = Dépôt
             transaction.setMontant(BigDecimal.valueOf(montant));
-            
-            // Utiliser la date fournie ou la date actuelle si non fournie
-            if (dateTransaction != null) {
-                transaction.setDateTransaction(dateTransaction);
-            } else {
-                transaction.setDateTransaction(LocalDateTime.now());
-            }
+            transaction.setDateTransaction(dateTransaction);
             
             transactionService.createTransaction(transaction);
             
@@ -338,20 +327,14 @@ public class CompteDepotController {
     public Compte effectuerRetrait(
             @RequestParam String compteId, 
             @RequestParam double montant,
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") LocalDateTime dateTransaction) {
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") LocalDateTime dateTransaction) {
         try {
             // Utiliser le système de transaction pour effectuer un retrait
             Transaction transaction = new Transaction();
             transaction.setIdCompte(compteId);
             transaction.setIdTypeTransaction(2); // Type 2 = Retrait
             transaction.setMontant(BigDecimal.valueOf(montant));
-            
-            // Utiliser la date fournie ou la date actuelle si non fournie
-            if (dateTransaction != null) {
-                transaction.setDateTransaction(dateTransaction);
-            } else {
-                transaction.setDateTransaction(LocalDateTime.now());
-            }
+            transaction.setDateTransaction(dateTransaction);
             
             transactionService.createTransaction(transaction);
             

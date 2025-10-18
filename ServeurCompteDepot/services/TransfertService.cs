@@ -10,7 +10,7 @@ namespace ServeurCompteDepot.Services
         Task<IEnumerable<Transfert>> GetTransfertsByCompteAsync(string idCompte);
         Task<IEnumerable<Transfert>> GetTransfertsByCompteEnvoyeurAsync(string idCompteEnvoyeur);
         Task<IEnumerable<Transfert>> GetTransfertsByCompteReceveurAsync(string idCompteReceveur);
-        Task<Transfert> CreateTransfertAsync(string compteEnvoyeur, string compteReceveur, decimal montant);
+        Task<Transfert> CreateTransfertAsync(string compteEnvoyeur, string compteReceveur, decimal montant, DateTime dateTransfert);
         Task<decimal> GetTotalTransfertsSortantsAsync(string compteId);
         Task<decimal> GetTotalTransfertsEntrantsAsync(string compteId);
         Task<int> GetNombreTransfertsSortantsAsync(string compteId);
@@ -75,18 +75,92 @@ namespace ServeurCompteDepot.Services
                 .ToListAsync();
         }
 
-        public async Task<Transfert> CreateTransfertAsync(string compteEnvoyeur, string compteReceveur, decimal montant)
+        public async Task<Transfert> CreateTransfertAsync(string compteEnvoyeur, string compteReceveur, decimal montant, DateTime dateTransfert)
         {
-            // Vérifier que les comptes existent
-            var compteEnv = await _context.Comptes.FirstOrDefaultAsync(c => c.IdCompte == compteEnvoyeur);
-            var compteRec = await _context.Comptes.FirstOrDefaultAsync(c => c.IdCompte == compteReceveur);
+            using var transaction = await _context.Database.BeginTransactionAsync();
             
-            // Vérifier que le solde est suffisant (AUCUN découvert autorisé pour les comptes dépôt)
-            if (compteEnv.Solde < montant)
-                throw new InvalidOperationException($"Solde insuffisant pour le compte {compteEnvoyeur}. Solde actuel: {compteEnv.Solde}, Montant demandé: {montant}");
-            
-            // Déléguer la création du transfert au TransactionService
-            return await _transactionService.CreateTransfertAsync(compteEnvoyeur, compteReceveur, montant);
+            try
+            {
+                // Vérifier que les comptes existent
+                var compteEnv = await _context.Comptes.FirstOrDefaultAsync(c => c.IdCompte == compteEnvoyeur);
+                var compteRec = await _context.Comptes.FirstOrDefaultAsync(c => c.IdCompte == compteReceveur);
+                
+                // Vérifier que le solde est suffisant (pas de découvert autorisé pour les comptes dépôt)
+                if (compteEnv.Solde < montant)
+                    throw new InvalidOperationException($"Solde insuffisant. Solde actuel: {compteEnv.Solde}, Montant demandé: {montant}");
+                
+                // Créer la transaction sortante (débit)
+                var transactionSortante = new Transaction
+                {
+                    IdCompte = compteEnvoyeur,
+                    IdTypeTransaction = 4, // Virement sortant
+                    Montant = montant,
+                    DateTransaction = dateTransfert
+                };
+                
+                _context.Transactions.Add(transactionSortante);
+                await _context.SaveChangesAsync();
+                
+                // Créer la transaction entrante (crédit)
+                var transactionEntrante = new Transaction
+                {
+                    IdCompte = compteReceveur,
+                    IdTypeTransaction = 3, // Virement entrant
+                    Montant = montant,
+                    DateTransaction = dateTransfert
+                };
+                
+                _context.Transactions.Add(transactionEntrante);
+                await _context.SaveChangesAsync();
+                
+                // Créer le transfert
+                var transfert = new Transfert
+                {
+                    DateTransfert = dateTransfert.Date,
+                    IdTransactionEnvoyeur = transactionSortante.IdTransaction.ToString(),
+                    IdTransactionReceveur = transactionEntrante.IdTransaction.ToString(),
+                    Montant = montant,
+                    Envoyer = compteEnvoyeur,
+                    Receveur = compteReceveur
+                };
+                
+                _context.Transferts.Add(transfert);
+                await _context.SaveChangesAsync();
+                
+                // Mettre à jour les soldes
+                compteEnv.Solde -= montant;
+                compteRec.Solde += montant;
+                
+                // Créer les historiques de solde
+                var histoSoldeEnvoyeur = new HistoriqueSolde
+                {
+                    IdCompte = compteEnvoyeur,
+                    IdTransaction = transactionSortante.IdTransaction,
+                    Montant = compteEnv.Solde,
+                    DateChangement = dateTransfert
+                };
+                
+                var histoSoldeReceveur = new HistoriqueSolde
+                {
+                    IdCompte = compteReceveur,
+                    IdTransaction = transactionEntrante.IdTransaction,
+                    Montant = compteRec.Solde,
+                    DateChangement = dateTransfert
+                };
+                
+                _context.HistoriquesSolde.Add(histoSoldeEnvoyeur);
+                _context.HistoriquesSolde.Add(histoSoldeReceveur);
+                
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+                
+                return transfert;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
 
         public async Task<decimal> GetTotalTransfertsSortantsAsync(string compteId)

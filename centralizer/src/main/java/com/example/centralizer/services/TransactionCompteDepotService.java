@@ -1,6 +1,7 @@
 package com.example.centralizer.services;
 
 import com.example.centralizer.models.compteDepotDTO.Transaction;
+import com.example.centralizer.models.compteDepotDTO.TransactionRequest;
 import com.example.centralizer.models.compteDepotDTO.Transfert;
 import com.example.centralizer.models.compteDepotDTO.TransfertRequest;
 import com.example.centralizer.models.compteDepotDTO.CompteRequest;
@@ -12,6 +13,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import java.time.LocalDateTime;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
@@ -94,7 +96,14 @@ public class TransactionCompteDepotService {
             String url = serverUrl + "/transaction";
             LOGGER.info("Appel POST vers: " + url);
             
-            Transaction result = restTemplate.postForObject(url, transaction, Transaction.class);
+            // Créer une TransactionRequest sans date pour l'envoi à l'API C#
+            TransactionRequest request = new TransactionRequest(
+                transaction.getMontant(),
+                transaction.getIdTypeTransaction(),
+                transaction.getIdCompte()
+            );
+            
+            Transaction result = restTemplate.postForObject(url, request, Transaction.class);
             return result;
         } catch (RestClientException e) {
             LOGGER.severe("Erreur lors de la création de la transaction: " + e.getMessage());
@@ -104,14 +113,14 @@ public class TransactionCompteDepotService {
     }
 
     /**
-     * Créer un transfert entre deux comptes dépôt
+     * Créer un transfert entre deux comptes dépôt avec date personnalisée
      */
-    public Transfert createTransfert(String compteEnvoyeur, String compteReceveur, BigDecimal montant) {
+    public Transfert createTransfert(String compteEnvoyeur, String compteReceveur, BigDecimal montant, LocalDateTime dateTransfert) {
         try {
             String url = serverUrl + "/transfert";
             LOGGER.info("Appel POST vers: " + url);
             
-            TransfertRequest request = new TransfertRequest(compteEnvoyeur, compteReceveur, montant);
+            TransfertRequest request = new TransfertRequest(compteEnvoyeur, compteReceveur, montant, dateTransfert);
             Transfert result = restTemplate.postForObject(url, request, Transfert.class);
             return result;
         } catch (RestClientException e) {

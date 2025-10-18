@@ -2,9 +2,12 @@ package com.example.centralizer.models.compteDepotDTO;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 public class Transaction {
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Integer idTransaction;
+    
     private LocalDateTime dateTransaction;
     private BigDecimal montant;
     private Integer idTypeTransaction;

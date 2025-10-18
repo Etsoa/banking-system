@@ -12,7 +12,6 @@ namespace ServeurCompteDepot.Services
         Task<IEnumerable<Transaction>> GetTransactionsByTypeAsync(int idTypeTransaction);
         Task<Transaction> CreateTransactionAsync(Transaction transaction);
         Task<Transaction> ExecuteTransactionAsync(Transaction transaction);
-        Task<Transfert> CreateTransfertAsync(string compteEnvoyeur, string compteReceveur, decimal montant);
         Task<Transaction?> UpdateTransactionAsync(int id, Transaction transaction);
     }
 
@@ -88,94 +87,6 @@ namespace ServeurCompteDepot.Services
                 .Where(t => t.IdCompte == idCompte && t.IdTypeTransaction == idTypeTransaction)
                 .OrderByDescending(t => t.DateTransaction)
                 .ToListAsync();
-        }
-
-        public async Task<Transfert> CreateTransfertAsync(string compteEnvoyeur, string compteReceveur, decimal montant)
-        {
-            using var transaction = await _context.Database.BeginTransactionAsync();
-            
-            try
-            {
-                // Vérifier que les comptes existent
-                var compteEnv = await _context.Comptes.FirstOrDefaultAsync(c => c.IdCompte == compteEnvoyeur);
-                var compteRec = await _context.Comptes.FirstOrDefaultAsync(c => c.IdCompte == compteReceveur);
-                
-                // Vérifier que le solde est suffisant (pas de découvert autorisé pour les comptes dépôt)
-                if (compteEnv.Solde < montant)
-                    throw new InvalidOperationException($"Solde insuffisant. Solde actuel: {compteEnv.Solde}, Montant demandé: {montant}");
-                
-                // Créer la transaction sortante (débit)
-                var transactionSortante = new Transaction
-                {
-                    IdCompte = compteEnvoyeur,
-                    IdTypeTransaction = 4, // Virement sortant
-                    Montant = montant,
-                    DateTransaction = DateTime.UtcNow
-                };
-                
-                _context.Transactions.Add(transactionSortante);
-                await _context.SaveChangesAsync();
-                
-                // Créer la transaction entrante (crédit)
-                var transactionEntrante = new Transaction
-                {
-                    IdCompte = compteReceveur,
-                    IdTypeTransaction = 3, // Virement entrant
-                    Montant = montant,
-                    DateTransaction = DateTime.UtcNow
-                };
-                
-                _context.Transactions.Add(transactionEntrante);
-                await _context.SaveChangesAsync();
-                
-                // Créer le transfert
-                var transfert = new Transfert
-                {
-                    DateTransfert = DateTime.UtcNow.Date,
-                    IdTransactionEnvoyeur = transactionSortante.IdTransaction.ToString(),
-                    IdTransactionReceveur = transactionEntrante.IdTransaction.ToString(),
-                    Montant = montant,
-                    Envoyer = compteEnvoyeur,
-                    Receveur = compteReceveur
-                };
-                
-                _context.Transferts.Add(transfert);
-                await _context.SaveChangesAsync();
-                
-                // Mettre à jour les soldes
-                compteEnv.Solde -= montant;
-                compteRec.Solde += montant;
-                
-                // Créer les historiques de solde
-                var histoSoldeEnvoyeur = new HistoriqueSolde
-                {
-                    IdCompte = compteEnvoyeur,
-                    IdTransaction = transactionSortante.IdTransaction,
-                    Montant = compteEnv.Solde,
-                    DateChangement = DateTime.UtcNow
-                };
-                
-                var histoSoldeReceveur = new HistoriqueSolde
-                {
-                    IdCompte = compteReceveur,
-                    IdTransaction = transactionEntrante.IdTransaction,
-                    Montant = compteRec.Solde,
-                    DateChangement = DateTime.UtcNow
-                };
-                
-                _context.HistoriquesSolde.Add(histoSoldeEnvoyeur);
-                _context.HistoriquesSolde.Add(histoSoldeReceveur);
-                
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
-                
-                return transfert;
-            }
-            catch
-            {
-                await transaction.RollbackAsync();
-                throw;
-            }
         }
 
         /// <summary>
