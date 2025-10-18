@@ -13,7 +13,7 @@ public class StatutPret {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "Id_statut_pret")
+    @Column(name = "id_statut_pret")
     private Integer id;
 
     @Column(name = "libelle", nullable = false, length = 50)

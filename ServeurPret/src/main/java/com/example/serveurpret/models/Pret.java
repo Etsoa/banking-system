@@ -8,7 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.json.bind.annotation.JsonbDateFormat;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "prets")
@@ -22,30 +22,34 @@ public class Pret {
     @Column(name = "montant", nullable = false, precision = 12, scale = 2)
     private BigDecimal montant;
 
-    @Column(name = "duree_mois", nullable = false)
-    private Integer dureeMois;
+    @Column(name = "duree_periode", nullable = false)
+    private Integer dureePeriode;
 
     @Column(name = "date_debut", nullable = false)
-    @JsonbDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
-    private LocalDateTime dateDebut;
+    @JsonbDateFormat("yyyy-MM-dd")
+    private LocalDate dateDebut;
 
-    @Column(name = "Id_statut_pret", nullable = false)
+    @Column(name = "client_id", nullable = false)
+    private String clientId;
+
+    @Column(name = "id_statut_pret", nullable = false)
     private Integer idStatutPret;
 
     @Column(name = "id_modalite", nullable = false)
     private Integer idModalite;
 
-    @Column(name = "Id_type_remboursement", nullable = false)
+    @Column(name = "id_type_remboursement", nullable = false)
     private Integer idTypeRemboursement;
 
     // Constructors
     public Pret() {}
 
-    public Pret(BigDecimal montant, Integer dureeMois, LocalDateTime dateDebut, 
+    public Pret(BigDecimal montant, Integer dureePeriode, LocalDate dateDebut, String clientId,
                 Integer idStatutPret, Integer idModalite, Integer idTypeRemboursement) {
         this.montant = montant;
-        this.dureeMois = dureeMois;
+        this.dureePeriode = dureePeriode;
         this.dateDebut = dateDebut;
+        this.clientId = clientId;
         this.idStatutPret = idStatutPret;
         this.idModalite = idModalite;
         this.idTypeRemboursement = idTypeRemboursement;
@@ -68,20 +72,28 @@ public class Pret {
         this.montant = montant;
     }
 
-    public Integer getDureeMois() {
-        return dureeMois;
+    public Integer getDureePeriode() {
+        return dureePeriode;
     }
 
-    public void setDureeMois(Integer dureeMois) {
-        this.dureeMois = dureeMois;
+    public void setDureePeriode(Integer dureePeriode) {
+        this.dureePeriode = dureePeriode;
     }
 
-    public LocalDateTime getDateDebut() {
+    public LocalDate getDateDebut() {
         return dateDebut;
     }
 
-    public void setDateDebut(LocalDateTime dateDebut) {
+    public void setDateDebut(LocalDate dateDebut) {
         this.dateDebut = dateDebut;
+    }
+
+    public String getClientId() {
+        return clientId;
+    }
+
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
     }
 
     public Integer getIdStatutPret() {
@@ -113,8 +125,9 @@ public class Pret {
         return "Pret{" +
                 "id=" + id +
                 ", montant=" + montant +
-                ", dureeMois=" + dureeMois +
+                ", dureePeriode=" + dureePeriode +
                 ", dateDebut=" + dateDebut +
+                ", clientId=" + clientId +
                 ", idStatutPret=" + idStatutPret +
                 ", idModalite=" + idModalite +
                 ", idTypeRemboursement=" + idTypeRemboursement +

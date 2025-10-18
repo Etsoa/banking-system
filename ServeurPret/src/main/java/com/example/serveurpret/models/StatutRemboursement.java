@@ -8,35 +8,30 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "modalites")
-public class Modalite {
+@Table(name = "statuts_remboursement")
+public class StatutRemboursement {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_modalite")
+    @Column(name = "id_statut_remboursement")
     private Integer id;
 
     @Column(name = "libelle", nullable = false, length = 50)
     private String libelle;
 
-    @Column(name = "nombre_mois", nullable = false)
-    private Integer nombreMois;
-
     @Column(name = "actif", nullable = false)
     private Boolean actif = true;
 
     // Constructors
-    public Modalite() {}
+    public StatutRemboursement() {}
 
-    public Modalite(String libelle, Integer nombreMois) {
+    public StatutRemboursement(String libelle) {
         this.libelle = libelle;
-        this.nombreMois = nombreMois;
         this.actif = true;
     }
 
-    public Modalite(String libelle, Integer nombreMois, Boolean actif) {
+    public StatutRemboursement(String libelle, Boolean actif) {
         this.libelle = libelle;
-        this.nombreMois = nombreMois;
         this.actif = actif;
     }
 
@@ -57,19 +52,20 @@ public class Modalite {
         this.libelle = libelle;
     }
 
-    public Integer getNombreMois() {
-        return nombreMois;
-    }
-
-    public void setNombreMois(Integer nombreMois) {
-        this.nombreMois = nombreMois;
-    }
-
     public Boolean getActif() {
         return actif;
     }
 
     public void setActif(Boolean actif) {
         this.actif = actif;
+    }
+
+    @Override
+    public String toString() {
+        return "StatutRemboursement{" +
+                "id=" + id +
+                ", libelle='" + libelle + '\'' +
+                ", actif=" + actif +
+                '}';
     }
 }

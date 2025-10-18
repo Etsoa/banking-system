@@ -159,51 +159,6 @@ public class HomeController {
         }
     }
 
-    @GetMapping("/clients/view")
-    public String viewClient(@RequestParam("id") Integer id, Model model) {
-        try {
-            // Récupérer le client
-            Client client = clientService.getClientById(id);
-            model.addAttribute("client", client);
-            
-            // Récupérer le statut du client
-            String statut = clientService.getStatutClient(id);
-            model.addAttribute("statut", statut);
-            
-            // Récupérer les comptes courants du client spécifique
-            try {
-                List<CompteCourant> comptesCourant = compteCourantService.getComptesByClientId(id);
-                model.addAttribute("comptesCourant", comptesCourant);
-            } catch (Exception e) {
-                model.addAttribute("comptesCourant", null);
-                model.addAttribute("errorComptesCourant", "Erreur: Erreur lors de la récupération des comptes courants: " + e.getMessage());
-            }
-            
-            // Récupérer les comptes dépôt du client spécifique
-            try {
-                List<Compte> comptesDepot = compteDepotService.getComptesByClientId(id);
-                model.addAttribute("comptesDepot", comptesDepot);
-            } catch (Exception e) {
-                model.addAttribute("comptesDepot", null);
-                model.addAttribute("errorComptesDepot", "Erreur: Erreur lors de la récupération des comptes dépôt: " + e.getMessage());
-            }
-            
-            // Récupérer les prêts du client spécifique
-            try {
-                List<Pret> prets = pretService.getPretsByClientId((long) id);
-                model.addAttribute("prets", prets);
-            } catch (Exception e) {
-                model.addAttribute("prets", null);
-                model.addAttribute("errorPrets", "Erreur: Erreur lors de la récupération des prêts: " + e.getMessage());
-            }
-            
-            return "clients/client-view";
-        } catch (Exception e) {
-            model.addAttribute("error", "Erreur lors de la récupération du client: " + e.getMessage());
-            return "redirect:/clients";
-        }
-    }
-
     @PostMapping("/clients/delete")
     public String deleteClient(@RequestParam("id") Integer id, RedirectAttributes redirectAttributes) {
         try {

@@ -20,7 +20,7 @@ public class PretController {
     private ExceptionHandlingService exceptionHandlingService;
 
     @GetMapping("/prets")
-    public String getPrets(Model model) {
+    public String getAllPrets(Model model) {
         try {
             List<Pret> prets = pretService.getAllPrets();
             model.addAttribute("prets", prets);
@@ -36,18 +36,6 @@ public class PretController {
         return "prets/list";
     }
 
-    /* ENDPOINT NON IMPLÉMENTÉ DANS LE SERVEUR - COMMENTÉ
-    @GetMapping("/prets/details")
-    @ResponseBody
-    public Pret getPretById(@RequestParam int id) {
-        try {
-            return pretService.getPretById((long) id);
-        } catch (ServerApplicationException e) {
-            throw new RuntimeException(exceptionHandlingService.getUserFriendlyMessage(e));
-        }
-    }
-    */
-
     @PostMapping("/prets")
     @ResponseBody
     public Pret createPret(@RequestBody Pret pret) {
@@ -58,25 +46,22 @@ public class PretController {
         }
     }
 
-    /* ENDPOINTS NON IMPLÉMENTÉS DANS LE SERVEUR - COMMENTÉS
-    @PutMapping("/prets/update")
-    @ResponseBody
-    public Pret updatePret(@RequestParam int id, @RequestBody Pret pret) {
+    @GetMapping("/prets/client/")
+    public String getPretsByClientId(@RequestParam(required = true) String clientId, Model model) {
         try {
-            return pretService.updatePret((long) id, pret);
+            List<Pret> prets = pretService.getPretsByClientId(clientId);
+            model.addAttribute("prets", prets);
+            return "prets/list";
         } catch (ServerApplicationException e) {
-            throw new RuntimeException(exceptionHandlingService.getUserFriendlyMessage(e));
+            String userMessage = exceptionHandlingService.getUserFriendlyMessage(e);
+            model.addAttribute("prets", null);
+            model.addAttribute("error", userMessage);
+            model.addAttribute("errorDetails", e.getFormattedMessage());
+            return "prets/list";
+        } catch (Exception e) {
+            model.addAttribute("prets", null);
+            model.addAttribute("error", "Erreur lors de la récupération des prêts pour le client " + clientId + " : " + e.getMessage());
+            return "prets/list";
         }
     }
-
-    @PutMapping("/prets/remboursement")
-    @ResponseBody
-    public Pret effectuerRemboursement(@RequestParam int id, @RequestParam double montant) {
-        try {
-            return pretService.effectuerRemboursement((long) id, montant);
-        } catch (ServerApplicationException e) {
-            throw new RuntimeException(exceptionHandlingService.getUserFriendlyMessage(e));
-        }
-    }
-    */
 }

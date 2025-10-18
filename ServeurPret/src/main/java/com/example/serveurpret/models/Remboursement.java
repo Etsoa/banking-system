@@ -8,7 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.json.bind.annotation.JsonbDateFormat;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "remboursements")
@@ -19,14 +19,20 @@ public class Remboursement {
     @Column(name = "id_remboursement")
     private Integer id;
 
-    @Column(name = "date_paiement", nullable = false)
-    @JsonbDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
-    private LocalDateTime datePaiement;
+    @Column(name = "date_paiement")
+    @JsonbDateFormat("yyyy-MM-dd")
+    private LocalDate datePaiement;
 
     @Column(name = "montant", nullable = false, precision = 12, scale = 2)
     private BigDecimal montant;
 
-    @Column(name = "Id_methode_remboursement", nullable = false)
+    @Column(name = "jours_retard")
+    private Integer joursRetard = 0;
+
+    @Column(name = "id_statut_remboursement")
+    private Integer idStatutRemboursement;
+
+    @Column(name = "id_methode_remboursement", nullable = false)
     private Integer idMethodeRemboursement;
 
     @Column(name = "id_pret", nullable = false)
@@ -35,10 +41,12 @@ public class Remboursement {
     // Constructors
     public Remboursement() {}
 
-    public Remboursement(LocalDateTime datePaiement, BigDecimal montant, 
-                        Integer idMethodeRemboursement, Integer idPret) {
+    public Remboursement(LocalDate datePaiement, BigDecimal montant, Integer joursRetard,
+                        Integer idStatutRemboursement, Integer idMethodeRemboursement, Integer idPret) {
         this.datePaiement = datePaiement;
         this.montant = montant;
+        this.joursRetard = joursRetard;
+        this.idStatutRemboursement = idStatutRemboursement;
         this.idMethodeRemboursement = idMethodeRemboursement;
         this.idPret = idPret;
     }
@@ -52,12 +60,28 @@ public class Remboursement {
         this.id = id;
     }
 
-    public LocalDateTime getDatePaiement() {
+    public LocalDate getDatePaiement() {
         return datePaiement;
     }
 
-    public void setDatePaiement(LocalDateTime datePaiement) {
+    public void setDatePaiement(LocalDate datePaiement) {
         this.datePaiement = datePaiement;
+    }
+
+    public Integer getJoursRetard() {
+        return joursRetard;
+    }
+
+    public void setJoursRetard(Integer joursRetard) {
+        this.joursRetard = joursRetard;
+    }
+
+    public Integer getIdStatutRemboursement() {
+        return idStatutRemboursement;
+    }
+
+    public void setIdStatutRemboursement(Integer idStatutRemboursement) {
+        this.idStatutRemboursement = idStatutRemboursement;
     }
 
     public BigDecimal getMontant() {

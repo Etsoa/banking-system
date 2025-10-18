@@ -59,18 +59,20 @@
                             </span>
                         </td>
                         <td style="padding: 10px;">
-                            <form th:action="@{/clients/view}" method="get" style="display: inline; margin: 2px;">
-                                <input type="hidden" name="id" th:value="${client.id}">
-                                <button type="submit" style="background-color: #007bff; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px;">Voir</button>
-                            </form>
-                            <form th:action="@{/clients/edit}" method="get" style="display: inline; margin: 2px;">
-                                <input type="hidden" name="id" th:value="${client.id}">
-                                <button type="submit" style="background-color: #28a745; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px;">Modifier</button>
-                            </form>
-                            <form th:action="@{/clients/delete}" method="post" style="display: inline; margin: 2px;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce client ?');">
-                                <input type="hidden" name="id" th:value="${client.id}">
-                                <button type="submit" style="background-color: #dc3545; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px;">Supprimer</button>
-                            </form>
+                            <div>
+                                <form th:action="@{/prets}" method="get" style="display: inline; margin: 2px;">
+                                    <input type="hidden" name="clientId" th:value="${client.id}">
+                                    <button type="submit" style="background-color: #ffc107; color: #212529; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px; font-weight: bold;">Prêts</button>
+                                </form>
+                                <form th:action="@{/clients/edit}" method="get" style="display: inline; margin: 2px;">
+                                    <input type="hidden" name="id" th:value="${client.id}">
+                                    <button type="submit" style="background-color: #28a745; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px;">Modifier</button>
+                                </form>
+                                <form th:action="@{/clients/delete}" method="post" style="display: inline; margin: 2px;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce client ?');">
+                                    <input type="hidden" name="id" th:value="${client.id}">
+                                    <button type="submit" style="background-color: #dc3545; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px;">Supprimer</button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                 </tbody>

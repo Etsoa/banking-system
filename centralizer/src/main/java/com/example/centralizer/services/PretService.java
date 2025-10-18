@@ -56,9 +56,9 @@ public class PretService {
     /**
      * Récupère les prêts d'un client spécifique
      */
-    public List<Pret> getPretsByClientId(Long clientId) {
+    public List<Pret> getPretsByClientId(String clientId) {
         try {
-            String url = serverUrl + "/client/" + clientId;
+            String url = serverUrl + "/pret/client/" + clientId;
             LOGGER.info("Appel GET vers: " + url);
             
             ResponseEntity<List<Pret>> response = restTemplate.exchange(
@@ -76,27 +76,6 @@ public class PretService {
         }
     }
 
-    /* ENDPOINTS NON IMPLEMENTES DANS LE SERVEUR - COMMENTES
-    
-    /**
-     * Récupère un prêt par son ID - ENDPOINT NON DISPONIBLE
-     */
-    /*
-    public Pret getPretById(Long id) {
-        try {
-            String url = serverUrl + "/" + id;
-            LOGGER.info("Appel GET vers: " + url);
-            
-            ResponseEntity<Pret> response = restTemplate.getForEntity(url, Pret.class);
-            return response.getBody();
-        } catch (RestClientException e) {
-            LOGGER.severe("Erreur lors de la récupération du prêt " + id + ": " + e.getMessage());
-            exceptionHandlingService.handleServerException(e, "ServeurPret");
-            return null;
-        }
-    }
-    */
-
     /**
      * Crée un nouveau prêt
      */
@@ -113,55 +92,4 @@ public class PretService {
             return null;
         }
     }
-
-    /* ENDPOINTS NON IMPLEMENTES DANS LE SERVEUR - COMMENTES
-    
-    /**
-     * Met à jour un prêt existant - ENDPOINT NON DISPONIBLE
-     */
-    /*
-    public Pret updatePret(Long id, Pret pret) {
-        try {
-            String url = serverUrl + "/" + id;
-            LOGGER.info("Appel PUT vers: " + url);
-            
-            ResponseEntity<Pret> response = restTemplate.exchange(
-                url,
-                HttpMethod.PUT,
-                null,
-                Pret.class
-            );
-            
-            return response.getBody();
-        } catch (RestClientException e) {
-            LOGGER.severe("Erreur lors de la mise à jour du prêt " + id + ": " + e.getMessage());
-            exceptionHandlingService.handleServerException(e, "ServeurPret");
-            return null;
-        }
-    }
-
-    /**
-     * Effectue un remboursement sur un prêt - ENDPOINT NON DISPONIBLE
-     */
-    /*
-    public Pret effectuerRemboursement(Long pretId, double montant) {
-        try {
-            String url = serverUrl + "/" + pretId + "/remboursement?montant=" + montant;
-            LOGGER.info("Appel PUT vers: " + url);
-            
-            ResponseEntity<Pret> response = restTemplate.exchange(
-                url,
-                HttpMethod.PUT,
-                null,
-                Pret.class
-            );
-            
-            return response.getBody();
-        } catch (RestClientException e) {
-            LOGGER.severe("Erreur lors du remboursement du prêt " + pretId + ": " + e.getMessage());
-            exceptionHandlingService.handleServerException(e, "ServeurPret");
-            return null;
-        }
-    }
-    */
 }

@@ -13,7 +13,7 @@ public class TypeRemboursement {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "Id_type_remboursement")
+    @Column(name = "id_type_remboursement")
     private Integer id;
 
     @Column(name = "nom", nullable = false, length = 50)

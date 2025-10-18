@@ -30,7 +30,7 @@ public class PretController {
 
     @GET
     @Path("/client/{clientId}")
-    public Response getByClientId(@PathParam("clientId") Integer clientId) {
+    public Response getByClientId(@PathParam("clientId") String clientId) {
         try {
             List<Pret> prets = pretService.getPretsByClientId(clientId);
             return Response.ok(prets).build();
