@@ -9,7 +9,7 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import java.util.List;
 
-@Path("/transactions")
+@Path("/compte-courant/transactions")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class TransactionController {
@@ -32,20 +32,11 @@ public class TransactionController {
     @GET
     @Path("/types")
     public List<TypeTransaction> getAllTypesTransaction() throws CompteCourantException {
-        return transactionService.getAllTypesTransaction();
+        return transactionService.getTypesTransactionActifs();
     }
 
     @POST
     public Transaction createTransaction(Transaction transaction) throws CompteCourantException {
         return transactionService.createTransaction(transaction);
-    }
-
-    @POST
-    @Path("/transfert/{compteEnvoyeur}/{compteReceveur}/{montant}")
-    public com.example.serveurcomptecourant.models.Transfert createTransfert(
-            @PathParam("compteEnvoyeur") String compteEnvoyeur,
-            @PathParam("compteReceveur") String compteReceveur,
-            @PathParam("montant") java.math.BigDecimal montant) throws CompteCourantException {
-        return transactionService.createTransfert(compteEnvoyeur, compteReceveur, montant);
     }
 }

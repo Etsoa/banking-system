@@ -6,6 +6,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.json.bind.annotation.JsonbDateFormat;
+import jakarta.json.bind.annotation.JsonbProperty;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -16,10 +18,12 @@ public class Transfert {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_transfert")
+    @JsonbProperty("idTransfert")
     private Integer id;
 
     @Column(name = "date_transfert", nullable = false)
-    private LocalDate dateTransfert = LocalDate.now();
+    @JsonbDateFormat("yyyy-MM-dd")
+    private LocalDate dateTransfert;
 
     @Column(name = "montant", nullable = false, precision = 12, scale = 2)
     private BigDecimal montant;
@@ -45,7 +49,6 @@ public class Transfert {
         this.idTransactionReceveur = idTransactionReceveur;
         this.envoyer = envoyer;
         this.receveur = receveur;
-        this.dateTransfert = LocalDate.now();
     }
 
     // Getters & Setters

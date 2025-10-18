@@ -56,6 +56,16 @@
                     </small>
                 </div>
 
+                <div style="margin-bottom: 15px;">
+                    <label for="dateTransfert">Date et heure du transfert :</label><br>
+                    <input type="datetime-local" id="dateTransfert" name="dateTransfert" 
+                           style="padding: 8px; min-width: 200px; margin-top: 5px;" 
+                           th:value="${#temporals.format(T(java.time.LocalDateTime).now(), 'yyyy-MM-dd''T''HH:mm')}">
+                    <small style="display: block; margin-top: 5px; color: #6c757d;">
+                        Laissez vide pour utiliser la date et heure actuelles
+                    </small>
+                </div>
+
                 <div style="margin-top: 20px;">
                     <button type="submit" style="background-color: #28a745; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px; margin-right: 10px;">
                         Effectuer le Transfert
@@ -80,6 +90,20 @@
         <!-- Liste des transferts récents -->
         <div style="margin-top: 20px;">
             <h4>Historique des transferts :</h4>
+            
+            <!-- Debug: Afficher le nombre de transferts -->
+            <div style="padding: 10px; background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; margin-bottom: 10px; color: #856404;">
+                <strong>Debug:</strong> 
+                <span th:if="${transferts != null}">
+                    Nombre de transferts trouvés: [[${#lists.size(transferts)}]]
+                    <span th:if="${not #lists.isEmpty(transferts)}">
+                        - Premier transfert ID: [[${transferts[0].idTransfert}]]
+                    </span>
+                </span>
+                <span th:unless="${transferts != null}">
+                    transferts est null
+                </span>
+            </div>
             
             <div th:if="${transferts != null and not #lists.isEmpty(transferts)}">
                 <div style="max-height: 400px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 5px;">

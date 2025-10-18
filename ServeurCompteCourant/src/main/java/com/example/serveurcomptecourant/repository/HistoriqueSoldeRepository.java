@@ -57,31 +57,6 @@ public class HistoriqueSoldeRepository {
     }
 
     /**
-     * Trouve tous les historiques de solde d'une transaction
-     */
-    public List<HistoriqueSolde> findByTransaction(Integer idTransaction) {
-        TypedQuery<HistoriqueSolde> query = em.createQuery(
-            "SELECT h FROM HistoriqueSolde h WHERE h.idTransaction = :idTransaction ORDER BY h.dateChangement DESC", 
-            HistoriqueSolde.class
-        );
-        query.setParameter("idTransaction", idTransaction);
-        return query.getResultList();
-    }
-
-    /**
-     * Trouve les historiques de solde par période
-     */
-    public List<HistoriqueSolde> findByDateRange(LocalDateTime dateDebut, LocalDateTime dateFin) {
-        TypedQuery<HistoriqueSolde> query = em.createQuery(
-            "SELECT h FROM HistoriqueSolde h WHERE h.dateChangement BETWEEN :dateDebut AND :dateFin ORDER BY h.dateChangement DESC", 
-            HistoriqueSolde.class
-        );
-        query.setParameter("dateDebut", dateDebut);
-        query.setParameter("dateFin", dateFin);
-        return query.getResultList();
-    }
-
-    /**
      * Trouve le dernier historique de solde d'un compte
      */
     public HistoriqueSolde findLastByCompte(String idCompte) {
@@ -93,40 +68,5 @@ public class HistoriqueSoldeRepository {
         query.setMaxResults(1);
         List<HistoriqueSolde> results = query.getResultList();
         return results.isEmpty() ? null : results.get(0);
-    }
-
-    /**
-     * Supprime un historique de solde par ID
-     */
-    public boolean deleteById(Integer id) {
-        HistoriqueSolde historiqueSolde = findById(id);
-        if (historiqueSolde != null) {
-            em.remove(historiqueSolde);
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Compte le nombre total d'historiques de solde
-     */
-    public long count() {
-        TypedQuery<Long> query = em.createQuery(
-            "SELECT COUNT(h) FROM HistoriqueSolde h", 
-            Long.class
-        );
-        return query.getSingleResult();
-    }
-
-    /**
-     * Compte le nombre d'historiques de solde pour un compte
-     */
-    public long countByCompte(String idCompte) {
-        TypedQuery<Long> query = em.createQuery(
-            "SELECT COUNT(h) FROM HistoriqueSolde h WHERE h.idCompte = :idCompte", 
-            Long.class
-        );
-        query.setParameter("idCompte", idCompte);
-        return query.getSingleResult();
     }
 }

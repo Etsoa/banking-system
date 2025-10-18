@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -104,6 +105,7 @@ public class CompteDepotController {
             @RequestParam String compteId,
             @RequestParam Integer typeTransaction,
             @RequestParam double montant,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") LocalDateTime dateTransaction,
             RedirectAttributes redirectAttributes) {
         
         try {
@@ -112,7 +114,13 @@ public class CompteDepotController {
             transaction.setIdCompte(compteId);
             transaction.setIdTypeTransaction(typeTransaction);
             transaction.setMontant(BigDecimal.valueOf(montant));
-            transaction.setDateTransaction(LocalDateTime.now());
+            
+            // Utiliser la date fournie ou la date actuelle si non fournie
+            if (dateTransaction != null) {
+                transaction.setDateTransaction(dateTransaction);
+            } else {
+                transaction.setDateTransaction(LocalDateTime.now());
+            }
 
             // Appeler le service pour créer la transaction
             Transaction result = transactionService.createTransaction(transaction);
@@ -287,14 +295,23 @@ public class CompteDepotController {
 
     @PutMapping("/comptes-depot/depot")
     @ResponseBody
-    public Compte effectuerDepot(@RequestParam String compteId, @RequestParam double montant) {
+    public Compte effectuerDepot(
+            @RequestParam String compteId, 
+            @RequestParam double montant,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") LocalDateTime dateTransaction) {
         try {
             // Utiliser le système de transaction pour effectuer un dépôt
             Transaction transaction = new Transaction();
             transaction.setIdCompte(compteId);
             transaction.setIdTypeTransaction(1); // Type 1 = Dépôt
             transaction.setMontant(BigDecimal.valueOf(montant));
-            transaction.setDateTransaction(LocalDateTime.now());
+            
+            // Utiliser la date fournie ou la date actuelle si non fournie
+            if (dateTransaction != null) {
+                transaction.setDateTransaction(dateTransaction);
+            } else {
+                transaction.setDateTransaction(LocalDateTime.now());
+            }
             
             transactionService.createTransaction(transaction);
             
@@ -307,14 +324,23 @@ public class CompteDepotController {
 
     @PutMapping("/comptes-depot/retrait")
     @ResponseBody
-    public Compte effectuerRetrait(@RequestParam String compteId, @RequestParam double montant) {
+    public Compte effectuerRetrait(
+            @RequestParam String compteId, 
+            @RequestParam double montant,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") LocalDateTime dateTransaction) {
         try {
             // Utiliser le système de transaction pour effectuer un retrait
             Transaction transaction = new Transaction();
             transaction.setIdCompte(compteId);
             transaction.setIdTypeTransaction(2); // Type 2 = Retrait
             transaction.setMontant(BigDecimal.valueOf(montant));
-            transaction.setDateTransaction(LocalDateTime.now());
+            
+            // Utiliser la date fournie ou la date actuelle si non fournie
+            if (dateTransaction != null) {
+                transaction.setDateTransaction(dateTransaction);
+            } else {
+                transaction.setDateTransaction(LocalDateTime.now());
+            }
             
             transactionService.createTransaction(transaction);
             

@@ -1,7 +1,6 @@
 package com.example.serveurcomptecourant.services;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -64,88 +63,6 @@ public class TransfertService {
             throw new CompteCourantException("Erreur lors de la récupération des transferts", e);
         }
     }
-
-    /**
-     * Récupère les transferts envoyés par un compte
-     */
-    public List<Transfert> getTransfertsEnvoyes(String compteEnvoyeur) throws CompteCourantException {
-        try {
-            if (compteEnvoyeur == null || compteEnvoyeur.trim().isEmpty()) {
-                throw new CompteCourantBusinessException("L'ID du compte envoyeur est obligatoire");
-            }
-            
-            return transfertRepository.findByEnvoyer(compteEnvoyeur);
-        } catch (CompteCourantBusinessException e) {
-            throw e;
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Erreur lors de la récupération des transferts envoyés par " + compteEnvoyeur, e);
-            throw new CompteCourantException("Erreur lors de la récupération des transferts", e);
-        }
-    }
-
-    /**
-     * Récupère les transferts reçus par un compte
-     */
-    public List<Transfert> getTransfertsRecus(String compteReceveur) throws CompteCourantException {
-        try {
-            if (compteReceveur == null || compteReceveur.trim().isEmpty()) {
-                throw new CompteCourantBusinessException("L'ID du compte receveur est obligatoire");
-            }
-            
-            return transfertRepository.findByReceveur(compteReceveur);
-        } catch (CompteCourantBusinessException e) {
-            throw e;
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Erreur lors de la récupération des transferts reçus par " + compteReceveur, e);
-            throw new CompteCourantException("Erreur lors de la récupération des transferts", e);
-        }
-    }
-
-    /**
-     * Récupère les transferts par période
-     */
-    public List<Transfert> getTransfertsByPeriode(LocalDate dateDebut, LocalDate dateFin) throws CompteCourantException {
-        try {
-            if (dateDebut == null || dateFin == null) {
-                throw new CompteCourantBusinessException("Les dates de début et fin sont obligatoires");
-            }
-            
-            if (dateDebut.isAfter(dateFin)) {
-                throw new CompteCourantBusinessException("La date de début doit être antérieure à la date de fin");
-            }
-            
-            return transfertRepository.findByDateRange(dateDebut, dateFin);
-        } catch (CompteCourantBusinessException e) {
-            throw e;
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Erreur lors de la récupération des transferts par période", e);
-            throw new CompteCourantException("Erreur lors de la récupération des transferts", e);
-        }
-    }
-
-    /**
-     * Récupère un transfert par ID
-     */
-    public Transfert getTransfertById(Integer id) throws CompteCourantException {
-        try {
-            if (id == null || id <= 0) {
-                throw new CompteCourantBusinessException("L'ID du transfert est obligatoire");
-            }
-            
-            Transfert transfert = transfertRepository.findById(id);
-            if (transfert == null) {
-                throw new CompteCourantBusinessException("Transfert introuvable");
-            }
-            
-            return transfert;
-        } catch (CompteCourantBusinessException e) {
-            throw e;
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Erreur lors de la récupération du transfert " + id, e);
-            throw new CompteCourantException("Erreur lors de la récupération du transfert", e);
-        }
-    }
-
     /**
      * Crée un transfert (appelé par TransactionService)
      */
@@ -163,6 +80,7 @@ public class TransfertService {
             transfert.setReceveur(compteReceveur);
             transfert.setIdTransactionEnvoyeur(transactionSortante.getId().toString());
             transfert.setIdTransactionReceveur(transactionEntrante.getId().toString());
+            transfert.setDateTransfert(transactionSortante.getDateTransaction().toLocalDate());
             
             return transfertRepository.save(transfert);
             
@@ -173,43 +91,6 @@ public class TransfertService {
             throw new CompteCourantException("Erreur lors de la création du transfert", e);
         }
     }
-
-    /**
-     * Calcule le total des transferts envoyés par un compte
-     */
-    public BigDecimal getTotalTransfertsEnvoyes(String compteEnvoyeur) throws CompteCourantException {
-        try {
-            if (compteEnvoyeur == null || compteEnvoyeur.trim().isEmpty()) {
-                throw new CompteCourantBusinessException("L'ID du compte envoyeur est obligatoire");
-            }
-            
-            return transfertRepository.getTotalTransfertsSortants(compteEnvoyeur);
-        } catch (CompteCourantBusinessException e) {
-            throw e;
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Erreur lors du calcul du total des transferts envoyés", e);
-            throw new CompteCourantException("Erreur lors du calcul du total", e);
-        }
-    }
-
-    /**
-     * Calcule le total des transferts reçus par un compte
-     */
-    public BigDecimal getTotalTransfertsRecus(String compteReceveur) throws CompteCourantException {
-        try {
-            if (compteReceveur == null || compteReceveur.trim().isEmpty()) {
-                throw new CompteCourantBusinessException("L'ID du compte receveur est obligatoire");
-            }
-            
-            return transfertRepository.getTotalTransfertsEntrants(compteReceveur);
-        } catch (CompteCourantBusinessException e) {
-            throw e;
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Erreur lors du calcul du total des transferts reçus", e);
-            throw new CompteCourantException("Erreur lors du calcul du total", e);
-        }
-    }
-
     /**
      * Validation des données de transfert
      */

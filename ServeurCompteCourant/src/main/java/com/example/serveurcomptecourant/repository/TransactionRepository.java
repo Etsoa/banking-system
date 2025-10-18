@@ -42,11 +42,4 @@ public class TransactionRepository {
             return em.merge(transaction);
         }
     }
-
-    public void delete(int id) {
-        Transaction transaction = findById(id);
-        if (transaction != null) {
-            em.remove(transaction);
-        }
-    }
 }

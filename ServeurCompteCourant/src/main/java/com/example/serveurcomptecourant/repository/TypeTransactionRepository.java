@@ -34,11 +34,4 @@ public class TypeTransactionRepository {
             return em.merge(typeTransaction);
         }
     }
-
-    public void delete(Integer id) {
-        TypeTransaction typeTransaction = findById(id);
-        if (typeTransaction != null) {
-            em.remove(typeTransaction);
-        }
-    }
 }

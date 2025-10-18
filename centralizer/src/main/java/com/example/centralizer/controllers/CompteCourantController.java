@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,12 +22,12 @@ import com.example.centralizer.models.Client;
 import com.example.centralizer.models.compteCourantDTO.CompteCourant;
 import com.example.centralizer.models.compteCourantDTO.CompteCourantAvecStatut;
 import com.example.centralizer.models.compteCourantDTO.Transaction;
-import com.example.centralizer.models.compteCourantDTO.TypeTransaction;
 import com.example.centralizer.models.compteCourantDTO.Transfert;
+import com.example.centralizer.models.compteCourantDTO.TypeTransaction;
 import com.example.centralizer.services.ClientService;
 import com.example.centralizer.services.CompteCourantService;
-import com.example.centralizer.services.TransactionCompteCourantService;
 import com.example.centralizer.services.ExceptionHandlingService;
+import com.example.centralizer.services.TransactionCompteCourantService;
 
 @Controller
 public class CompteCourantController {
@@ -192,6 +193,7 @@ public class CompteCourantController {
             @RequestParam String compteId,
             @RequestParam int typeTransaction,
             @RequestParam double montant,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") LocalDateTime dateTransaction,
             RedirectAttributes redirectAttributes) {
         try {
             // Créer l'objet transaction
@@ -199,7 +201,13 @@ public class CompteCourantController {
             transaction.setIdCompte(compteId);
             transaction.setIdTypeTransaction(typeTransaction);
             transaction.setMontant(BigDecimal.valueOf(montant));
-            transaction.setDateTransaction(LocalDateTime.now());
+            
+            // Utiliser la date fournie ou la date actuelle si non fournie
+            if (dateTransaction != null) {
+                transaction.setDateTransaction(dateTransaction);
+            } else {
+                transaction.setDateTransaction(LocalDateTime.now());
+            }
 
             // Appeler le service pour créer la transaction
             Transaction result = transactionService.createTransaction(transaction);
@@ -238,6 +246,26 @@ public class CompteCourantController {
             }
             model.addAttribute("clientsMap", clientsMap);
             
+            // Récupérer les transferts pour ce compte
+            List<Transfert> transferts = transactionService.getTransfertsByCompte(compteId);
+            if (transferts == null) {
+                model.addAttribute("error", "Impossible de récupérer les transferts - problème de connexion au serveur");
+                transferts = java.util.Collections.emptyList(); // Initialiser une liste vide pour éviter les erreurs dans le template
+            }
+            model.addAttribute("transferts", transferts);
+            
+            // Créer une map des comptes pour l'affichage des transferts
+            Map<String, CompteCourant> comptesMap = new HashMap<>();
+            for (CompteCourantAvecStatut compteAvecStatut : comptes) {
+                CompteCourant compteCourant = new CompteCourant();
+                compteCourant.setIdCompte(compteAvecStatut.getIdCompte());
+                compteCourant.setIdClient(compteAvecStatut.getIdClient());
+                comptesMap.put(compteAvecStatut.getIdCompte(), compteCourant);
+            }
+            // Ajouter le compte envoyeur aussi
+            comptesMap.put(compte.getIdCompte(), compte);
+            model.addAttribute("comptesMap", comptesMap);
+            
         } catch (Exception e) {
             model.addAttribute("error", "Erreur lors de la préparation du formulaire de transfert: " + e.getMessage());
         }
@@ -250,10 +278,11 @@ public class CompteCourantController {
             @RequestParam String compteEnvoyeur,
             @RequestParam String compteReceveur,
             @RequestParam double montant,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") LocalDateTime dateTransfert,
             RedirectAttributes redirectAttributes) {
         try {
-            // Appeler le service pour créer le transfert
-            Transfert result = transactionService.createTransfert(compteEnvoyeur, compteReceveur, BigDecimal.valueOf(montant));
+            // Appeler le service pour créer le transfert avec la date personnalisée
+            Transfert result = transactionService.createTransfert(compteEnvoyeur, compteReceveur, BigDecimal.valueOf(montant), dateTransfert);
             
             if (result != null) {
                 redirectAttributes.addFlashAttribute("success", "Transfert effectué avec succès !");
@@ -265,7 +294,7 @@ public class CompteCourantController {
             redirectAttributes.addFlashAttribute("error", "Erreur lors du transfert: " + e.getMessage());
         }
         
-        return "redirect:/comptes-courant/transactions?compteId=" + compteEnvoyeur;
+        return "redirect:/comptes-courant/transferts?compteId=" + compteEnvoyeur;
     }
 
     @GetMapping("/comptes-courant/transferts/list")

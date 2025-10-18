@@ -66,46 +66,4 @@ public class TypeStatutCompteRepository {
         List<TypeStatutCompte> results = query.getResultList();
         return results.isEmpty() ? null : results.get(0);
     }
-
-    /**
-     * Supprime un type de statut de compte par ID
-     */
-    public boolean deleteById(Integer id) {
-        TypeStatutCompte typeStatutCompte = findById(id);
-        if (typeStatutCompte != null) {
-            em.remove(typeStatutCompte);
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Vérifie si un type de statut de compte existe par ID
-     */
-    public boolean existsById(Integer id) {
-        return findById(id) != null;
-    }
-
-    /**
-     * Compte le nombre total de types de statut de compte
-     */
-    public long count() {
-        TypedQuery<Long> query = em.createQuery(
-            "SELECT COUNT(t) FROM TypeStatutCompte t", 
-            Long.class
-        );
-        return query.getSingleResult();
-    }
-
-    /**
-     * Active ou désactive un type de statut de compte
-     */
-    public TypeStatutCompte toggleActif(Integer id) {
-        TypeStatutCompte typeStatutCompte = findById(id);
-        if (typeStatutCompte != null) {
-            typeStatutCompte.setActif(!typeStatutCompte.getActif());
-            return em.merge(typeStatutCompte);
-        }
-        return null;
-    }
 }

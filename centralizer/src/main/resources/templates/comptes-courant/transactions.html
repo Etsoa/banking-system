@@ -48,6 +48,12 @@
                         <input type="number" id="montant" name="montant" step="0.01" min="0.01" required 
                                style="padding: 5px; min-width: 120px;" placeholder="0.00">
                     </div>
+                    <div style="display: inline-block; margin-right: 20px;">
+                        <label for="dateTransaction">Date et heure:</label><br>
+                        <input type="datetime-local" id="dateTransaction" name="dateTransaction" 
+                               style="padding: 5px; min-width: 180px;" 
+                               th:value="${#temporals.format(T(java.time.LocalDateTime).now(), 'yyyy-MM-dd''T''HH:mm')}">
+                    </div>
                     <div style="display: inline-block;">
                         <label>&nbsp;</label><br>
                         <button type="submit" style="background-color: #28a745; color: white; border: none; padding: 6px 15px; cursor: pointer; border-radius: 3px;">

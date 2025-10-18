@@ -141,24 +141,8 @@ public class TransactionService {
             // Validation des données
             validateTransactionData(transaction);
             
-            // Vérifier que le compte existe
             CompteCourant compte = compteRepository.find(transaction.getIdCompte());
-            if (compte == null) {
-                throw new CompteCourantBusinessException.CompteNotFoundException(0L);
-            }
-            
-            // Vérifier que le type de transaction existe
             TypeTransaction typeTransaction = typeTransactionRepository.findById(transaction.getIdTypeTransaction());
-            if (typeTransaction == null) {
-                throw new CompteCourantBusinessException("Type de transaction introuvable");
-            }
-            
-            // Vérifier que c'est bien un dépôt ou retrait (pas de virement)
-            String libelle = typeTransaction.getLibelle().toLowerCase();
-            if (libelle.contains("virement")) {
-                throw new CompteCourantBusinessException("Utilisez createTransfert() pour les virements");
-            }
-            
             return executeTransaction(transaction, compte, typeTransaction);
             
         } catch (CompteCourantBusinessException e) {
@@ -173,34 +157,11 @@ public class TransactionService {
      * Crée un transfert entre deux comptes (2 transactions + 1 transfert)
      */
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public Transfert createTransfert(String compteEnvoyeur, String compteReceveur, BigDecimal montant) throws CompteCourantException {
+    public Transfert createTransfert(String compteEnvoyeur, String compteReceveur, BigDecimal montant, LocalDateTime dateTransfert) throws CompteCourantException {
         try {
-            // Validation des paramètres
-            if (compteEnvoyeur == null || compteEnvoyeur.trim().isEmpty()) {
-                throw new CompteCourantBusinessException("Le compte envoyeur est obligatoire");
-            }
-            if (compteReceveur == null || compteReceveur.trim().isEmpty()) {
-                throw new CompteCourantBusinessException("Le compte receveur est obligatoire");
-            }
-            if (montant == null || montant.compareTo(BigDecimal.ZERO) <= 0) {
-                throw new CompteCourantBusinessException.MontantInvalideException(
-                    montant != null ? montant.doubleValue() : 0.0
-                );
-            }
-            if (compteEnvoyeur.equals(compteReceveur)) {
-                throw new CompteCourantBusinessException("Le compte envoyeur et receveur doivent être différents");
-            }
-            
             // Vérifier que les comptes existent
             CompteCourant envoyeur = compteRepository.find(compteEnvoyeur);
             CompteCourant receveur = compteRepository.find(compteReceveur);
-            
-            if (envoyeur == null) {
-                throw new CompteCourantBusinessException("Compte envoyeur introuvable");
-            }
-            if (receveur == null) {
-                throw new CompteCourantBusinessException("Compte receveur introuvable");
-            }
             
             // Récupérer les types de transaction pour virement
             TypeTransaction typeSortant = getTypeTransactionByLibelle("Virement sortant");
@@ -211,7 +172,8 @@ public class TransactionService {
             transactionSortante.setMontant(montant);
             transactionSortante.setIdCompte(compteEnvoyeur);
             transactionSortante.setIdTypeTransaction(typeSortant.getId());
-            
+            transactionSortante.setDateTransaction(dateTransfert);
+
             Transaction savedTransactionSortante = executeTransaction(transactionSortante, envoyeur, typeSortant);
             
             // Créer la transaction entrante (crédit du compte receveur)
@@ -219,6 +181,7 @@ public class TransactionService {
             transactionEntrante.setMontant(montant);
             transactionEntrante.setIdCompte(compteReceveur);
             transactionEntrante.setIdTypeTransaction(typeEntrant.getId());
+            transactionEntrante.setDateTransaction(dateTransfert);
             
             Transaction savedTransactionEntrante = executeTransaction(transactionEntrante, receveur, typeEntrant);
             
@@ -233,19 +196,6 @@ public class TransactionService {
             throw new CompteCourantException("Erreur lors de la création du transfert", e);
         }
     }
-
-    /**
-     * Récupère tous les types de transaction
-     */
-    public List<TypeTransaction> getAllTypesTransaction() throws CompteCourantException {
-        try {
-            return typeTransactionRepository.findAll();
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Erreur lors de la récupération des types de transaction", e);
-            throw new CompteCourantException("Erreur lors de la récupération des types de transaction", e);
-        }
-    }
-
     /**
      * Récupère les types de transaction actifs
      */
@@ -270,50 +220,6 @@ public class TransactionService {
      */
     public List<Transfert> getTransfertsByCompte(String compteId) throws CompteCourantException {
         return transfertService.getTransfertsByCompte(compteId);
-    }
-
-    /**
-     * Supprime une transaction (avec remise à jour du solde)
-     */
-    @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void deleteTransaction(Integer id) throws CompteCourantException {
-        try {
-            Transaction transaction = getTransactionById(id);
-            
-            // Récupérer le compte
-            CompteCourant compte = compteRepository.find(transaction.getIdCompte());
-            if (compte == null) {
-                throw new CompteCourantBusinessException.CompteNotFoundException(0L);
-            }
-            
-            // Récupérer le type de transaction
-            TypeTransaction typeTransaction = typeTransactionRepository.findById(transaction.getIdTypeTransaction());
-            if (typeTransaction == null) {
-                throw new CompteCourantBusinessException("Type de transaction introuvable");
-            }
-            
-            // Annuler l'effet de la transaction sur le solde
-            BigDecimal montantSigne;
-            try {
-                montantSigne = calculerMontantSigne(transaction.getMontant(), typeTransaction.getSigne());
-            } catch (CompteCourantBusinessException e) {
-                throw e;
-            }
-            BigDecimal nouveauSolde = compte.getSolde().subtract(montantSigne);
-            
-            // Mettre à jour le solde du compte
-            compte.setSolde(nouveauSolde);
-            compteRepository.save(compte);
-            
-            // Supprimer la transaction
-            transactionRepository.delete(id);
-            
-        } catch (CompteCourantBusinessException e) {
-            throw e;
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Erreur lors de la suppression de la transaction " + id, e);
-            throw new CompteCourantException("Erreur lors de la suppression de la transaction", e);
-        }
     }
 
     /**
@@ -353,21 +259,17 @@ public class TransactionService {
                 throw new CompteCourantBusinessException("Solde insuffisant - découvert non autorisé");
             }
         }
-        
-        // Sauvegarder la transaction
-        transaction.setDateTransaction(LocalDateTime.now());
+
         Transaction savedTransaction = transactionRepository.save(transaction);
         
         // Mettre à jour le solde du compte
         compte.setSolde(nouveauSolde);
         compteRepository.save(compte);
         
-        // Déléguer la création de l'historique au service dédié
         try {
             historiqueSoldeService.createHistoriqueSolde(nouveauSolde, transaction.getIdCompte(), savedTransaction.getId());
         } catch (CompteCourantException e) {
             LOGGER.log(Level.WARNING, "Erreur lors de la création de l'historique de solde", e);
-            // Ne pas faire échouer la transaction pour un problème d'historique
         }
         
         return savedTransaction;

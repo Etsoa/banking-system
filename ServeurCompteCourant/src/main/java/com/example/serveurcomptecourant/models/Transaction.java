@@ -22,7 +22,7 @@ public class Transaction {
 
     @Column(name = "date_transaction", nullable = false)
     @JsonbDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
-    private LocalDateTime dateTransaction = LocalDateTime.now();
+    private LocalDateTime dateTransaction;
 
     @Column(name = "montant", nullable = false, precision = 12, scale = 2)
     private BigDecimal montant;
@@ -40,7 +40,6 @@ public class Transaction {
         this.montant = montant;
         this.idTypeTransaction = idTypeTransaction;
         this.idCompte = idCompte;
-        this.dateTransaction = LocalDateTime.now();
     }
 
     // Getters & Setters

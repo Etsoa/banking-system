@@ -45,6 +45,7 @@ app.UseCors("AllowCentralizer");
 app.UseHttpsRedirection();
 
 // Mappe tous tes contrôleurs (ex: /api/CompteDepot/test)
+
 app.MapControllers();
 
 app.Run();

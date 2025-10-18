@@ -6,13 +6,19 @@ import com.example.centralizer.models.compteCourantDTO.Transfert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -37,8 +43,8 @@ public class TransactionCompteCourantService {
      */
     public List<Transaction> getTransactionsByCompte(String compteId) {
         try {
-            String baseUrl = serverUrl.replace("/compte-courant", "");
-            String url = baseUrl + "/transactions/compte/" + compteId;
+             
+            String url =  serverUrl + "/transactions/compte/" + compteId;
             LOGGER.info("Appel GET vers: " + url);
             
             ResponseEntity<List<Transaction>> response = restTemplate.exchange(
@@ -61,8 +67,8 @@ public class TransactionCompteCourantService {
      */
     public List<Transaction> getTransactionsByCompteAndType(String compteId, Integer typeId) {
         try {
-            String baseUrl = serverUrl.replace("/compte-courant", "");
-            String url = baseUrl + "/transactions/compte/" + compteId + "/type/" + typeId;
+             
+            String url =  serverUrl + "/transactions/compte/" + compteId + "/type/" + typeId;
             LOGGER.info("Appel GET vers: " + url);
             
             ResponseEntity<List<Transaction>> response = restTemplate.exchange(
@@ -85,8 +91,8 @@ public class TransactionCompteCourantService {
      */
     public List<TypeTransaction> getAllTypesTransaction() {
         try {
-            String baseUrl = serverUrl.replace("/compte-courant", "");
-            String url = baseUrl + "/transactions/types";
+             
+            String url =  serverUrl + "/transactions/types";
             LOGGER.info("Appel GET vers: " + url);
             
             ResponseEntity<List<TypeTransaction>> response = restTemplate.exchange(
@@ -109,8 +115,8 @@ public class TransactionCompteCourantService {
      */
     public Transaction createTransaction(Transaction transaction) {
         try {
-            String baseUrl = serverUrl.replace("/compte-courant", "");
-            String url = baseUrl + "/transactions";
+             
+            String url =  serverUrl + "/transactions";
             LOGGER.info("Appel POST vers: " + url);
             
             Transaction result = restTemplate.postForObject(url, transaction, Transaction.class);
@@ -123,15 +129,22 @@ public class TransactionCompteCourantService {
     }
 
     /**
-     * Créer un transfert entre deux comptes
+     * Créer un transfert entre deux comptes avec date personnalisée
      */
-    public Transfert createTransfert(String compteEnvoyeur, String compteReceveur, BigDecimal montant) {
+    public Transfert createTransfert(String compteEnvoyeur, String compteReceveur, BigDecimal montant, LocalDateTime dateTransfert) {
         try {
-            String baseUrl = serverUrl.replace("/compte-courant", "");
-            String url = baseUrl + "/transactions/transfert/" + compteEnvoyeur + "/" + compteReceveur + "/" + montant;
+            String url = serverUrl + "/transferts";
             LOGGER.info("Appel POST vers: " + url);
             
-            Transfert result = restTemplate.postForObject(url, null, Transfert.class);
+            // Créer l'objet transfert
+            Transfert transfert = new Transfert();
+            transfert.setEnvoyer(compteEnvoyeur);
+            transfert.setReceveur(compteReceveur);
+            transfert.setMontant(montant);
+            // Convertir LocalDateTime en LocalDate
+            transfert.setDateTransfert(dateTransfert.toLocalDate());
+            
+            Transfert result = restTemplate.postForObject(url, transfert, Transfert.class);
             return result;
         } catch (RestClientException e) {
             LOGGER.severe("Erreur lors de la création du transfert: " + e.getMessage());
@@ -145,8 +158,8 @@ public class TransactionCompteCourantService {
      */
     public List<Transfert> getAllTransferts() {
         try {
-            String baseUrl = serverUrl.replace("/compte-courant", "");
-            String url = baseUrl + "/transferts";
+             
+            String url =  serverUrl + "/transferts";
             LOGGER.info("Appel GET vers: " + url);
             
             ResponseEntity<List<Transfert>> response = restTemplate.exchange(
@@ -169,8 +182,8 @@ public class TransactionCompteCourantService {
      */
     public List<Transfert> getTransfertsByCompte(String compteId) {
         try {
-            String baseUrl = serverUrl.replace("/compte-courant", "");
-            String url = baseUrl + "/transferts/compte/" + compteId;
+             
+            String url =  serverUrl + "/transferts/compte/" + compteId;
             LOGGER.info("Appel GET vers: " + url);
             
             ResponseEntity<List<Transfert>> response = restTemplate.exchange(
