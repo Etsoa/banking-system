@@ -82,7 +82,11 @@ namespace ServeurCompteDepot.Models
 
             // Configuration pour Frais
             modelBuilder.Entity<Frais>()
-                .Property(f => f.Montant)
+                .Property(f => f.MontantMin)
+                .HasPrecision(12, 2);
+
+            modelBuilder.Entity<Frais>()
+                .Property(f => f.MontantMax)
                 .HasPrecision(12, 2);
         }
     }

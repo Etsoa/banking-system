@@ -14,9 +14,14 @@
     <div>
         <h2>Liste des Prêts</h2>
         
+        <!-- Message de succès -->
+        <div th:if="${success}" style="margin-top: 20px; padding: 15px; background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 5px; color: #155724;">
+            <strong>Succès:</strong> <span th:text="${success}"></span>
+        </div>
+
         <!-- Message d'erreur si problème de connexion -->
         <div th:if="${error}" style="margin-top: 20px; padding: 15px; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 5px; color: #721c24;">
-            <strong>Erreur:</strong> <span>[[${error}]]</span>
+            <strong>Erreur:</strong> <span th:text="${error}"></span>
         </div>
         
         <!-- Tableau des prêts -->

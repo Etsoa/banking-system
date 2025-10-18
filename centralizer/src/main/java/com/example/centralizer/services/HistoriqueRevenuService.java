@@ -1,7 +1,7 @@
 package com.example.centralizer.services;
 
 import com.example.centralizer.models.HistoriqueRevenus;
-import com.example.centralizer.repositories.HistoriqueRevenusRepository;
+import com.example.centralizer.repository.HistoriqueRevenusRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

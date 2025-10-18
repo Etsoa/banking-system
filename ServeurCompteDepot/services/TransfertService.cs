@@ -85,6 +85,12 @@ namespace ServeurCompteDepot.Services
                 var compteEnv = await _context.Comptes.FirstOrDefaultAsync(c => c.IdCompte == compteEnvoyeur);
                 var compteRec = await _context.Comptes.FirstOrDefaultAsync(c => c.IdCompte == compteReceveur);
                 
+                if (compteEnv == null)
+                    throw new InvalidOperationException($"Compte envoyeur {compteEnvoyeur} introuvable");
+                
+                if (compteRec == null)
+                    throw new InvalidOperationException($"Compte receveur {compteReceveur} introuvable");
+                
                 // Vérifier que le solde est suffisant (pas de découvert autorisé pour les comptes dépôt)
                 if (compteEnv.Solde < montant)
                     throw new InvalidOperationException($"Solde insuffisant. Solde actuel: {compteEnv.Solde}, Montant demandé: {montant}");

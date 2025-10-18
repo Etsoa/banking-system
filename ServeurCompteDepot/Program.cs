@@ -17,6 +17,7 @@ builder.Services.AddScoped<IHistoriqueSoldeService, HistoriqueSoldeService>();
 builder.Services.AddScoped<IHistoriqueStatutCompteService, HistoriqueStatutCompteService>();
 builder.Services.AddScoped<ITypeTransactionService, TypeTransactionService>();
 builder.Services.AddScoped<ITypeStatutCompteService, TypeStatutCompteService>();
+builder.Services.AddScoped<IFraisService, FraisService>();
 
 // Active la prise en charge des contrôleurs API
 builder.Services.AddControllers()

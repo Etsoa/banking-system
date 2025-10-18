@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Centralizer - Nouveau Prêt</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="container" style="max-width: 800px; margin: 0 auto; padding: 20px;">
+        <h1>Nouveau Prêt</h1>
+        <div style="margin-bottom: 20px;">
+            <a href="/prets" style="color: #007bff; text-decoration: none;">← Retour à la liste des prêts</a>
+        </div>
+
+        <!-- Message d'erreur -->
+        <div th:if="${error}" style="margin-bottom: 20px; padding: 15px; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 5px; color: #721c24;">
+            <strong>Erreur:</strong> <span th:text="${error}"></span>
+            <div th:if="${errorDetails}" style="margin-top: 10px; font-size: 0.9em; color: #6c757d;">
+                <details>
+                    <summary>Détails techniques</summary>
+                    <pre th:text="${errorDetails}" style="white-space: pre-wrap; margin-top: 10px;"></pre>
+                </details>
+            </div>
+        </div>
+
+        <!-- Message de succès -->
+        <div th:if="${success}" style="margin-bottom: 20px; padding: 15px; background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 5px; color: #155724;">
+            <strong>Succès:</strong> <span th:text="${success}"></span>
+        </div>
+
+        <!-- Formulaire de création -->
+        <form th:action="@{/prets/create}" th:object="${pret}" method="post" style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
+            <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 20px;">
+                <!-- Client -->
+                <div class="form-group" style="flex: 1; min-width: 200px;">
+                    <label for="idClient" style="display: block; margin-bottom: 5px; font-weight: bold;">Client *</label>
+                    <select th:field="*{idClient}" 
+                            id="idClient" 
+                            required 
+                            style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+                        <option value="">-- Sélectionner un client --</option>
+                        <option th:each="client : ${clients}" 
+                                th:value="${client.idClient}" 
+                                th:text="${client.idClient + ' - ' + client.nom + ' ' + client.prenom}">
+                        </option>
+                    </select>
+                </div>
+
+                <!-- Montant -->
+                <div class="form-group" style="flex: 1; min-width: 200px;">
+                    <label for="montant" style="display: block; margin-bottom: 5px; font-weight: bold;">Montant *</label>
+                    <input type="number" 
+                           th:field="*{montant}" 
+                           id="montant" 
+                           step="0.01" 
+                           min="0.01" 
+                           required 
+                           onchange="updateDureePlage()"
+                           style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+                </div>
+            </div>
+
+            <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 20px; margin-top: 15px;">
+                <!-- Durée en Mois -->
+                <div class="form-group" style="flex: 1; min-width: 200px;">
+                    <label for="dureeMois" style="display: block; margin-bottom: 5px; font-weight: bold;">Durée (mois) *</label>
+                    <select th:field="*{dureeMois}" 
+                            id="dureeMois" 
+                            required 
+                            style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+                        <option value="">-- Saisir d'abord le montant --</option>
+                    </select>
+                    <small id="dureeInfo" style="color: #6c757d; font-size: 0.9em;"></small>
+                </div>
+
+                <!-- Modalité -->
+                <div class="form-group" style="flex: 1; min-width: 200px;">
+                    <label for="idModalite" style="display: block; margin-bottom: 5px; font-weight: bold;">Modalité de remboursement *</label>
+                    <select th:field="*{idModalite}" 
+                            id="idModalite" 
+                            required 
+                            style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+                        <option value="">-- Sélectionner --</option>
+                        <option th:each="modalite : ${modalites}" 
+                                th:value="${modalite.id}" 
+                                th:text="${modalite.libelle + ' (' + modalite.nombreMois + ' mois)'}">
+                        </option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 20px; margin-top: 15px;">
+                <!-- Type de Remboursement -->
+                <div class="form-group" style="flex: 1; min-width: 200px;">
+                    <label for="idTypeRemboursement" style="display: block; margin-bottom: 5px; font-weight: bold;">Type de remboursement *</label>
+                    <select th:field="*{idTypeRemboursement}" 
+                            id="idTypeRemboursement" 
+                            required 
+                            style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+                        <option value="">-- Sélectionner --</option>
+                        <option th:each="type : ${typesRemboursement}" 
+                                th:value="${type.id}" 
+                                th:text="${type.nom}">
+                        </option>
+                    </select>
+                </div>
+
+                <!-- Date de Début (optionnel, sera définie automatiquement) -->
+                <div class="form-group" style="flex: 1; min-width: 200px;">
+                    <label for="dateDebut" style="display: block; margin-bottom: 5px; font-weight: bold;">Date de début (optionnel)</label>
+                    <input type="date" 
+                           th:field="*{dateDebut}" 
+                           id="dateDebut" 
+                           style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+                    <small style="color: #6c757d; font-size: 0.9em;">Laissez vide pour utiliser la date d'aujourd'hui</small>
+                </div>
+            </div>
+
+            <!-- Boutons -->
+            <div style="margin-top: 30px; text-align: center;">
+                <button type="submit" 
+                        style="background-color: #28a745; color: white; border: none; padding: 12px 30px; font-size: 16px; border-radius: 5px; cursor: pointer; margin-right: 10px;">
+                    Créer le Prêt
+                </button>
+                <button type="button" 
+                        onclick="window.location.href='/prets'" 
+                        style="background-color: #6c757d; color: white; border: none; padding: 12px 30px; font-size: 16px; border-radius: 5px; cursor: pointer;">
+                    Annuler
+                </button>
+            </div>
+        </form>
+
+        <!-- Instructions -->
+        <div style="margin-top: 30px; padding: 15px; background-color: #e9ecef; border-radius: 5px;">
+            <h3 style="margin-top: 0;">Instructions :</h3>
+            <ul>
+                <li><strong>Client :</strong> Sélectionnez le client demandant le prêt</li>
+                <li><strong>Montant :</strong> Montant du prêt en devise locale (détermine la plage de durée disponible)</li>
+                <li><strong>Durée :</strong> Durée du prêt selon la plage autorisée pour le montant saisi</li>
+                <li><strong>Modalité :</strong> Fréquence des remboursements (mensuel, trimestriel, etc.)</li>
+                <li><strong>Type de remboursement :</strong> Méthode de calcul des remboursements (annuité constante ou amortissement constant)</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Fonction pour mettre à jour la plage de durée selon le montant
+        function updateDureePlage() {
+            const montant = document.getElementById('montant').value;
+            const dureeMoisSelect = document.getElementById('dureeMois');
+            const dureeInfo = document.getElementById('dureeInfo');
+            
+            if (!montant || montant <= 0) {
+                dureeMoisSelect.innerHTML = '<option value="">-- Saisir d\'abord le montant --</option>';
+                dureeInfo.textContent = '';
+                return;
+            }
+            
+            // Appel AJAX pour récupérer la plage de durée
+            fetch('/prets/plage-duree?montant=' + montant)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        dureeInfo.textContent = 'Erreur: ' + data.error;
+                        dureeInfo.style.color = '#dc3545';
+                        dureeMoisSelect.innerHTML = '<option value="">-- Erreur --</option>';
+                    } else {
+                        const dureeMin = data.dureeMinMois;
+                        const dureeMax = data.dureeMaxMois;
+                        
+                        dureeInfo.textContent = `Plage autorisée: ${dureeMin} à ${dureeMax} mois`;
+                        dureeInfo.style.color = '#28a745';
+                        
+                        // Remplir la liste déroulante avec les options disponibles
+                        let options = '<option value="">-- Sélectionner --</option>';
+                        for (let i = dureeMin; i <= dureeMax; i++) {
+                            options += `<option value="${i}">${i} mois</option>`;
+                        }
+                        dureeMoisSelect.innerHTML = options;
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    dureeInfo.textContent = 'Erreur lors de la récupération de la plage de durée';
+                    dureeInfo.style.color = '#dc3545';
+                    dureeMoisSelect.innerHTML = '<option value="">-- Erreur --</option>';
+                });
+        }
+        
+        // Initialiser la date d'aujourd'hui
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date().toISOString().split('T')[0];
+            const dateInput = document.getElementById('dateDebut');
+            if (!dateInput.value) {
+                dateInput.value = today;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -58,4 +58,16 @@ public class Pret {
 
     public Integer getIdTypeRemboursement() { return idTypeRemboursement; }
     public void setIdTypeRemboursement(Integer idTypeRemboursement) { this.idTypeRemboursement = idTypeRemboursement; }
+
+    // Propriétés calculées pour l'affichage
+    public Integer getIdPret() { return id; }
+    
+    public Double getDureeAnne() { 
+        return dureeMois != null ? dureeMois / 12.0 : 0.0; 
+    }
+    
+    public Double getTauxInteret() { 
+        // Taux d'intérêt par défaut - à récupérer depuis la base si disponible
+        return 5.0; 
+    }
 }

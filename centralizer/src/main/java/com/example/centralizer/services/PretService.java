@@ -10,7 +10,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 /**
@@ -58,7 +61,7 @@ public class PretService {
      */
     public List<Pret> getPretsByClientId(String clientId) {
         try {
-            String url = serverUrl + "/pret/client/" + clientId;
+            String url = serverUrl + "/client/" + clientId;
             LOGGER.info("Appel GET vers: " + url);
             
             ResponseEntity<List<Pret>> response = restTemplate.exchange(
@@ -77,7 +80,7 @@ public class PretService {
     }
 
     /**
-     * Crée un nouveau prêt
+     * Crée un nouveau prêt (version simple)
      */
     public Pret createPret(Pret pret) {
         try {
@@ -88,6 +91,32 @@ public class PretService {
             return response.getBody();
         } catch (RestClientException e) {
             LOGGER.severe("Erreur lors de la création du prêt: " + e.getMessage());
+            exceptionHandlingService.handleServerException(e, "ServeurPret");
+            return null;
+        }
+    }
+
+    /**
+     * Crée un prêt complet avec validation et amortissement
+     */
+    public Pret createPretComplet(String clientId, BigDecimal montant, Integer dureeMois, 
+                                 Integer modaliteId, Integer typeRemboursementId) {
+        try {
+            String url = serverUrl + "/complet";
+            LOGGER.info("Appel POST vers: " + url);
+            
+            // Création d'un objet pour les paramètres
+            Map<String, Object> requestBody = new HashMap<>();
+            requestBody.put("clientId", clientId);
+            requestBody.put("montant", montant);
+            requestBody.put("dureeMois", dureeMois);
+            requestBody.put("modaliteId", modaliteId);
+            requestBody.put("typeRemboursementId", typeRemboursementId);
+            
+            ResponseEntity<Pret> response = restTemplate.postForEntity(url, requestBody, Pret.class);
+            return response.getBody();
+        } catch (RestClientException e) {
+            LOGGER.severe("Erreur lors de la création du prêt complet: " + e.getMessage());
             exceptionHandlingService.handleServerException(e, "ServeurPret");
             return null;
         }

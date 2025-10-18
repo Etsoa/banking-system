@@ -7,7 +7,7 @@ namespace ServeurCompteDepot.Services
     {
         Task<IEnumerable<HistoriqueSolde>> GetAllHistoriquesSoldeAsync();
         Task<IEnumerable<HistoriqueSolde>> GetHistoriquesSoldeByCompteAsync(string idCompte);
-        Task<HistoriqueSolde> CreateHistoriqueSoldeAsync(string idCompte, int idTransaction, decimal montant);
+        Task<HistoriqueSolde> CreateHistoriqueSoldeAsync(string idCompte, int idTransaction, decimal montant, DateTime dateChangement);
         Task<HistoriqueSolde?> GetDernierHistoriqueSoldeAsync(string idCompte);
     }
 

@@ -146,3 +146,19 @@ INSERT INTO plage_duree_pret (montant_min, montant_max, duree_min_mois, duree_ma
    (1001, 5000, 12, 24, TRUE),
    (5001, 20000, 24, 36, TRUE),
    (20001, 100000, 36, 60, TRUE);
+
+-- Donnees exemple pour taux d'interet
+INSERT INTO taux_interet (taux_annuel, date_debut) VALUES
+   (3.50, '2024-01-01'),
+   (4.25, '2024-06-01'),
+   (5.00, '2024-12-01'),
+   (4.75, '2025-01-01');
+
+-- Donnees exemple pour frais
+INSERT INTO frais (date_debut, nom, valeur) VALUES
+   ('2024-01-01 00:00:00', 'Frais de dossier', 150),
+   ('2024-01-01 00:00:00', 'Assurance emprunteur', 500),
+   ('2024-01-01 00:00:00', 'Frais de garantie', 300),
+   ('2024-01-01 00:00:00', 'Frais de notaire', 1200),
+   ('2024-06-01 00:00:00', 'Frais de retard', 50),
+   ('2024-06-01 00:00:00', 'Penalite remboursement anticipe', 1000);

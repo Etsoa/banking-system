@@ -196,6 +196,13 @@ public class CompteCourantController {
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") LocalDateTime dateTransaction,
             RedirectAttributes redirectAttributes) {
         try {
+            // Récupérer le compte pour obtenir l'ID du client
+            CompteCourant compte = compteCourantService.getCompteById(compteId);
+            if (compte == null) {
+                redirectAttributes.addFlashAttribute("error", "Compte introuvable");
+                return "redirect:/comptes-courant/transactions?compteId=" + compteId;
+            }
+
             // Créer l'objet transaction
             Transaction transaction = new Transaction();
             transaction.setIdCompte(compteId);
@@ -203,8 +210,8 @@ public class CompteCourantController {
             transaction.setMontant(BigDecimal.valueOf(montant));
             transaction.setDateTransaction(dateTransaction);
 
-            // Appeler le service pour créer la transaction
-            Transaction result = transactionService.createTransaction(transaction);
+            // Appeler le service pour créer la transaction avec l'ID du client
+            Transaction result = transactionService.createTransaction(transaction, compte.getIdClient());
             
             if (result != null) {
                 redirectAttributes.addFlashAttribute("success", "Transaction ajoutée avec succès !");

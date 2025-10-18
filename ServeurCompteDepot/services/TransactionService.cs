@@ -18,10 +18,14 @@ namespace ServeurCompteDepot.Services
     public class TransactionService : ITransactionService
     {
         private readonly CompteDepotContext _context;
+        private readonly IFraisService _fraisService;
+        private readonly ILogger<TransactionService> _logger;
 
-        public TransactionService(CompteDepotContext context)
+        public TransactionService(CompteDepotContext context, IFraisService fraisService, ILogger<TransactionService> logger)
         {
             _context = context;
+            _fraisService = fraisService;
+            _logger = logger;
         }
 
         public async Task<IEnumerable<Transaction>> GetAllTransactionsAsync()
@@ -94,6 +98,7 @@ namespace ServeurCompteDepot.Services
         /// Règles métier:
         /// - Dépôt: Montant positif ajouté au solde
         /// - Retrait: Montant positif retiré du solde, SANS découvert autorisé
+        /// - Frais automatiques pour retraits et virements sortants
         /// </summary>
         public async Task<Transaction> ExecuteTransactionAsync(Transaction transaction)
         {
@@ -101,12 +106,21 @@ namespace ServeurCompteDepot.Services
             
             try
             {
-                // Vérifier que le compte existe
+                // 1. Vérifier que le compte existe
                 var compte = await _context.Comptes.FirstOrDefaultAsync(c => c.IdCompte == transaction.IdCompte);
+                if (compte == null)
+                {
+                    throw new InvalidOperationException($"Compte {transaction.IdCompte} introuvable");
+                }
                 
-                // Récupérer le type de transaction
+                // 2. Récupérer le type de transaction
                 var typeTransaction = await _context.TypesTransaction.FindAsync(transaction.IdTypeTransaction);
+                if (typeTransaction == null)
+                {
+                    throw new InvalidOperationException($"Type de transaction {transaction.IdTypeTransaction} introuvable");
+                }
                 
+                // 3. Calculer le nouveau solde
                 decimal nouveauSolde = compte.Solde;
                 
                 // Appliquer la règle métier selon le signe du type de transaction
@@ -123,19 +137,22 @@ namespace ServeurCompteDepot.Services
                     nouveauSolde -= transaction.Montant;
                 }
                 
-                // Sauvegarder la transaction
+                // 4. Sauvegarder la transaction
                 _context.Transactions.Add(transaction);
                 await _context.SaveChangesAsync();
                 
-                // Mettre à jour le solde du compte
-                compte.Solde = nouveauSolde;
+                // 5. Appliquer les frais pour les retraits et virements sortants
+                decimal soldeApresTransactionEtFrais = await AppliquerFraisAsync(compte, typeTransaction, transaction, nouveauSolde);
                 
-                // Créer l'historique du solde
+                // 6. Mettre à jour le solde du compte
+                compte.Solde = soldeApresTransactionEtFrais;
+                
+                // 7. Créer l'historique du solde
                 var historiqueSolde = new HistoriqueSolde
                 {
                     IdCompte = transaction.IdCompte,
                     IdTransaction = transaction.IdTransaction,
-                    Montant = nouveauSolde,
+                    Montant = soldeApresTransactionEtFrais,
                     DateChangement = transaction.DateTransaction
                 };
                 
@@ -150,6 +167,55 @@ namespace ServeurCompteDepot.Services
             {
                 await dbTransaction.RollbackAsync();
                 throw;
+            }
+        }
+
+        /// <summary>
+        /// Applique les frais pour les retraits et virements sortants
+        /// </summary>
+        private async Task<decimal> AppliquerFraisAsync(Compte compte, TypeTransaction typeTransaction, Transaction transaction, decimal nouveauSolde)
+        {
+            // Les frais s'appliquent uniquement aux retraits et virements sortants
+            if (!typeTransaction.Libelle.Equals("Retrait", StringComparison.OrdinalIgnoreCase) &&
+                !typeTransaction.Libelle.Equals("Virement sortant", StringComparison.OrdinalIgnoreCase))
+            {
+                return nouveauSolde;
+            }
+
+            try
+            {
+                var fraisApplicables = await _fraisService.FindCurrentFraisAsync(
+                    typeTransaction.Libelle, 
+                    transaction.Montant, 
+                    transaction.DateTransaction);
+
+                if (fraisApplicables == null)
+                {
+                    return nouveauSolde; // Pas de frais applicables
+                }
+
+                decimal montantFrais = fraisApplicables.Valeur;
+                decimal soldeApresTransactionEtFrais = nouveauSolde - montantFrais;
+
+                // Vérifier que l'application des frais ne rend pas le solde négatif
+                // (PAS de découvert autorisé pour les comptes dépôt)
+                if (soldeApresTransactionEtFrais < 0)
+                {
+                    throw new InvalidOperationException(
+                        $"Solde insuffisant pour couvrir les frais de {montantFrais}. " +
+                        $"Solde après transaction: {nouveauSolde}, " +
+                        $"Solde après frais: {soldeApresTransactionEtFrais}");
+                }
+
+                _logger.LogInformation("Frais de {MontantFrais} appliqués pour {TypeTransaction} de {Montant}", 
+                    montantFrais, typeTransaction.Libelle, transaction.Montant);
+
+                return soldeApresTransactionEtFrais;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Erreur lors de la récupération des frais pour {TypeTransaction}", typeTransaction.Libelle);
+                return nouveauSolde; // Continue sans frais en cas d'erreur
             }
         }
     }

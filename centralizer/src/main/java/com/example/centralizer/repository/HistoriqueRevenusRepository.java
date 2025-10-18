@@ -52,4 +52,21 @@ public interface HistoriqueRevenusRepository extends JpaRepository<HistoriqueRev
      * Trouve les revenus supérieurs à un montant
      */
     List<HistoriqueRevenus> findByMontantRevenusGreaterThan(BigDecimal montant);
+    
+    /**
+     * Trouve le revenu le plus récent d'un client à une date donnée
+     */
+    @Query("SELECT hr FROM HistoriqueRevenus hr WHERE hr.idClient = :idClient " +
+           "AND hr.periodeDebut <= :dateReference " +
+           "AND hr.periodeFin >= :dateReference " +
+           "ORDER BY hr.dateEnregistrement DESC")
+    java.util.Optional<HistoriqueRevenus> findCurrentRevenuByClientAndDate(@Param("idClient") Integer idClient, 
+                                                                @Param("dateReference") LocalDate dateReference);
+
+    /**
+     * Trouve le revenu le plus récent d'un client (sans contrainte de date)
+     */
+    @Query("SELECT hr FROM HistoriqueRevenus hr WHERE hr.idClient = :idClient " +
+           "ORDER BY hr.dateEnregistrement DESC")
+    java.util.Optional<HistoriqueRevenus> findLatestRevenuByClient(@Param("idClient") Integer idClient);
 }

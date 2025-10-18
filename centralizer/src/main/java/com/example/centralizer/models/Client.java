@@ -96,4 +96,9 @@ public class Client {
     public void setEmail(String email) {
         this.email = email;
     }
+
+    // Méthode pour la compatibilité avec les templates
+    public String getIdClient() {
+        return id != null ? id.toString() : null;
+    }
 }
