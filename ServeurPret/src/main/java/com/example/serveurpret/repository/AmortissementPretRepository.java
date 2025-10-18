@@ -58,4 +58,11 @@ public class AmortissementPretRepository {
                 .setParameter("idPret", idPret)
                 .executeUpdate();
     }
+
+    /**
+     * Récupère les amortissements d'un prêt par ID prêt
+     */
+    public List<AmortissementPret> findByPretId(Integer idPret) {
+        return findByIdPretOrderByPeriode(idPret);
+    }
 }

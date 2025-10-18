@@ -118,4 +118,27 @@ public class PretParametresService {
             return 1; // Valeur par défaut
         }
     }
+
+    /**
+     * Récupère toutes les méthodes de remboursement disponibles
+     */
+    public List<Map<String, Object>> getMethodesRemboursement() {
+        try {
+            String url = serverUrl + "/parametres/methodes-remboursement";
+            LOGGER.info("Appel GET vers: " + url);
+            
+            ResponseEntity<List<Map<String, Object>>> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<Map<String, Object>>>() {}
+            );
+            
+            return response.getBody();
+        } catch (RestClientException e) {
+            LOGGER.severe("Erreur lors de la récupération des méthodes de remboursement: " + e.getMessage());
+            exceptionHandlingService.handleServerException(e, "ServeurPret");
+            return null;
+        }
+    }
 }

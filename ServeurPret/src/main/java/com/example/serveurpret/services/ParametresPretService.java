@@ -24,6 +24,9 @@ public class ParametresPretService {
     @EJB
     private TauxInteretRepository tauxInteretRepository;
 
+    @EJB
+    private MethodeRemboursementRepository methodeRemboursementRepository;
+
     /**
      * Récupère toutes les modalités de remboursement disponibles
      */
@@ -64,5 +67,12 @@ public class ParametresPretService {
      */
     public TypeRemboursement getTypeRemboursementById(Integer id) {
         return typeRemboursementRepository.findById(id);
+    }
+
+    /**
+     * Récupère toutes les méthodes de remboursement disponibles
+     */
+    public List<MethodeRemboursement> getMethodesRemboursement() {
+        return methodeRemboursementRepository.findAll();
     }
 }

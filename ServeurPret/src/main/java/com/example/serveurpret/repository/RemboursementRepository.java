@@ -42,4 +42,20 @@ public class RemboursementRepository {
             em.remove(remboursement);
         }
     }
+
+    /**
+     * Récupère les remboursements payés d'un prêt
+     */
+    public List<Remboursement> findByPretIdAndPaid(Integer pretId) {
+        return em.createQuery("SELECT r FROM Remboursement r WHERE r.idPret = :pretId AND r.datePaiement IS NOT NULL", Remboursement.class)
+                .setParameter("pretId", pretId)
+                .getResultList();
+    }
+
+    /**
+     * Crée un nouveau remboursement
+     */
+    public void create(Remboursement remboursement) {
+        em.persist(remboursement);
+    }
 }

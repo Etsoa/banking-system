@@ -121,4 +121,100 @@ public class PretService {
             return null;
         }
     }
+
+    /**
+     * Récupère un prêt par son ID
+     */
+    public Pret getPretById(Long id) {
+        try {
+            String url = serverUrl + "/" + id;
+            LOGGER.info("Appel GET vers: " + url);
+            
+            ResponseEntity<Pret> response = restTemplate.getForEntity(url, Pret.class);
+            return response.getBody();
+        } catch (RestClientException e) {
+            LOGGER.severe("Erreur lors de la récupération du prêt " + id + ": " + e.getMessage());
+            exceptionHandlingService.handleServerException(e, "ServeurPret");
+            return null;
+        }
+    }
+
+    /**
+     * Récupère les informations du prochain remboursement à effectuer
+     */
+    public Map<String, Object> getInfosProchainRemboursement(Long pretId) {
+        try {
+            String url = serverUrl + "/" + pretId + "/prochain-remboursement";
+            LOGGER.info("Appel GET vers: " + url);
+            
+            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<Map<String, Object>>() {}
+            );
+            
+            return response.getBody();
+        } catch (RestClientException e) {
+            LOGGER.severe("Erreur lors de la récupération des informations de remboursement: " + e.getMessage());
+            exceptionHandlingService.handleServerException(e, "ServeurPret");
+            return new HashMap<>();
+        }
+    }
+
+    /**
+     * Récupère l'historique des remboursements d'un prêt
+     */
+    public List<Map<String, Object>> getHistoriqueRemboursements(Long pretId) {
+        try {
+            String url = serverUrl + "/" + pretId + "/remboursements";
+            LOGGER.info("Appel GET vers: " + url);
+            
+            ResponseEntity<List<Map<String, Object>>> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<Map<String, Object>>>() {}
+            );
+            
+            return response.getBody();
+        } catch (RestClientException e) {
+            LOGGER.severe("Erreur lors de la récupération de l'historique des remboursements: " + e.getMessage());
+            exceptionHandlingService.handleServerException(e, "ServeurPret");
+            return null;
+        }
+    }
+
+    /**
+     * Effectue un paiement de remboursement
+     */
+    public Map<String, Object> effectuerRemboursement(Long pretId, String datePaiement, 
+                                                     BigDecimal montant, Integer idMethodeRemboursement) {
+        try {
+            String url = serverUrl + "/" + pretId + "/payer";
+            LOGGER.info("Appel POST vers: " + url);
+            
+            Map<String, Object> requestBody = new HashMap<>();
+            requestBody.put("datePaiement", datePaiement);
+            requestBody.put("montant", montant);
+            requestBody.put("idMethodeRemboursement", idMethodeRemboursement);
+            
+            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+                url,
+                HttpMethod.POST,
+                new org.springframework.http.HttpEntity<>(requestBody),
+                new ParameterizedTypeReference<Map<String, Object>>() {}
+            );
+            
+            return response.getBody();
+        } catch (RestClientException e) {
+            LOGGER.severe("Erreur lors du paiement du remboursement: " + e.getMessage());
+            exceptionHandlingService.handleServerException(e, "ServeurPret");
+            
+            Map<String, Object> errorResult = new HashMap<>();
+            errorResult.put("success", false);
+            errorResult.put("message", "Erreur lors du traitement du paiement");
+            return errorResult;
+        }
+    }
 }

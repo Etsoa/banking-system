@@ -28,6 +28,14 @@ public class FraisRepository {
                 .getResultList();
     }
 
+    /**
+     * Récupère le frais le plus récent par nom
+     */
+    public Frais findCurrentByNom(String nom) {
+        List<Frais> frais = findByNom(nom);
+        return frais.isEmpty() ? null : frais.get(0);
+    }
+
     public Frais findCurrentFrais(String nom) {
         return em.createQuery("SELECT f FROM Frais f WHERE f.nom = :nom AND f.dateDebut <= :today ORDER BY f.dateDebut DESC", Frais.class)
                 .setParameter("nom", nom)

@@ -164,4 +164,84 @@ public class PretController {
             return error;
         }
     }
+
+    /**
+     * Afficher le formulaire de paiement d'un remboursement
+     */
+    @GetMapping("/prets/{id}/remboursement")
+    public String showRemboursementForm(@PathVariable Long id, Model model) {
+        try {
+            // Récupérer les informations du prêt
+            Pret pret = pretService.getPretById(id);
+            model.addAttribute("pret", pret);
+            
+            // Récupérer les informations du prochain remboursement
+            Map<String, Object> infosRemboursement = pretService.getInfosProchainRemboursement(id);
+            
+            if (infosRemboursement.containsKey("prochainRemboursement")) {
+                model.addAttribute("prochainRemboursement", infosRemboursement.get("prochainRemboursement"));
+                model.addAttribute("enRetard", infosRemboursement.get("enRetard"));
+                model.addAttribute("fraisRetard", infosRemboursement.get("fraisRetard"));
+                model.addAttribute("montantTotalAPayer", infosRemboursement.get("montantTotalAPayer"));
+            }
+            
+            // Récupérer le statut du prêt
+            model.addAttribute("pretStatut", infosRemboursement.get("statutPret"));
+            
+            // Récupérer les méthodes de remboursement
+            List<Map<String, Object>> methodesRemboursement = pretParametresService.getMethodesRemboursement();
+            model.addAttribute("methodesRemboursement", methodesRemboursement);
+            
+            // Récupérer l'historique des remboursements
+            List<Map<String, Object>> historique = pretService.getHistoriqueRemboursements(id);
+            model.addAttribute("historique", historique);
+            
+            return "prets/remboursement-form";
+        } catch (ServerApplicationException e) {
+            String userMessage = exceptionHandlingService.getUserFriendlyMessage(e);
+            model.addAttribute("error", userMessage);
+            return "prets/remboursement-form";
+        } catch (Exception e) {
+            model.addAttribute("error", "Erreur lors de la récupération des informations: " + e.getMessage());
+            return "prets/remboursement-form";
+        }
+    }
+
+    /**
+     * Traiter le paiement d'un remboursement
+     */
+    @PostMapping("/prets/{id}/payer")
+    public String effectuerPaiement(
+            @PathVariable Long id,
+            @RequestParam String datePaiement,
+            @RequestParam BigDecimal montant,
+            @RequestParam Integer idMethodeRemboursement,
+            RedirectAttributes redirectAttributes) {
+        
+        try {
+            // Effectuer le paiement via le service
+            Map<String, Object> resultat = pretService.effectuerRemboursement(id, datePaiement, montant, idMethodeRemboursement);
+            
+            if ((Boolean) resultat.get("success")) {
+                redirectAttributes.addFlashAttribute("success", resultat.get("message"));
+                
+                // Si le prêt est maintenant remboursé, rediriger vers la liste
+                if ((Boolean) resultat.get("pretRembourse")) {
+                    return "redirect:/prets";
+                }
+            } else {
+                redirectAttributes.addFlashAttribute("error", resultat.get("message"));
+            }
+            
+            return "redirect:/prets/" + id + "/remboursement";
+            
+        } catch (ServerApplicationException e) {
+            String userMessage = exceptionHandlingService.getUserFriendlyMessage(e);
+            redirectAttributes.addFlashAttribute("error", userMessage);
+            return "redirect:/prets/" + id + "/remboursement";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Erreur lors du paiement: " + e.getMessage());
+            return "redirect:/prets/" + id + "/remboursement";
+        }
+    }
 }

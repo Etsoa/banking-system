@@ -157,4 +157,75 @@ public class PretController {
                            .build();
         }
     }
+
+    @GET
+    @Path("/parametres/methodes-remboursement")
+    public Response getMethodesRemboursement() {
+        try {
+            return Response.ok(parametresService.getMethodesRemboursement()).build();
+        } catch (Exception e) {
+            return Response.serverError()
+                           .entity("Erreur lors de la récupération des méthodes de remboursement : " + e.getMessage())
+                           .build();
+        }
+    }
+
+    @GET
+    @Path("/{id}")
+    public Response getPretById(@PathParam("id") Long id) {
+        try {
+            Pret pret = pretService.getPretById(id);
+            if (pret != null) {
+                return Response.ok(pret).build();
+            } else {
+                return Response.status(Response.Status.NOT_FOUND)
+                              .entity("Prêt non trouvé avec l'ID: " + id)
+                              .build();
+            }
+        } catch (Exception e) {
+            return Response.serverError()
+                           .entity("Erreur lors de la récupération du prêt : " + e.getMessage())
+                           .build();
+        }
+    }
+
+    @GET
+    @Path("/{id}/prochain-remboursement")
+    public Response getInfosProchainRemboursement(@PathParam("id") Long id) {
+        try {
+            return Response.ok(pretService.getInfosProchainRemboursement(id)).build();
+        } catch (Exception e) {
+            return Response.serverError()
+                           .entity("Erreur lors de la récupération des informations de remboursement : " + e.getMessage())
+                           .build();
+        }
+    }
+
+    @GET
+    @Path("/{id}/remboursements")
+    public Response getHistoriqueRemboursements(@PathParam("id") Long id) {
+        try {
+            return Response.ok(pretService.getHistoriqueRemboursements(id)).build();
+        } catch (Exception e) {
+            return Response.serverError()
+                           .entity("Erreur lors de la récupération de l'historique des remboursements : " + e.getMessage())
+                           .build();
+        }
+    }
+
+    @POST
+    @Path("/{id}/payer")
+    public Response effectuerRemboursement(@PathParam("id") Long id, java.util.Map<String, Object> paiementData) {
+        try {
+            String datePaiement = (String) paiementData.get("datePaiement");
+            BigDecimal montant = new BigDecimal(paiementData.get("montant").toString());
+            Integer idMethodeRemboursement = Integer.valueOf(paiementData.get("idMethodeRemboursement").toString());
+            
+            return Response.ok(pretService.effectuerRemboursement(id, datePaiement, montant, idMethodeRemboursement)).build();
+        } catch (Exception e) {
+            return Response.serverError()
+                           .entity("Erreur lors du traitement du paiement : " + e.getMessage())
+                           .build();
+        }
+    }
 }

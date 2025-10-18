@@ -25,6 +25,9 @@ public class PretService {
     @EJB
     private AmortissementService amortissementService;
 
+    @EJB
+    private RemboursementService remboursementService;
+
     public List<Pret> getAllPrets() {
         return pretRepository.findAll();
     }
@@ -117,5 +120,35 @@ public class PretService {
      */
     public List<AmortissementPret> getAmortissementPret(Integer pretId) {
         return amortissementService.getAmortissementByPretId(pretId);
+    }
+
+    /**
+     * Récupère un prêt par son ID (version Long)
+     */
+    public Pret getPretById(Long id) {
+        return pretRepository.findById(id.intValue());
+    }
+
+    /**
+     * Récupère les informations du prochain remboursement à effectuer
+     */
+    public java.util.Map<String, Object> getInfosProchainRemboursement(Long pretId) {
+        return remboursementService.getInfosProchainRemboursement(pretId.intValue());
+    }
+
+    /**
+     * Récupère l'historique des remboursements d'un prêt
+     */
+    public List<java.util.Map<String, Object>> getHistoriqueRemboursements(Long pretId) {
+        return remboursementService.getHistoriqueRemboursements(pretId.intValue());
+    }
+
+    /**
+     * Effectue un paiement de remboursement
+     */
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public java.util.Map<String, Object> effectuerRemboursement(Long pretId, String datePaiement, 
+                                                                BigDecimal montant, Integer idMethodeRemboursement) {
+        return remboursementService.effectuerRemboursement(pretId.intValue(), datePaiement, montant, idMethodeRemboursement);
     }
 }
