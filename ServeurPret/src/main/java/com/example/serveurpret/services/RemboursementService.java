@@ -129,6 +129,10 @@ public class RemboursementService {
                     fraisRetard = fraisParJour.multiply(new BigDecimal(joursDeRetard));
                     montantTotalAPayer = montantTotalAPayer.add(fraisRetard);
                 }
+                
+                // Calculer le total des frais déjà payés pour ce prêt
+                BigDecimal totalFraisPaye = calculateTotalFraisPaye(pretId);
+                result.put("totalFraisPaye", totalFraisPaye);
             }
 
             result.put("fraisRetard", fraisRetard);
@@ -292,6 +296,38 @@ public class RemboursementService {
             result.put("success", false);
             result.put("message", "Erreur lors du traitement du paiement: " + e.getMessage());
             return result;
+        }
+    }
+
+    /**
+     * Calcule le total des frais payés pour un prêt donné
+     * (somme de tous les frais de retard payés dans les remboursements passés)
+     */
+    private BigDecimal calculateTotalFraisPaye(Integer pretId) {
+        try {
+            // Récupérer tous les remboursements payés pour ce prêt
+            List<Remboursement> remboursementsPayes = remboursementRepository.findByPretIdAndPaid(pretId);
+            
+            BigDecimal totalFrais = BigDecimal.ZERO;
+            
+            for (Remboursement remb : remboursementsPayes) {
+                // Calculer les frais de retard pour ce remboursement s'il était en retard
+                if (remb.getJoursRetard() > 0) {
+                    // Récupérer les frais de retard applicables à la date de paiement
+                    Frais fraisRetardInfo = fraisRepository.findCurrentByNom("Frais de retard");
+                    if (fraisRetardInfo != null) {
+                        BigDecimal fraisParJour = new BigDecimal(fraisRetardInfo.getValeur());
+                        BigDecimal fraisRemboursement = fraisParJour.multiply(new BigDecimal(remb.getJoursRetard()));
+                        totalFrais = totalFrais.add(fraisRemboursement);
+                    }
+                }
+            }
+            
+            return totalFrais;
+            
+        } catch (Exception e) {
+            LOGGER.severe("Erreur lors du calcul du total des frais payés: " + e.getMessage());
+            return BigDecimal.ZERO;
         }
     }
 }

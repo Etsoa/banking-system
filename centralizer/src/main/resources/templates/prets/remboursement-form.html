@@ -32,7 +32,8 @@
                 <div><strong>Date d'échéance:</strong> <span th:text="${prochainRemboursement.dateEcheance}"></span></div>
                 <div><strong>Montant attendu:</strong> <span th:text="${#numbers.formatCurrency(prochainRemboursement.annuite)}" style="font-size: 1.2em; color: #007bff; font-weight: bold;"></span></div>
                 <div th:if="${enRetard}"><strong style="color: #dc3545;">Statut:</strong> <span style="color: #dc3545; font-weight: bold;">EN RETARD</span></div>
-                <div th:if="${enRetard}"><strong style="color: #dc3545;">Frais de retard:</strong> <span th:text="${#numbers.formatCurrency(fraisRetard)}" style="color: #dc3545; font-weight: bold;"></span></div>
+                <div th:if="${enRetard}"><strong style="color: #dc3545;">Frais de retard actuels:</strong> <span th:text="${#numbers.formatCurrency(fraisRetard)}" style="color: #dc3545; font-weight: bold;"></span></div>
+                <div th:if="${enRetard}"><strong style="color: #dc3545;">Total frais payés:</strong> <span th:text="${#numbers.formatCurrency(totalFraisPaye)}" style="color: #dc3545; font-weight: bold;"></span></div>
                 <div th:if="${enRetard}"><strong style="color: #dc3545;">Total à payer:</strong> <span th:text="${#numbers.formatCurrency(montantTotalAPayer)}" style="color: #dc3545; font-weight: bold; font-size: 1.2em;"></span></div>
             </div>
         </div>
