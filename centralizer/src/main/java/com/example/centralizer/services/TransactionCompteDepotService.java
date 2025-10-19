@@ -177,4 +177,22 @@ public class TransactionCompteDepotService {
             return null;
         }
     }
+
+    /**
+     * Créer un transfert inter-système (sans validation des comptes)
+     */
+    public Transfert createTransfertInterSysteme(Transfert transfert) {
+        try {
+            String url = serverUrl + "/transfert/inter-systeme";
+            LOGGER.info("Appel POST vers: " + url);
+            
+            HttpEntity<Transfert> httpEntity = new HttpEntity<>(transfert);
+            Transfert result = restTemplate.postForObject(url, httpEntity, Transfert.class);
+            return result;
+        } catch (RestClientException e) {
+            LOGGER.severe("Erreur lors de la création du transfert inter-système: " + e.getMessage());
+            exceptionHandlingService.handleServerException(e, "ServeurCompteDepot");
+            return null;
+        }
+    }
 }

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Centralizer - Transferts Inter-Système</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 20px;">
+        <h1>Transferts Inter-Système</h1>
+        <div style="margin-bottom: 20px;">
+            <a href="/" style="color: #007bff; text-decoration: none;">← Retour à l'accueil</a>
+            <span style="margin: 0 10px;">|</span>
+            <a href="/transferts-inter-systeme/historique" style="color: #007bff; text-decoration: none;">Historique des transferts</a>
+        </div>
+
+        <!-- Messages d'alerte -->
+        <div th:if="${success}" style="margin-top: 20px; padding: 15px; background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 5px; color: #155724;">
+            <strong>Succès:</strong> <span th:text="${success}"></span>
+        </div>
+
+        <div th:if="${error}" style="margin-top: 20px; padding: 15px; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 5px; color: #721c24;">
+            <strong>Erreur:</strong> <span th:text="${error}"></span>
+        </div>
+
+        <div th:if="${transfertError}" style="margin-top: 20px; padding: 15px; background-color: #fff3cd; border: 1px solid #ffecb5; border-radius: 5px; color: #664d03;">
+            <strong>Attention:</strong> <span th:text="${transfertError}"></span>
+        </div>
+
+        <!-- Formulaire de transfert -->
+        <div style="display: flex; gap: 20px; margin-top: 20px;">
+            <!-- Formulaire principal -->
+            <div style="flex: 2; background-color: #f8f9fa; padding: 20px; border-radius: 5px; border: 1px solid #dee2e6;">
+                <h2>Nouveau Transfert Inter-Système</h2>
+                <form th:action="@{/transferts-inter-systeme/effectuer}" method="post" id="transfertForm">
+                    <!-- Section Compte Envoyeur -->
+                    <div style="margin-bottom: 20px; padding: 15px; background-color: white; border: 1px solid #dee2e6; border-radius: 5px;">
+                        <h3 style="color: #007bff; margin-bottom: 15px;">Compte Envoyeur</h3>
+                        
+                        <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                            <div style="flex: 1;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Type de compte :</label>
+                                <select name="typeCompteEnvoyeur" id="typeCompteEnvoyeur" required style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 3px;">
+                                    <option value="">Choisir le type...</option>
+                                    <option value="compteCourant">Compte Courant</option>
+                                    <option value="compteDepot">Compte Dépôt</option>
+                                </select>
+                            </div>
+                            <div style="flex: 1;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Compte :</label>
+                                <select name="compteEnvoyeur" id="compteEnvoyeur" required disabled style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 3px;">
+                                    <option value="">Sélectionnez d'abord le type...</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Flèche de transfert -->
+                    <div style="text-align: center; margin: 15px 0;">
+                        <span style="font-size: 2rem; color: #28a745;">↓</span>
+                    </div>
+
+                    <!-- Section Compte Receveur -->
+                    <div style="margin-bottom: 20px; padding: 15px; background-color: white; border: 1px solid #dee2e6; border-radius: 5px;">
+                        <h3 style="color: #28a745; margin-bottom: 15px;">Compte Receveur</h3>
+                        
+                        <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                            <div style="flex: 1;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Type de compte :</label>
+                                <select name="typeCompteReceveur" id="typeCompteReceveur" required style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 3px;">
+                                    <option value="">Choisir le type...</option>
+                                    <option value="compteCourant">Compte Courant</option>
+                                    <option value="compteDepot">Compte Dépôt</option>
+                                </select>
+                            </div>
+                            <div style="flex: 1;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Compte :</label>
+                                <select name="compteReceveur" id="compteReceveur" required disabled style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 3px;">
+                                    <option value="">Sélectionnez d'abord le type...</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section Détails du transfert -->
+                    <div style="margin-bottom: 20px; padding: 15px; background-color: white; border: 1px solid #dee2e6; border-radius: 5px;">
+                        <h3 style="color: #17a2b8; margin-bottom: 15px;">Détails du Transfert</h3>
+                        
+                        <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                            <div style="flex: 1;">
+                                <label for="montant" style="display: block; margin-bottom: 5px; font-weight: bold;">Montant (€) :</label>
+                                <input type="number" id="montant" name="montant" min="0.01" step="0.01" required 
+                                       style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 3px;">
+                            </div>
+                            <div style="flex: 1;">
+                                <label for="dateTransfert" style="display: block; margin-bottom: 5px; font-weight: bold;">Date et heure :</label>
+                                <input type="datetime-local" id="dateTransfert" name="dateTransfert" required 
+                                       style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 3px;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Boutons d'action -->
+                    <div style="text-align: right; margin-top: 20px;">
+                        <button type="reset" style="background-color: #6c757d; color: white; border: none; padding: 10px 20px; margin-right: 10px; cursor: pointer; border-radius: 5px;">
+                            Réinitialiser
+                        </button>
+                        <button type="submit" style="background-color: #007bff; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px;">
+                            Effectuer le Transfert
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Transferts récents -->
+            <div style="flex: 1; background-color: #f8f9fa; padding: 20px; border-radius: 5px; border: 1px solid #dee2e6;">
+                <h3 style="color: #17a2b8; margin-bottom: 15px;">Transferts Récents</h3>
+                
+                <div th:if="${transfertsRecents != null and !transfertsRecents.empty}" style="max-height: 400px; overflow-y: auto;">
+                    <div th:each="transfert : ${transfertsRecents}" style="margin-bottom: 15px; padding: 15px; background-color: white; border: 1px solid #dee2e6; border-radius: 5px;">
+                        <div style="margin-bottom: 5px;">
+                            <small style="color: #6c757d;" th:text="${transfert.source}"></small>
+                        </div>
+                        <div style="font-weight: bold; margin-bottom: 5px;">
+                            <span th:text="${transfert.envoyeur}"></span>
+                            <span style="color: #007bff; margin: 0 5px;">→</span>
+                            <span th:text="${transfert.receveur}"></span>
+                        </div>
+                        <div style="color: #28a745; font-weight: bold; margin-bottom: 5px;">
+                            <span th:text="${#numbers.formatDecimal(transfert.montant, 1, 2)}"></span> €
+                        </div>
+                        <div>
+                            <small style="color: #6c757d;" th:text="${#temporals.format(transfert.date, 'dd/MM HH:mm')}"></small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div th:if="${transfertsRecents == null or transfertsRecents.empty}" style="text-align: center; color: #6c757d; padding: 20px;">
+                    <p>Aucun transfert récent</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        // Données des comptes
+        const comptesCourant = /*[[${comptesCourant}]]*/ [];
+        const comptesDepot = /*[[${comptesDepot}]]*/ [];
+        const clientsMap = /*[[${clientsMap}]]*/ {};
+
+        // Initialiser la date/heure actuelle
+        document.addEventListener('DOMContentLoaded', function() {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('dateTransfert').value = now.toISOString().slice(0,16);
+        });
+
+        // Gestion du changement de type de compte envoyeur
+        document.getElementById('typeCompteEnvoyeur').addEventListener('change', function() {
+            updateCompteOptions('compteEnvoyeur', this.value, true);
+        });
+
+        // Gestion du changement de type de compte receveur
+        document.getElementById('typeCompteReceveur').addEventListener('change', function() {
+            updateCompteOptions('compteReceveur', this.value, false);
+        });
+
+        function updateCompteOptions(selectId, typeCompte, isEnvoyeur) {
+            const select = document.getElementById(selectId);
+            select.innerHTML = '<option value="">Choisir un compte...</option>';
+            
+            if (!typeCompte) {
+                select.disabled = true;
+                return;
+            }
+
+            let comptes = [];
+            if (typeCompte === 'compteCourant') {
+                comptes = comptesCourant;
+            } else if (typeCompte === 'compteDepot') {
+                comptes = comptesDepot;
+            }
+
+            // Filtrer le compte déjà sélectionné dans l'autre select
+            const autreSelectId = isEnvoyeur ? 'compteReceveur' : 'compteEnvoyeur';
+            const autreCompteSelectionne = document.getElementById(autreSelectId).value;
+
+            comptes.forEach(compte => {
+                if (compte.idCompte !== autreCompteSelectionne) {
+                    const option = document.createElement('option');
+                    option.value = compte.idCompte;
+                    
+                    let clientNom = 'Client inconnu';
+                    if (compte.idClient && clientsMap[compte.idClient]) {
+                        const client = clientsMap[compte.idClient];
+                        clientNom = client.nom + ' ' + client.prenom;
+                    }
+                    
+                    option.textContent = `${compte.idCompte} - ${clientNom} (${formatCurrency(compte.solde)})`;
+                    select.appendChild(option);
+                }
+            });
+
+            select.disabled = false;
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('fr-FR', {
+                style: 'currency',
+                currency: 'EUR'
+            }).format(amount);
+        }
+
+        // Validation du formulaire
+        document.getElementById('transfertForm').addEventListener('submit', function(e) {
+            const typeEnvoyeur = document.getElementById('typeCompteEnvoyeur').value;
+            const typeReceveur = document.getElementById('typeCompteReceveur').value;
+            const compteEnvoyeur = document.getElementById('compteEnvoyeur').value;
+            const compteReceveur = document.getElementById('compteReceveur').value;
+            const montant = parseFloat(document.getElementById('montant').value);
+
+            // Vérifier que les types sont différents
+            if (typeEnvoyeur === typeReceveur) {
+                e.preventDefault();
+                alert('Erreur : Les transferts inter-systèmes nécessitent des types de comptes différents (Courant ↔ Dépôt)');
+                return;
+            }
+
+            // Vérifier que les comptes sont différents
+            if (compteEnvoyeur === compteReceveur) {
+                e.preventDefault();
+                alert('Erreur : Impossible d\'effectuer un transfert vers le même compte');
+                return;
+            }
+
+            // Vérifier le montant
+            if (montant <= 0) {
+                e.preventDefault();
+                alert('Erreur : Le montant doit être supérieur à 0');
+                return;
+            }
+
+            // Confirmation
+            if (!confirm(`Confirmer le transfert de ${formatCurrency(montant)} du compte ${compteEnvoyeur} vers le compte ${compteReceveur} ?`)) {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>

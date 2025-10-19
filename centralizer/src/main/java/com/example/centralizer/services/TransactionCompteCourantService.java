@@ -218,4 +218,21 @@ public class TransactionCompteCourantService {
             return null;
         }
     }
+
+    /**
+     * Créer un transfert inter-système (sans validation des comptes)
+     */
+    public Transfert createTransfertInterSysteme(Transfert transfert) {
+        try {
+            String url = serverUrl + "/transferts/inter-systeme";
+            LOGGER.info("Appel POST vers: " + url);
+            
+            Transfert result = restTemplate.postForObject(url, transfert, Transfert.class);
+            return result;
+        } catch (RestClientException e) {
+            LOGGER.severe("Erreur lors de la création du transfert inter-système: " + e.getMessage());
+            exceptionHandlingService.handleServerException(e, "ServeurCompteCourant");
+            return null;
+        }
+    }
 }

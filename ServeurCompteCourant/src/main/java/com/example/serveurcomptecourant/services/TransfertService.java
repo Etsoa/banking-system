@@ -122,4 +122,28 @@ public class TransfertService {
             throw new CompteCourantBusinessException("Les transactions doivent être sauvegardées avant de créer le transfert");
         }
     }
+
+    /**
+     * Crée un transfert inter-système sans validation des comptes
+     */
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public Transfert createTransfertInterSysteme(Transfert transfert) throws CompteCourantException {
+        try {
+            // Validation de base seulement
+            if (transfert.getMontant() == null || transfert.getMontant().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new CompteCourantBusinessException.MontantInvalideException(
+                    transfert.getMontant() != null ? transfert.getMontant().doubleValue() : 0.0
+                );
+            }
+            
+            // Créer le transfert directement sans validation des comptes (inter-système)
+            return transfertRepository.save(transfert);
+            
+        } catch (CompteCourantBusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Erreur lors de la création du transfert inter-système", e);
+            throw new CompteCourantException("Erreur lors de la création du transfert inter-système", e);
+        }
+    }
 }

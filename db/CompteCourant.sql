@@ -28,9 +28,7 @@ CREATE TABLE transferts(
    id_transaction_receveur VARCHAR(10) NOT NULL,
    envoyer VARCHAR(10) NOT NULL,
    receveur VARCHAR(10) NOT NULL,
-   PRIMARY KEY(id_transfert),
-   FOREIGN KEY(envoyer) REFERENCES comptes(id_compte) on delete cascade on update cascade,
-   FOREIGN KEY(receveur) REFERENCES comptes(id_compte) on delete cascade on update cascade
+   PRIMARY KEY(id_transfert)
 );
 
 CREATE TABLE transactions(

@@ -29,8 +29,6 @@ namespace ServeurCompteDepot.Models
 
         // Navigation properties
         public virtual ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
-        public virtual ICollection<Transfert> TransfertsEnvoyes { get; set; } = new List<Transfert>();
-        public virtual ICollection<Transfert> TransfertsRecus { get; set; } = new List<Transfert>();
         public virtual ICollection<HistoriqueSolde> HistoriquesSolde { get; set; } = new List<HistoriqueSolde>();
         public virtual ICollection<HistoriqueStatutCompte> HistoriquesStatut { get; set; } = new List<HistoriqueStatutCompte>();
     }

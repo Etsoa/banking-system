@@ -2,9 +2,14 @@ package com.example.centralizer.models.compteDepotDTO;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 public class Transfert {
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Integer idTransfert;
+    
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate dateTransfert;
     private String idTransactionEnvoyeur;
     private String idTransactionReceveur;

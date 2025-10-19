@@ -233,6 +233,13 @@ public class TransactionService {
     }
 
     /**
+     * Délègue au TransfertService pour les transferts inter-système
+     */
+    public Transfert createTransfertInterSysteme(Transfert transfert) throws CompteCourantException {
+        return transfertService.createTransfertInterSysteme(transfert);
+    }
+
+    /**
      * Validation des données de transaction
      */
     private void validateTransactionData(Transaction transaction) throws CompteCourantBusinessException {

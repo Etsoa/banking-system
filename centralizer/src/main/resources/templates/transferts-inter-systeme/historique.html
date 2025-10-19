@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Centralizer - Historique Transferts Inter-Système</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 20px;">
+        <h1>Historique des Transferts Inter-Système</h1>
+        <div style="margin-bottom: 20px;">
+            <a href="/" style="color: #007bff; text-decoration: none;">← Retour à l'accueil</a>
+            <span style="margin: 0 10px;">|</span>
+            <a href="/transferts-inter-systeme" style="color: #007bff; text-decoration: none;">Nouveau transfert</a>
+        </div>
+
+        <!-- Messages d'erreur -->
+        <div th:if="${error}" style="margin-top: 20px; padding: 15px; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 5px; color: #721c24;">
+            <strong>Erreur:</strong> <span th:text="${error}"></span>
+        </div>
+
+        <!-- Section de filtrage -->
+        <div th:if="${compteFiltre != null and typeCompteFiltre != null}" style="margin-bottom: 20px; padding: 15px; background-color: #e7f3ff; border: 1px solid #bee5eb; border-radius: 5px;">
+            <h3 style="color: #0c5460; margin-bottom: 10px;">Filtre Actif</h3>
+            <div style="display: flex; justify-content: between; align-items: center;">
+                <div>
+                    <span style="background-color: #17a2b8; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.8rem; margin-right: 10px;">Compte filtré</span>
+                    <strong th:text="${compteFiltre}"></strong>
+                    <span style="color: #6c757d;">
+                        (<span th:text="${typeCompteFiltre == 'compteCourant' ? 'Compte Courant' : 'Compte Dépôt'}"></span>)
+                    </span>
+                    <span th:if="${compteDetails != null and clientsMap != null}" style="margin-left: 10px;">
+                        - <span th:if="${clientsMap[compteDetails.idClient] != null}"
+                                th:text="${clientsMap[compteDetails.idClient].nom + ' ' + clientsMap[compteDetails.idClient].prenom}"></span>
+                    </span>
+                </div>
+                <a href="/transferts-inter-systeme/historique" style="background-color: #6c757d; color: white; padding: 5px 10px; text-decoration: none; border-radius: 3px; font-size: 0.9rem;">
+                    Supprimer le filtre
+                </a>
+            </div>
+        </div>
+
+        <!-- Liste des transferts -->
+        <div th:if="${historique != null and !historique.empty}">
+            <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 20px;">
+                <h2>
+                    Transferts trouvés : 
+                    <span style="background-color: #007bff; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.9rem;" th:text="${#lists.size(historique)}"></span>
+                </h2>
+            </div>
+
+            <!-- Tableau des transferts -->
+            <table border="1" style="border-collapse: collapse; width: 100%; margin-top: 20px;">
+                <thead style="background-color: #f8f9fa;">
+                    <tr>
+                        <th style="padding: 10px; text-align: left;">Montant</th>
+                        <th style="padding: 10px; text-align: left;">Envoyeur</th>
+                        <th style="padding: 10px; text-align: left;">Receveur</th>
+                        <th style="padding: 10px; text-align: left;">Date</th>
+                        <th style="padding: 10px; text-align: left;">Source</th>
+                        <th style="padding: 10px; text-align: left;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="transfert : ${historique}" style="border-bottom: 1px solid #dee2e6;">
+                        <td style="padding: 10px;">
+                            <span style="color: #28a745; font-weight: bold; font-size: 1.1rem;">
+                                <span th:text="${#numbers.formatDecimal(transfert.montant, 1, 2)}"></span> €
+                            </span>
+                        </td>
+                        <td style="padding: 10px;">
+                            <span style="padding: 4px 8px; border-radius: 12px; font-size: 0.85rem; font-weight: 500;"
+                                  th:classappend="${#strings.startsWith(transfert.envoyeur, 'D')} ? 'badge-depot' : 'badge-courant'"
+                                  th:style="${#strings.startsWith(transfert.envoyeur, 'D')} ? 'background-color: #e3f2fd; color: #1976d2;' : 'background-color: #f3e5f5; color: #7b1fa2;'">
+                                <span th:text="${transfert.envoyeur}"></span>
+                            </span>
+                        </td>
+                        <td style="padding: 10px;">
+                            <span style="padding: 4px 8px; border-radius: 12px; font-size: 0.85rem; font-weight: 500;"
+                                  th:style="${#strings.startsWith(transfert.receveur, 'D')} ? 'background-color: #e3f2fd; color: #1976d2;' : 'background-color: #f3e5f5; color: #7b1fa2;'">
+                                <span th:text="${transfert.receveur}"></span>
+                            </span>
+                        </td>
+                        <td style="padding: 10px;">
+                            <span th:text="${#temporals.format(transfert.date, 'dd/MM/yyyy à HH:mm')}"></span>
+                        </td>
+                        <td style="padding: 10px;">
+                            <span style="background-color: #6c757d; color: white; padding: 3px 6px; border-radius: 8px; font-size: 0.8rem;" th:text="${transfert.source}"></span>
+                        </td>
+                        <td style="padding: 10px;">
+                            <div style="display: flex; gap: 5px;">
+                                <a th:href="@{/transferts-inter-systeme/historique(compteId=${transfert.envoyeur}, typeCompte=${#strings.startsWith(transfert.envoyeur, 'D') ? 'compteDepot' : 'compteCourant'})}" 
+                                   style="background-color: #007bff; color: white; border: none; padding: 4px 8px; text-decoration: none; cursor: pointer; border-radius: 3px; font-size: 0.8rem;">
+                                    Voir envoyeur
+                                </a>
+                                <a th:href="@{/transferts-inter-systeme/historique(compteId=${transfert.receveur}, typeCompte=${#strings.startsWith(transfert.receveur, 'D') ? 'compteDepot' : 'compteCourant'})}" 
+                                   style="background-color: #28a745; color: white; border: none; padding: 4px 8px; text-decoration: none; cursor: pointer; border-radius: 3px; font-size: 0.8rem;">
+                                    Voir receveur
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Message si aucun transfert -->
+        <div th:if="${historique == null or historique.empty}" style="text-align: center; padding: 40px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px; margin-top: 20px;">
+            <h3 style="color: #6c757d;">Aucun transfert inter-système trouvé</h3>
+            <p style="color: #6c757d; margin-bottom: 20px;">
+                <span th:if="${compteFiltre != null}">
+                    Aucun transfert trouvé pour le compte <strong th:text="${compteFiltre}"></strong>
+                </span>
+                <span th:if="${compteFiltre == null}">
+                    Aucun transfert inter-système n'a encore été effectué.
+                </span>
+            </p>
+            <a href="/transferts-inter-systeme" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                Effectuer le premier transfert
+            </a>
+        </div>
+    </div>
+</body>
+</html>

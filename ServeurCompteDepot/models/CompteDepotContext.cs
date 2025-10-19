@@ -29,18 +29,13 @@ namespace ServeurCompteDepot.Models
                 .Property(c => c.IdCompte)
                 .ValueGeneratedOnAdd();
 
-            // Configuration des relations pour Transfert
+            // Configuration pour Transfert (sans relations FK)
             modelBuilder.Entity<Transfert>()
-                .HasOne(t => t.CompteEnvoyeur)
-                .WithMany(c => c.TransfertsEnvoyes)
-                .HasForeignKey(t => t.Envoyer)
-                .OnDelete(DeleteBehavior.Restrict);
+                .HasKey(t => t.IdTransfert);
 
             modelBuilder.Entity<Transfert>()
-                .HasOne(t => t.CompteReceveur)
-                .WithMany(c => c.TransfertsRecus)
-                .HasForeignKey(t => t.Receveur)
-                .OnDelete(DeleteBehavior.Restrict);
+                .Property(t => t.IdTransfert)
+                .ValueGeneratedOnAdd();
 
             // Configuration des relations pour Transaction
             modelBuilder.Entity<Transaction>()

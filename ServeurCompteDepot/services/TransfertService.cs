@@ -33,8 +33,6 @@ namespace ServeurCompteDepot.Services
         public async Task<IEnumerable<Transfert>> GetAllTransfertsAsync()
         {
             return await _context.Transferts
-                .Include(t => t.CompteEnvoyeur)
-                .Include(t => t.CompteReceveur)
                 .OrderByDescending(t => t.DateTransfert)
                 .ToListAsync();
         }
@@ -42,16 +40,12 @@ namespace ServeurCompteDepot.Services
         public async Task<Transfert?> GetTransfertByIdAsync(int id)
         {
             return await _context.Transferts
-                .Include(t => t.CompteEnvoyeur)
-                .Include(t => t.CompteReceveur)
                 .FirstOrDefaultAsync(t => t.IdTransfert == id);
         }
 
         public async Task<IEnumerable<Transfert>> GetTransfertsByCompteAsync(string idCompte)
         {
             return await _context.Transferts
-                .Include(t => t.CompteEnvoyeur)
-                .Include(t => t.CompteReceveur)
                 .Where(t => t.Envoyer == idCompte || t.Receveur == idCompte)
                 .OrderByDescending(t => t.DateTransfert)
                 .ToListAsync();
@@ -60,7 +54,6 @@ namespace ServeurCompteDepot.Services
         public async Task<IEnumerable<Transfert>> GetTransfertsByCompteEnvoyeurAsync(string idCompteEnvoyeur)
         {
             return await _context.Transferts
-                .Include(t => t.CompteReceveur)
                 .Where(t => t.Envoyer == idCompteEnvoyeur)
                 .OrderByDescending(t => t.DateTransfert)
                 .ToListAsync();
@@ -69,7 +62,6 @@ namespace ServeurCompteDepot.Services
         public async Task<IEnumerable<Transfert>> GetTransfertsByCompteReceveurAsync(string idCompteReceveur)
         {
             return await _context.Transferts
-                .Include(t => t.CompteEnvoyeur)
                 .Where(t => t.Receveur == idCompteReceveur)
                 .OrderByDescending(t => t.DateTransfert)
                 .ToListAsync();

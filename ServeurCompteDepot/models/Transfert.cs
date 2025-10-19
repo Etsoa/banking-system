@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Text.Json.Serialization;
 
 namespace ServeurCompteDepot.Models
 {
@@ -34,14 +33,5 @@ namespace ServeurCompteDepot.Models
         [Required]
         [Column("receveur")]
         public string Receveur { get; set; } = string.Empty;
-
-        // Navigation properties
-        [ForeignKey("Envoyer")]
-        [JsonIgnore] // Evite la référence circulaire avec Compte
-        public virtual Compte CompteEnvoyeur { get; set; } = null!;
-
-        [ForeignKey("Receveur")]
-        [JsonIgnore] // Evite la référence circulaire avec Compte
-        public virtual Compte CompteReceveur { get; set; } = null!;
     }
 }

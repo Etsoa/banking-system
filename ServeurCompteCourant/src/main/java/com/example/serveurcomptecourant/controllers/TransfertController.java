@@ -45,4 +45,15 @@ public class TransfertController {
             dateTime
         );
     }
+
+    @POST
+    @Path("/inter-systeme")
+    public Transfert createTransfertInterSysteme(Transfert transfert) throws CompteCourantException {
+        try {
+            // Créer le transfert directement sans validation des comptes inter-système
+            return transfertService.createTransfertInterSysteme(transfert);
+        } catch (Exception e) {
+            throw new CompteCourantException("Erreur lors de la création du transfert inter-système", e);
+        }
+    }
 }
