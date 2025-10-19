@@ -54,8 +54,8 @@ public class ValidationPretService {
 
         Modalite modalite = getModalite(modaliteId);
 
-        // Utilisation de Math.ceil pour arrondir au supérieur
-        double periodes = Math.ceil((double) dureeMois / modalite.getNombreMois());
+        // Utilisation de Math.floor pour arrondir au inférieur
+        double periodes = Math.floor((double) dureeMois / modalite.getNombreMois());
         return (int) periodes;
     }
 

@@ -99,6 +99,21 @@ public class PretBusinessService {
                 return new EligibilitePret(false, validationException.getMessage());
             }
 
+            // Vérification : le client ne doit pas avoir de prêt déjà en cours
+            try {
+                java.util.List<Pret> pretsClient = pretService.getPretsByClientId(clientId);
+                if (pretsClient != null) {
+                    for (Pret p : pretsClient) {
+                        if (p != null && p.getIdStatutPret() != null && p.getIdStatutPret().intValue() == 1) {
+                            return new EligibilitePret(false, "Le client possède déjà un prêt en cours");
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                // Si on ne peut pas vérifier les prêts clients, considérer cela comme une non-éligibilité
+                return new EligibilitePret(false, "Impossible de vérifier les prêts existants du client: " + e.getMessage());
+            }
+
             // Ici on pourrait ajouter d'autres vérifications :
             // - Vérification du nombre de prêts en cours
             // - Vérification de la capacité d'endettement
