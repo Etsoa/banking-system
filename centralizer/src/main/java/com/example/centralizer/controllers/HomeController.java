@@ -69,7 +69,7 @@ public class HomeController {
 
     @PostMapping("/clients")
     public String createClient(@ModelAttribute("client") Client client, 
-                              Model model, 
+                              Model model,  
                               RedirectAttributes redirectAttributes) {
         
         try {
