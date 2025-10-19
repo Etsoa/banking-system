@@ -72,6 +72,11 @@ namespace ServeurCompteDepot.Models
                 .Property(t => t.Montant)
                 .HasPrecision(12, 2);
 
+            // Configuration du type DATE pour DateTransfert
+            modelBuilder.Entity<Transfert>()
+                .Property(t => t.DateTransfert)
+                .HasColumnType("date");
+
             modelBuilder.Entity<Transaction>()
                 .Property(t => t.Montant)
                 .HasPrecision(12, 2);

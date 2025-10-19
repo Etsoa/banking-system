@@ -101,7 +101,7 @@ namespace ServeurCompteDepot.Services
                     IdCompte = compteEnvoyeur,
                     IdTypeTransaction = 4, // Virement sortant
                     Montant = montant,
-                    DateTransaction = dateTransfert
+                    DateTransaction = DateTime.SpecifyKind(dateTransfert, DateTimeKind.Utc)
                 };
                 
                 _context.Transactions.Add(transactionSortante);
@@ -113,7 +113,7 @@ namespace ServeurCompteDepot.Services
                     IdCompte = compteReceveur,
                     IdTypeTransaction = 3, // Virement entrant
                     Montant = montant,
-                    DateTransaction = dateTransfert
+                    DateTransaction = DateTime.SpecifyKind(dateTransfert, DateTimeKind.Utc)
                 };
                 
                 _context.Transactions.Add(transactionEntrante);
@@ -122,7 +122,7 @@ namespace ServeurCompteDepot.Services
                 // Créer le transfert
                 var transfert = new Transfert
                 {
-                    DateTransfert = dateTransfert.Date,
+                    DateTransfert = dateTransfert.Date, // Utiliser seulement la date
                     IdTransactionEnvoyeur = transactionSortante.IdTransaction.ToString(),
                     IdTransactionReceveur = transactionEntrante.IdTransaction.ToString(),
                     Montant = montant,
@@ -143,7 +143,7 @@ namespace ServeurCompteDepot.Services
                     IdCompte = compteEnvoyeur,
                     IdTransaction = transactionSortante.IdTransaction,
                     Montant = compteEnv.Solde,
-                    DateChangement = dateTransfert
+                    DateChangement = DateTime.SpecifyKind(dateTransfert, DateTimeKind.Utc)
                 };
                 
                 var histoSoldeReceveur = new HistoriqueSolde
@@ -151,7 +151,7 @@ namespace ServeurCompteDepot.Services
                     IdCompte = compteReceveur,
                     IdTransaction = transactionEntrante.IdTransaction,
                     Montant = compteRec.Solde,
-                    DateChangement = dateTransfert
+                    DateChangement = DateTime.SpecifyKind(dateTransfert, DateTimeKind.Utc)
                 };
                 
                 _context.HistoriquesSolde.Add(histoSoldeEnvoyeur);

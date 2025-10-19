@@ -9,10 +9,12 @@ namespace ServeurCompteDepot.Controllers
     public class TransfertController : ControllerBase
     {
         private readonly ITransfertService _transfertService;
+        private readonly CompteDepotContext _context;
 
-        public TransfertController(ITransfertService transfertService)
+        public TransfertController(ITransfertService transfertService, CompteDepotContext context)
         {
             _transfertService = transfertService;
+            _context = context;
         }
 
         [HttpGet]
@@ -134,6 +136,9 @@ namespace ServeurCompteDepot.Controllers
         {
             try
             {
+                // Log des données reçues pour debug
+                Console.WriteLine($"Transfert request reçu: Envoyeur={request.CompteEnvoyeur}, Receveur={request.CompteReceveur}, Montant={request.Montant}, Date={request.DateTransfert}");
+                
                 var transfert = await _transfertService.CreateTransfertAsync(
                     request.CompteEnvoyeur, 
                     request.CompteReceveur, 
@@ -152,7 +157,37 @@ namespace ServeurCompteDepot.Controllers
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Erreur détaillée: {ex}");
                 return StatusCode(500, $"Erreur lors du transfert: {ex.Message}");
+            }
+        }
+
+        [HttpPost("inter-systeme")]
+        public async Task<ActionResult<Transfert>> CreateTransfertInterSysteme([FromBody] Transfert transfert)
+        {
+            try
+            {
+                // Créer le transfert directement sans validation des comptes
+                var nouveauTransfert = new Transfert
+                {
+                    DateTransfert = transfert.DateTransfert,
+                    IdTransactionEnvoyeur = transfert.IdTransactionEnvoyeur,
+                    IdTransactionReceveur = transfert.IdTransactionReceveur,
+                    Montant = transfert.Montant,
+                    Envoyer = transfert.Envoyer,
+                    Receveur = transfert.Receveur
+                };
+
+                // Sauvegarder directement sans passer par le service complet (pas de création de transactions)
+                _context.Transferts.Add(nouveauTransfert);
+                await _context.SaveChangesAsync();
+
+                return CreatedAtAction(nameof(GetTransfertById), 
+                    new { id = nouveauTransfert.IdTransfert }, nouveauTransfert);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erreur lors du transfert inter-système: {ex.Message}");
             }
         }
 
