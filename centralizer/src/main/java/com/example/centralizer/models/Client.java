@@ -98,7 +98,7 @@ public class Client {
     }
 
     // Méthode pour la compatibilité avec les templates
-    public String getIdClient() {
-        return id != null ? id.toString() : null;
+    public Integer getIdClient() {
+        return id;
     }
 }

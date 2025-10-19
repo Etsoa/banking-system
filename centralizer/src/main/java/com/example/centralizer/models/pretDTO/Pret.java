@@ -5,7 +5,7 @@ import java.time.LocalDate;
 
 public class Pret {
     private Integer id;
-    private String idClient;
+    private Integer idClient;
     private BigDecimal montant;
     private Integer dureeMois;
     private Integer dureePeriode;
@@ -17,7 +17,7 @@ public class Pret {
     // Constructors
     public Pret() {}
 
-    public Pret(Integer id, String idClient, BigDecimal montant, Integer dureeMois,
+    public Pret(Integer id, Integer idClient, BigDecimal montant, Integer dureeMois,
                 Integer dureePeriode, LocalDate dateDebut, Integer idStatutPret,
                 Integer idModalite, Integer idTypeRemboursement) {
         this.id = id;
@@ -35,8 +35,8 @@ public class Pret {
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
 
-    public String getIdClient() { return idClient; }
-    public void setIdClient(String idClient) { this.idClient = idClient; }
+    public Integer getIdClient() { return idClient; }
+    public void setIdClient(Integer idClient) { this.idClient = idClient; }
 
     public BigDecimal getMontant() { return montant; }
     public void setMontant(BigDecimal montant) { this.montant = montant; }

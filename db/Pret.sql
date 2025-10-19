@@ -41,10 +41,19 @@ CREATE TABLE plage_duree_pret(
     actif BOOLEAN NOT NULL DEFAULT TRUE
 );
 
+-- Table de plafonnage de pret selon le revenu
+CREATE TABLE plafond_pret_revenu(
+    id_plafond SERIAL PRIMARY KEY,
+    date_debut TIMESTAMP NOT NULL,
+    revenu_min NUMERIC(12,2) NOT NULL,
+    revenu_max NUMERIC(12,2) NOT NULL,
+    montant_max_pret NUMERIC(12,2) NOT NULL
+);
+
 -- Table des prets
 CREATE TABLE prets(
    id_pret SERIAL PRIMARY KEY,
-   id_client VARCHAR(50) NOT NULL,    -- id_client en string
+   id_client INTEGER NOT NULL,    -- id_client en integer
    montant NUMERIC(12,2) NOT NULL,
    duree_mois INTEGER NOT NULL,       -- duree totale en mois
    duree_periode INTEGER NOT NULL,    -- nombre de periodes calculees selon modalite
@@ -146,6 +155,15 @@ INSERT INTO plage_duree_pret (montant_min, montant_max, duree_min_mois, duree_ma
    (1001, 5000, 12, 24, TRUE),
    (5001, 20000, 24, 36, TRUE),
    (20001, 100000, 36, 60, TRUE);
+
+-- Donnees exemple pour plafond de pret selon le revenu
+INSERT INTO plafond_pret_revenu (date_debut, revenu_min, revenu_max, montant_max_pret) VALUES
+   ('2024-01-01 00:00:00', 0, 1000, 3000),
+   ('2024-06-01 00:00:00', 1001, 2000, 10000),
+   ('2024-08-01 00:00:00', 2001, 3000, 20000),
+   ('2024-11-01 00:00:00', 3001, 5000, 50000),
+   ('2024-12-01 00:00:00', 5001, 10000, 100000),
+   ('2025-06-01 00:00:00', 10001, 999999999, 500000);
 
 -- Donnees exemple pour taux d'interet
 INSERT INTO taux_interet (taux_annuel, date_debut) VALUES

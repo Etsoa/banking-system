@@ -1,14 +1,15 @@
 package com.example.serveurpret.models;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+import jakarta.json.bind.annotation.JsonbDateFormat;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.json.bind.annotation.JsonbDateFormat;
-import java.math.BigDecimal;
-import java.time.LocalDate;
 
 @Entity
 @Table(name = "prets")
@@ -20,7 +21,7 @@ public class Pret {
     private Integer id;
 
     @Column(name = "id_client", nullable = false)
-    private String idClient;
+    private Integer idClient;
 
     @Column(name = "montant", nullable = false, precision = 12, scale = 2)
     private BigDecimal montant;
@@ -47,7 +48,7 @@ public class Pret {
     // Constructors
     public Pret() {}
 
-    public Pret(String idClient, BigDecimal montant, Integer dureeMois, Integer dureePeriode, 
+    public Pret(Integer idClient, BigDecimal montant, Integer dureeMois, Integer dureePeriode, 
                 LocalDate dateDebut, Integer idStatutPret, Integer idModalite, Integer idTypeRemboursement) {
         this.idClient = idClient;
         this.montant = montant;
@@ -92,11 +93,11 @@ public class Pret {
         this.dateDebut = dateDebut;
     }
 
-    public String getIdClient() {
+    public Integer getIdClient() {
         return idClient;
     }
 
-    public void setIdClient(String idClient) {
+    public void setIdClient(Integer idClient) {
         this.idClient = idClient;
     }
 
@@ -136,7 +137,7 @@ public class Pret {
     public String toString() {
         return "Pret{" +
                 "id=" + id +
-                ", idClient='" + idClient + '\'' +
+                ", idClient=" + idClient +
                 ", montant=" + montant +
                 ", dureeMois=" + dureeMois +
                 ", dureePeriode=" + dureePeriode +

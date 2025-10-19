@@ -1,18 +1,34 @@
 package com.example.serveurpret.services;
 
-import com.example.serveurpret.models.*;
-import com.example.serveurpret.repository.*;
-import jakarta.ejb.EJB;
-import jakarta.ejb.Stateless;
-import jakarta.ejb.TransactionAttribute;
-import jakarta.ejb.TransactionAttributeType;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
+
+import com.example.serveurpret.models.AmortissementPret;
+import com.example.serveurpret.models.Frais;
+import com.example.serveurpret.models.MethodeRemboursement;
+import com.example.serveurpret.models.Pret;
+import com.example.serveurpret.models.Remboursement;
+import com.example.serveurpret.models.StatutPret;
+import com.example.serveurpret.models.StatutRemboursement;
+import com.example.serveurpret.repository.AmortissementPretRepository;
+import com.example.serveurpret.repository.FraisRepository;
+import com.example.serveurpret.repository.MethodeRemboursementRepository;
+import com.example.serveurpret.repository.PretRepository;
+import com.example.serveurpret.repository.RemboursementRepository;
+import com.example.serveurpret.repository.StatutPretRepository;
+import com.example.serveurpret.repository.StatutRemboursementRepository;
+
+import jakarta.ejb.EJB;
+import jakarta.ejb.Stateless;
+import jakarta.ejb.TransactionAttribute;
+import jakarta.ejb.TransactionAttributeType;
 
 @Stateless
 public class RemboursementService {
@@ -105,10 +121,12 @@ public class RemboursementService {
             BigDecimal montantTotalAPayer = prochainRemboursement.getAnnuite();
 
             if (enRetard) {
-                // Calculer les frais de retard
+                // Calculer les frais de retard (frais par jour * nombre de jours)
+                long joursDeRetard = ChronoUnit.DAYS.between(dateEcheance, dateActuelle);
                 Frais fraisRetardInfo = fraisRepository.findCurrentByNom("Frais de retard");
                 if (fraisRetardInfo != null) {
-                    fraisRetard = new BigDecimal(fraisRetardInfo.getValeur());
+                    BigDecimal fraisParJour = new BigDecimal(fraisRetardInfo.getValeur());
+                    fraisRetard = fraisParJour.multiply(new BigDecimal(joursDeRetard));
                     montantTotalAPayer = montantTotalAPayer.add(fraisRetard);
                 }
             }

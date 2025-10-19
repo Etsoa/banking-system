@@ -1,21 +1,29 @@
 package com.example.centralizer.controllers;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import com.example.centralizer.services.PretService;
-import com.example.centralizer.services.PretParametresService;
-import com.example.centralizer.services.ClientService;
-import com.example.centralizer.services.ExceptionHandlingService;
-import com.example.centralizer.exceptions.ServerApplicationException;
-import com.example.centralizer.models.pretDTO.Pret;
-import com.example.centralizer.models.Client;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.example.centralizer.exceptions.ServerApplicationException;
+import com.example.centralizer.models.Client;
+import com.example.centralizer.models.pretDTO.Pret;
+import com.example.centralizer.services.ClientService;
+import com.example.centralizer.services.ExceptionHandlingService;
+import com.example.centralizer.services.PretParametresService;
+import com.example.centralizer.services.PretService;
 
 @Controller
 public class PretController {
@@ -33,10 +41,10 @@ public class PretController {
     private ExceptionHandlingService exceptionHandlingService;
 
     @GetMapping("/prets")
-    public String getPrets(@RequestParam(required = false) String clientId, Model model) {
+    public String getPrets(@RequestParam(required = false) Integer clientId, Model model) {
         try {
             List<Pret> prets;
-            if (clientId != null && !clientId.isEmpty()) {
+            if (clientId != null) {
                 prets = pretService.getPretsByClientId(clientId);
                 model.addAttribute("filterClientId", clientId);
             } else {
@@ -53,16 +61,6 @@ public class PretController {
             model.addAttribute("error", "Erreur lors de la récupération des prêts: " + e.getMessage());
         }
         return "prets/list";
-    }
-
-    @PostMapping("/prets")
-    @ResponseBody
-    public Pret createPret(@RequestBody Pret pret) {
-        try {
-            return pretService.createPret(pret);
-        } catch (ServerApplicationException e) {
-            throw new RuntimeException(exceptionHandlingService.getUserFriendlyMessage(e));
-        }
     }
 
     @GetMapping("/prets/client/")
@@ -108,7 +106,7 @@ public class PretController {
                                 RedirectAttributes redirectAttributes) {
         try {
             // Valider les données obligatoires
-            if (pret.getIdClient() == null || pret.getIdClient().trim().isEmpty()) {
+            if (pret.getIdClient() == null) {
                 model.addAttribute("error", "L'ID du client est obligatoire");
                 return "prets/pret-form";
             }
@@ -123,10 +121,27 @@ public class PretController {
                 return "prets/pret-form";
             }
 
-            // Appel au service avec la nouvelle signature
+            // Récupérer le client pour obtenir son revenu
+            Integer clientId = pret.getIdClient();
+            
+            Client client = clientService.getClientById(clientId);
+            if (client == null) {
+                model.addAttribute("error", "Client non trouvé avec l'ID: " + clientId);
+                return "prets/pret-form";
+            }
+
+            // Récupérer le revenu actuel du client depuis l'historique
+            BigDecimal revenuActuel = clientService.getRevenuActuelClient(clientId);
+            if (revenuActuel == null || revenuActuel.compareTo(BigDecimal.ZERO) <= 0) {
+                model.addAttribute("error", "Le revenu du client doit être renseigné et supérieur à zéro pour pouvoir créer un prêt");
+                return "prets/pret-form";
+            }
+
+            // Appel au service avec la nouvelle signature incluant le revenu
             Pret nouveauPret = pretService.createPretComplet(
-                pret.getIdClient(), 
-                pret.getMontant(), 
+                clientId,  // Maintenant c'est un Integer
+                pret.getMontant(),
+                revenuActuel,  // Revenu récupéré de l'historique
                 pret.getDureeMois(),
                 pret.getIdModalite(),
                 pret.getIdTypeRemboursement()

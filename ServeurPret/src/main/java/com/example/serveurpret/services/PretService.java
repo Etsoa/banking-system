@@ -1,16 +1,20 @@
 package com.example.serveurpret.services;
 
-import com.example.serveurpret.models.*;
-import com.example.serveurpret.repository.PretRepository;
-import jakarta.ejb.EJB;
-import jakarta.ejb.Stateless;
-import jakarta.ejb.TransactionAttribute;
-import jakarta.ejb.TransactionAttributeType;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.logging.Logger;
+
+import com.example.serveurpret.models.AmortissementPret;
+import com.example.serveurpret.models.Modalite;
+import com.example.serveurpret.models.Pret;
+import com.example.serveurpret.models.TypeRemboursement;
+import com.example.serveurpret.repository.PretRepository;
+
+import jakarta.ejb.EJB;
+import jakarta.ejb.Stateless;
+import jakarta.ejb.TransactionAttribute;
+import jakarta.ejb.TransactionAttributeType;
 
 @Stateless
 public class PretService {
@@ -32,7 +36,7 @@ public class PretService {
         return pretRepository.findAll();
     }
 
-    public List<Pret> getPretsByClientId(String clientId) {
+    public List<Pret> getPretsByClientId(Integer clientId) {
         return pretRepository.findByClientId(clientId);
     }
 
@@ -44,7 +48,7 @@ public class PretService {
      * Crée un prêt complet avec validation et génération du tableau d'amortissement
      */
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public Pret createPret(String clientId, BigDecimal montant, Integer dureeMois, 
+    public Pret createPret(Integer clientId, BigDecimal montant, Integer dureeMois, 
                           Integer modaliteId, Integer typeRemboursementId) {
         try {
             LOGGER.info("Création d'un prêt pour client " + clientId + ", montant: " + montant + ", durée: " + dureeMois + " mois");

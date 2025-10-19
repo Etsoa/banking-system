@@ -35,7 +35,7 @@ public class PretController {
 
     @GET
     @Path("/client/{clientId}")
-    public Response getByClientId(@PathParam("clientId") String clientId) {
+    public Response getByClientId(@PathParam("clientId") Integer clientId) {
         try {
             List<Pret> prets = pretService.getPretsByClientId(clientId);
             return Response.ok(prets).build();
@@ -63,11 +63,20 @@ public class PretController {
     public Response createPretComplet(java.util.Map<String, Object> requestBody) {
         try {
             // Extraction des paramètres
-            String clientId = (String) requestBody.get("clientId");
+            Integer clientId = Integer.valueOf(requestBody.get("clientId").toString());
             java.math.BigDecimal montant = new java.math.BigDecimal(requestBody.get("montant").toString());
+            java.math.BigDecimal revenu = new java.math.BigDecimal(requestBody.get("revenu").toString());
             Integer dureeMois = Integer.valueOf(requestBody.get("dureeMois").toString());
             Integer modaliteId = Integer.valueOf(requestBody.get("modaliteId").toString());
             Integer typeRemboursementId = Integer.valueOf(requestBody.get("typeRemboursementId").toString());
+
+            // Validation du plafond selon le revenu
+            if (!parametresService.isPretAutorise(revenu, montant)) {
+                BigDecimal montantMax = parametresService.getMontantMaxAutorise(revenu);
+                return Response.status(Response.Status.BAD_REQUEST)
+                               .entity("Montant demandé (" + montant + "€) dépasse le plafond autorisé pour ce revenu (" + montantMax + "€)")
+                               .build();
+            }
 
             // Création du prêt complet avec validation et amortissement
             Pret nouveauPret = pretService.createPret(clientId, montant, dureeMois, modaliteId, typeRemboursementId);
@@ -86,12 +95,12 @@ public class PretController {
 
     @GET
     @Path("/{id}")
-    public Response getById(@PathParam("id") Integer id) {
+    public Response getById(@PathParam("id") Long id) {
         try {
             Pret pret = pretService.getPretById(id);
             if (pret == null) {
                 return Response.status(Response.Status.NOT_FOUND)
-                               .entity("Prêt non trouvé")
+                               .entity("Prêt non trouvé avec l'ID: " + id)
                                .build();
             }
             return Response.ok(pret).build();
@@ -171,20 +180,29 @@ public class PretController {
     }
 
     @GET
-    @Path("/{id}")
-    public Response getPretById(@PathParam("id") Long id) {
+    @Path("/parametres/validation-plafond")
+    public Response validatePlafondPret(@QueryParam("revenu") BigDecimal revenu, 
+                                       @QueryParam("montant") BigDecimal montant) {
         try {
-            Pret pret = pretService.getPretById(id);
-            if (pret != null) {
-                return Response.ok(pret).build();
-            } else {
-                return Response.status(Response.Status.NOT_FOUND)
-                              .entity("Prêt non trouvé avec l'ID: " + id)
-                              .build();
+            if (revenu == null || montant == null) {
+                return Response.status(Response.Status.BAD_REQUEST)
+                               .entity("Les paramètres revenu et montant sont requis")
+                               .build();
             }
+            
+            boolean autorise = parametresService.isPretAutorise(revenu, montant);
+            BigDecimal montantMax = parametresService.getMontantMaxAutorise(revenu);
+            
+            java.util.Map<String, Object> result = new java.util.HashMap<>();
+            result.put("autorise", autorise);
+            result.put("montantMax", montantMax);
+            result.put("montantDemande", montant);
+            result.put("revenu", revenu);
+            
+            return Response.ok(result).build();
         } catch (Exception e) {
             return Response.serverError()
-                           .entity("Erreur lors de la récupération du prêt : " + e.getMessage())
+                           .entity("Erreur lors de la validation du plafond : " + e.getMessage())
                            .build();
         }
     }

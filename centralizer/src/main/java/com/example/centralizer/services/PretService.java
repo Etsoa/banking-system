@@ -59,7 +59,7 @@ public class PretService {
     /**
      * Récupère les prêts d'un client spécifique
      */
-    public List<Pret> getPretsByClientId(String clientId) {
+    public List<Pret> getPretsByClientId(Integer clientId) {
         try {
             String url = serverUrl + "/client/" + clientId;
             LOGGER.info("Appel GET vers: " + url);
@@ -75,6 +75,19 @@ public class PretService {
         } catch (RestClientException e) {
             LOGGER.severe("Erreur lors de la récupération des prêts du client " + clientId + ": " + e.getMessage());
             exceptionHandlingService.handleServerException(e, "ServeurPret");
+            return null;
+        }
+    }
+
+    /**
+     * Récupère les prêts d'un client spécifique (version String pour compatibilité)
+     */
+    public List<Pret> getPretsByClientId(String clientId) {
+        try {
+            Integer id = Integer.valueOf(clientId);
+            return getPretsByClientId(id);
+        } catch (NumberFormatException e) {
+            LOGGER.severe("ID client invalide: " + clientId);
             return null;
         }
     }
@@ -99,7 +112,7 @@ public class PretService {
     /**
      * Crée un prêt complet avec validation et amortissement
      */
-    public Pret createPretComplet(String clientId, BigDecimal montant, Integer dureeMois, 
+    public Pret createPretComplet(Integer clientId, BigDecimal montant, BigDecimal revenu, Integer dureeMois, 
                                  Integer modaliteId, Integer typeRemboursementId) {
         try {
             String url = serverUrl + "/complet";
@@ -109,6 +122,7 @@ public class PretService {
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("clientId", clientId);
             requestBody.put("montant", montant);
+            requestBody.put("revenu", revenu);
             requestBody.put("dureeMois", dureeMois);
             requestBody.put("modaliteId", modaliteId);
             requestBody.put("typeRemboursementId", typeRemboursementId);

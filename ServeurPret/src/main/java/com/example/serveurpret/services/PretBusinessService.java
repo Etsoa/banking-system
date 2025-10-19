@@ -1,14 +1,16 @@
 package com.example.serveurpret.services;
 
-import com.example.serveurpret.models.*;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.logging.Logger;
+
+import com.example.serveurpret.models.AmortissementPret;
+import com.example.serveurpret.models.Pret;
+
 import jakarta.ejb.EJB;
 import jakarta.ejb.Stateless;
 import jakarta.ejb.TransactionAttribute;
 import jakarta.ejb.TransactionAttributeType;
-
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.logging.Logger;
 
 @Stateless
 public class PretBusinessService {
@@ -27,7 +29,7 @@ public class PretBusinessService {
      * Point d'entrée principal pour la création d'un prêt
      */
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public Pret creerPretComplet(String clientId, BigDecimal montant, Integer dureeMois, 
+    public Pret creerPretComplet(Integer clientId, BigDecimal montant, Integer dureeMois, 
                                 Integer modaliteId, Integer typeRemboursementId) {
         
         LOGGER.info("Demande de création de prêt - Client: " + clientId + 
@@ -64,9 +66,9 @@ public class PretBusinessService {
     /**
      * Récupère tous les prêts d'un client avec leurs amortissements
      */
-    public List<Pret> getPretsClient(String clientId) {
-        if (clientId == null || clientId.trim().isEmpty()) {
-            throw new IllegalArgumentException("L'ID du client ne peut pas être null ou vide");
+    public List<Pret> getPretsClient(Integer clientId) {
+        if (clientId == null) {
+            throw new IllegalArgumentException("L'ID du client ne peut pas être null");
         }
 
         return pretService.getPretsByClientId(clientId);
@@ -75,9 +77,13 @@ public class PretBusinessService {
     /**
      * Vérifie l'éligibilité d'un client pour un prêt
      */
-    public EligibilitePret verifierEligibilite(String clientId, BigDecimal montant, Integer dureeMois) {
+    public EligibilitePret verifierEligibilite(Integer clientId, BigDecimal montant, Integer dureeMois) {
         try {
             // Validation des paramètres de base
+            if (clientId == null) {
+                return new EligibilitePret(false, "L'ID du client ne peut pas être null");
+            }
+
             if (montant == null || montant.compareTo(BigDecimal.ZERO) <= 0) {
                 return new EligibilitePret(false, "Le montant doit être positif");
             }
@@ -87,7 +93,11 @@ public class PretBusinessService {
             }
 
             // Vérification des contraintes de durée selon le montant
-            validationService.validerDureePret(montant, dureeMois);
+            try {
+                validationService.validerDureePret(montant, dureeMois);
+            } catch (Exception validationException) {
+                return new EligibilitePret(false, validationException.getMessage());
+            }
 
             // Ici on pourrait ajouter d'autres vérifications :
             // - Vérification du nombre de prêts en cours

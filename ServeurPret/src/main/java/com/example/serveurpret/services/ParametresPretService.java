@@ -27,6 +27,9 @@ public class ParametresPretService {
     @EJB
     private MethodeRemboursementRepository methodeRemboursementRepository;
 
+    @EJB
+    private PlafondPretRevenuRepository plafondPretRevenuRepository;
+
     /**
      * Récupère toutes les modalités de remboursement disponibles
      */
@@ -74,5 +77,39 @@ public class ParametresPretService {
      */
     public List<MethodeRemboursement> getMethodesRemboursement() {
         return methodeRemboursementRepository.findAll();
+    }
+
+    /**
+     * Valide si le montant demandé respecte le plafond selon le revenu du client
+     */
+    public PlafondPretRevenu validatePlafondPret(BigDecimal revenu, BigDecimal montantDemande) {
+        PlafondPretRevenu plafond = plafondPretRevenuRepository.findCurrentByRevenu(revenu);
+        return plafond;
+    }
+
+    /**
+     * Vérifie si un montant de prêt est autorisé pour un revenu donné
+     */
+    public boolean isPretAutorise(BigDecimal revenu, BigDecimal montantDemande) {
+        PlafondPretRevenu plafond = plafondPretRevenuRepository.findCurrentByRevenu(revenu);
+        if (plafond == null) {
+            return false; // Aucun plafond trouvé, refus par défaut
+        }
+        return montantDemande.compareTo(plafond.getMontantMaxPret()) <= 0;
+    }
+
+    /**
+     * Récupère le montant maximum autorisé pour un revenu donné
+     */
+    public BigDecimal getMontantMaxAutorise(BigDecimal revenu) {
+        PlafondPretRevenu plafond = plafondPretRevenuRepository.findCurrentByRevenu(revenu);
+        return plafond != null ? plafond.getMontantMaxPret() : BigDecimal.ZERO;
+    }
+
+    /**
+     * Récupère tous les plafonds de prêt actuels
+     */
+    public List<PlafondPretRevenu> getAllPlafonds() {
+        return plafondPretRevenuRepository.findCurrent();
     }
 }
