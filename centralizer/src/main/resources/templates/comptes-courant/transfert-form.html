@@ -115,6 +115,8 @@
                                 <th style="padding: 10px; text-align: left; border-bottom: 1px solid #dee2e6;">De</th>
                                 <th style="padding: 10px; text-align: left; border-bottom: 1px solid #dee2e6;">Vers</th>
                                 <th style="padding: 10px; text-align: left; border-bottom: 1px solid #dee2e6;">Montant</th>
+                                <th style="padding: 10px; text-align: left; border-bottom: 1px solid #dee2e6;">Frais</th>
+                                <th style="padding: 10px; text-align: left; border-bottom: 1px solid #dee2e6;">Total</th>
                                 <th style="padding: 10px; text-align: left; border-bottom: 1px solid #dee2e6;">Statut</th>
                             </tr>
                         </thead>
@@ -144,6 +146,27 @@
                                 </td>
                                 <td style="padding: 8px; color: #007bff; font-weight: bold;">
                                     [[${#numbers.formatCurrency(transfert.montant)}]]
+                                </td>
+                                <td style="padding: 8px;">
+                                    <span th:if="${transfert.fraisEnvoyeur != null and transfert.fraisEnvoyeur > 0}" 
+                                          style="color: #dc3545; font-size: 0.9em;">
+                                        [[${#numbers.formatCurrency(transfert.fraisEnvoyeur)}]]
+                                        <br><small th:text="${transfert.libelleFraisEnvoyeur}" style="color: #6c757d;"></small>
+                                    </span>
+                                    <span th:unless="${transfert.fraisEnvoyeur != null and transfert.fraisEnvoyeur > 0}" 
+                                          style="color: #28a745; font-size: 0.9em;">
+                                        Gratuit
+                                    </span>
+                                </td>
+                                <td style="padding: 8px; font-weight: bold;">
+                                    <span th:if="${transfert.montantTotalEnvoyeur != null}" 
+                                          th:style="${transfert.fraisEnvoyeur != null and transfert.fraisEnvoyeur > 0} ? 'color: #dc3545;' : 'color: #007bff;'">
+                                        [[${#numbers.formatCurrency(transfert.montantTotalEnvoyeur)}]]
+                                    </span>
+                                    <span th:unless="${transfert.montantTotalEnvoyeur != null}" 
+                                          style="color: #007bff;">
+                                        [[${#numbers.formatCurrency(transfert.montant)}]]
+                                    </span>
                                 </td>
                                 <td style="padding: 8px;">
                                     <span style="color: green;">✓ Effectué</span>

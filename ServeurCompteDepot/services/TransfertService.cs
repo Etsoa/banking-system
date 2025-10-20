@@ -1,4 +1,5 @@
 using ServeurCompteDepot.Models;
+using ServeurCompteDepot.models;
 using Microsoft.EntityFrameworkCore;
 
 namespace ServeurCompteDepot.Services
@@ -15,6 +16,9 @@ namespace ServeurCompteDepot.Services
         Task<decimal> GetTotalTransfertsEntrantsAsync(string compteId);
         Task<int> GetNombreTransfertsSortantsAsync(string compteId);
         Task<int> GetNombreTransfertsEntrantsAsync(string compteId);
+        // Nouvelles méthodes avec frais
+        Task<IEnumerable<TransfertAvecFrais>> GetAllTransfertsAvecFraisAsync();
+        Task<IEnumerable<TransfertAvecFrais>> GetTransfertsByCompteAvecFraisAsync(string idCompte);
     }
 
     public class TransfertService : ITransfertService
@@ -22,12 +26,14 @@ namespace ServeurCompteDepot.Services
         private readonly CompteDepotContext _context;
         private readonly ITransactionService _transactionService;
         private readonly IHistoriqueSoldeService _historiqueSoldeService;
+        private readonly IFraisService _fraisService;
 
-        public TransfertService(CompteDepotContext context, ITransactionService transactionService, IHistoriqueSoldeService historiqueSoldeService)
+        public TransfertService(CompteDepotContext context, ITransactionService transactionService, IHistoriqueSoldeService historiqueSoldeService, IFraisService fraisService)
         {
             _context = context;
             _transactionService = transactionService;
             _historiqueSoldeService = historiqueSoldeService;
+            _fraisService = fraisService;
         }
 
         public async Task<IEnumerable<Transfert>> GetAllTransfertsAsync()
@@ -195,6 +201,95 @@ namespace ServeurCompteDepot.Services
             return await _context.Transferts
                 .Where(t => t.Receveur == compteId)
                 .CountAsync();
+        }
+
+        /// <summary>
+        /// Récupère tous les transferts avec les frais associés
+        /// </summary>
+        public async Task<IEnumerable<TransfertAvecFrais>> GetAllTransfertsAvecFraisAsync()
+        {
+            var transferts = await GetAllTransfertsAsync();
+            return await EnrichirTransfertsAvecFraisAsync(transferts);
+        }
+
+        /// <summary>
+        /// Récupère les transferts d'un compte avec les frais associés
+        /// </summary>
+        public async Task<IEnumerable<TransfertAvecFrais>> GetTransfertsByCompteAvecFraisAsync(string idCompte)
+        {
+            var transferts = await GetTransfertsByCompteAsync(idCompte);
+            return await EnrichirTransfertsAvecFraisAsync(transferts);
+        }
+
+        /// <summary>
+        /// Enrichit une liste de transferts avec les informations sur les frais
+        /// </summary>
+        private async Task<IEnumerable<TransfertAvecFrais>> EnrichirTransfertsAvecFraisAsync(IEnumerable<Transfert> transferts)
+        {
+            var transfertsAvecFrais = new List<TransfertAvecFrais>();
+
+            foreach (var transfert in transferts)
+            {
+                var transfertAvecFrais = new TransfertAvecFrais(transfert);
+
+                try
+                {
+                    // Récupérer la transaction de sortie (virement sortant)
+                    if (!string.IsNullOrEmpty(transfert.IdTransactionEnvoyeur) && 
+                        int.TryParse(transfert.IdTransactionEnvoyeur, out int idTransactionEnvoyeur))
+                    {
+                        var transactionEnvoyeur = await _context.Transactions
+                            .FirstOrDefaultAsync(t => t.IdTransaction == idTransactionEnvoyeur);
+
+                        if (transactionEnvoyeur != null)
+                        {
+                            // Récupérer les frais applicables pour cette transaction de type "Virement sortant"
+                            var frais = await _fraisService.FindCurrentFraisAsync(
+                                "Virement sortant",
+                                transfert.Montant,
+                                transactionEnvoyeur.DateTransaction
+                            );
+
+                            if (frais != null)
+                            {
+                                // Le montant des frais est directement la valeur du frais
+                                var montantFrais = frais.Valeur;
+
+                                transfertAvecFrais.FraisEnvoyeur = montantFrais;
+                                transfertAvecFrais.LibelleFraisEnvoyeur = frais.Nom;
+                                transfertAvecFrais.MontantTotalEnvoyeur = transfert.Montant + montantFrais;
+                            }
+                            else
+                            {
+                                // Pas de frais applicables
+                                transfertAvecFrais.FraisEnvoyeur = 0;
+                                transfertAvecFrais.LibelleFraisEnvoyeur = "Aucun frais";
+                                transfertAvecFrais.MontantTotalEnvoyeur = transfert.Montant;
+                            }
+                        }
+                    }
+
+                    // Si pas de transaction trouvée, initialiser avec des valeurs par défaut
+                    if (string.IsNullOrEmpty(transfertAvecFrais.LibelleFraisEnvoyeur))
+                    {
+                        transfertAvecFrais.FraisEnvoyeur = 0;
+                        transfertAvecFrais.LibelleFraisEnvoyeur = "Non calculé";
+                        transfertAvecFrais.MontantTotalEnvoyeur = transfert.Montant;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // En cas d'erreur, initialiser avec des valeurs par défaut
+                    Console.WriteLine($"Erreur lors du calcul des frais pour le transfert {transfert.IdTransfert}: {ex.Message}");
+                    transfertAvecFrais.FraisEnvoyeur = 0;
+                    transfertAvecFrais.LibelleFraisEnvoyeur = "Erreur calcul";
+                    transfertAvecFrais.MontantTotalEnvoyeur = transfert.Montant;
+                }
+
+                transfertsAvecFrais.Add(transfertAvecFrais);
+            }
+
+            return transfertsAvecFrais;
         }
     }
 }

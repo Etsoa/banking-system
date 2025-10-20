@@ -115,6 +115,8 @@
                             <th style="padding: 10px; text-align: left;">Date</th>
                             <th style="padding: 10px; text-align: left;">Type</th>
                             <th style="padding: 10px; text-align: left;">Montant</th>
+                            <th style="padding: 10px; text-align: left;">Frais</th>
+                            <th style="padding: 10px; text-align: left;">Total</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -122,13 +124,27 @@
                             <td style="padding: 10px;">[[${transaction.idTransaction}]]</td>
                             <td style="padding: 10px;">[[${#temporals.format(transaction.dateTransaction, 'dd/MM/yyyy HH:mm:ss')}]]</td>
                             <td style="padding: 10px;">
-                                <span th:if="${transaction.idTypeTransaction == 1}" style="color: green;">Dépôt (+)</span>
-                                <span th:if="${transaction.idTypeTransaction == 2}" style="color: red;">Retrait (-)</span>
-                                <span th:if="${transaction.idTypeTransaction == 3}" style="color: blue;">Virement entrant (+)</span>
-                                <span th:if="${transaction.idTypeTransaction == 4}" style="color: orange;">Virement sortant (-)</span>
+                                <span th:if="${transaction.typeTransactionLibelle != null}" 
+                                      th:text="${transaction.typeTransactionLibelle}"></span>
+                                <span th:unless="${transaction.typeTransactionLibelle != null}">
+                                    <span th:if="${transaction.idTypeTransaction == 1}" style="color: green;">Dépôt (+)</span>
+                                    <span th:if="${transaction.idTypeTransaction == 2}" style="color: red;">Retrait (-)</span>
+                                    <span th:if="${transaction.idTypeTransaction == 3}" style="color: blue;">Virement entrant (+)</span>
+                                    <span th:if="${transaction.idTypeTransaction == 4}" style="color: orange;">Virement sortant (-)</span>
+                                </span>
                             </td>
                             <td style="padding: 10px;" th:style="${transaction.idTypeTransaction == 1 or transaction.idTypeTransaction == 3} ? 'color: green;' : 'color: red;'">
                                 [[${#numbers.formatCurrency(transaction.montant)}]]
+                            </td>
+                            <td style="padding: 10px;">
+                                <span th:if="${transaction.hasFrais}" style="color: red;">
+                                    [[${#numbers.formatCurrency(transaction.fraisAppliques)}]]
+                                    <br><small th:text="${transaction.nomFrais}" style="color: #6c757d;"></small>
+                                </span>
+                                <span th:unless="${transaction.hasFrais}" style="color: #6c757d;">-</span>
+                            </td>
+                            <td style="padding: 10px;" th:style="${transaction.idTypeTransaction == 1 or transaction.idTypeTransaction == 3} ? 'color: green; font-weight: bold;' : 'color: red; font-weight: bold;'">
+                                [[${#numbers.formatCurrency(transaction.montantTotal)}]]
                             </td>
                         </tr>
                     </tbody>

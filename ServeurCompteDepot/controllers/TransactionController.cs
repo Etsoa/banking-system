@@ -59,6 +59,20 @@ namespace ServeurCompteDepot.Controllers
             }
         }
 
+        [HttpGet("compte/{compteId}/avec-frais")]
+        public async Task<ActionResult<IEnumerable<TransactionAvecFrais>>> GetTransactionsByCompteAvecFrais(string compteId)
+        {
+            try
+            {
+                var transactions = await _transactionService.GetTransactionsByCompteAvecFraisAsync(compteId);
+                return Ok(transactions);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erreur serveur: {ex.Message}");
+            }
+        }
+
         [HttpPost("by-compte")]
         public async Task<ActionResult<IEnumerable<Transaction>>> GetTransactionsByComptePost([FromBody] CompteRequest request)
         {

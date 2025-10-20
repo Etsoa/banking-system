@@ -104,3 +104,13 @@ INSERT INTO comptes (date_ouverture, id_client, solde) VALUES
 INSERT INTO historiques_statut_compte (date_changement, id_compte, id_type_statut_compte) VALUES
    ('2025-10-16 10:00:00', 'D1', 1), -- Compte D1 est Actif
    ('2025-10-16 11:00:00', 'D2', 1); -- Compte D2 est Actif
+
+-- Données pour la table frais
+INSERT INTO frais (date_debut, nom, montant_min, montant_max, valeur) VALUES
+   ('2025-01-01 00:00:00', 'Frais de retrait', 0, 5000, 5),
+   ('2025-01-01 00:00:00', 'Frais de retrait', 5001, 15000, 10),
+   ('2025-01-01 00:00:00', 'Frais de retrait', 15001, 50000, 15),
+   ('2025-01-01 00:00:00', 'Frais de virement sortant', 0, 3000, 3),
+   ('2025-01-01 00:00:00', 'Frais de virement sortant', 3001, 10000, 6),
+   ('2025-01-01 00:00:00', 'Frais de virement sortant', 10001, 30000, 9),
+   ('2025-01-01 00:00:00', 'Frais de gestion', 0, 100000, 2);

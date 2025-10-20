@@ -1,4 +1,5 @@
 using ServeurCompteDepot.Models;
+using ServeurCompteDepot.models;
 using ServeurCompteDepot.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,6 +16,34 @@ namespace ServeurCompteDepot.Controllers
         {
             _transfertService = transfertService;
             _context = context;
+        }
+
+        [HttpGet("avec-frais")]
+        public async Task<ActionResult<IEnumerable<TransfertAvecFrais>>> GetAllTransfertsAvecFrais()
+        {
+            try
+            {
+                var transferts = await _transfertService.GetAllTransfertsAvecFraisAsync();
+                return Ok(transferts);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erreur serveur: {ex.Message}");
+            }
+        }
+
+        [HttpGet("compte/{compteId}/avec-frais")]
+        public async Task<ActionResult<IEnumerable<TransfertAvecFrais>>> GetTransfertsByCompteAvecFrais(string compteId)
+        {
+            try
+            {
+                var transferts = await _transfertService.GetTransfertsByCompteAvecFraisAsync(compteId);
+                return Ok(transferts);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erreur serveur: {ex.Message}");
+            }
         }
 
         [HttpGet]

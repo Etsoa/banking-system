@@ -76,9 +76,9 @@ public class FraisService {
             // Déterminer le nom des frais selon le type de transaction
             String nomFrais;
             if ("Retrait".equalsIgnoreCase(typeTransaction)) {
-                nomFrais = "frais retrait";
+                nomFrais = "Frais de retrait";
             } else if ("Virement sortant".equalsIgnoreCase(typeTransaction)) {
-                nomFrais = "frais envois";
+                nomFrais = "Frais de virement sortant";
             } else {
                 // Pour les autres types de transaction, pas de frais
                 return null;

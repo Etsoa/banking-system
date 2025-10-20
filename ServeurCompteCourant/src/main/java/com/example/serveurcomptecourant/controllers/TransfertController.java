@@ -1,6 +1,7 @@
 package com.example.serveurcomptecourant.controllers;
 
 import com.example.serveurcomptecourant.models.Transfert;
+import com.example.serveurcomptecourant.models.TransfertAvecFrais;
 import com.example.serveurcomptecourant.services.TransactionService;
 import com.example.serveurcomptecourant.services.TransfertService;
 import com.example.serveurcomptecourant.exceptions.CompteCourantException;
@@ -21,6 +22,18 @@ public class TransfertController {
 
     @EJB
     private TransactionService transactionService;
+
+    @GET
+    @Path("/avec-frais")
+    public List<TransfertAvecFrais> getAllTransfertsAvecFrais() throws CompteCourantException {
+        return transfertService.getAllTransfertsAvecFrais();
+    }
+
+    @GET
+    @Path("/compte/{compteId}/avec-frais")
+    public List<TransfertAvecFrais> getTransfertsByCompteAvecFrais(@PathParam("compteId") String compteId) throws CompteCourantException {
+        return transfertService.getTransfertsByCompteAvecFrais(compteId);
+    }
 
     @GET
     public List<Transfert> getAllTransferts() throws CompteCourantException {

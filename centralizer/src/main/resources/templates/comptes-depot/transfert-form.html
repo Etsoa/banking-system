@@ -101,6 +101,8 @@
                                 <th style="padding: 10px; text-align: left; border-bottom: 1px solid #dee2e6;">De</th>
                                 <th style="padding: 10px; text-align: left; border-bottom: 1px solid #dee2e6;">Vers</th>
                                 <th style="padding: 10px; text-align: left; border-bottom: 1px solid #dee2e6;">Montant</th>
+                                <th style="padding: 10px; text-align: left; border-bottom: 1px solid #dee2e6;">Frais</th>
+                                <th style="padding: 10px; text-align: left; border-bottom: 1px solid #dee2e6;">Total</th>
                                 <th style="padding: 10px; text-align: left; border-bottom: 1px solid #dee2e6;">Statut</th>
                             </tr>
                         </thead>
@@ -109,27 +111,48 @@
                                 <td style="padding: 8px;">[[${transfert.idTransfert}]]</td>
                                 <td style="padding: 8px;">[[${#temporals.format(transfert.dateTransfert, 'dd/MM/yyyy')}]]</td>
                                 <td style="padding: 8px;">
-                                    [[${transfert.envoyer}]]
+                                    [[${transfert.compteEnvoyeur}]]
                                     <br><small style="color: #6c757d;">
-                                        <span th:if="${comptesMap != null and comptesMap.containsKey(transfert.envoyer)}">
-                                            <span th:if="${clientsMap != null and clientsMap.containsKey(comptesMap[transfert.envoyer].idClient)}">
-                                                [[${clientsMap[comptesMap[transfert.envoyer].idClient].nom}]] [[${clientsMap[comptesMap[transfert.envoyer].idClient].prenom}]]
+                                        <span th:if="${comptesMap != null and comptesMap.containsKey(transfert.compteEnvoyeur)}">
+                                            <span th:if="${clientsMap != null and clientsMap.containsKey(comptesMap[transfert.compteEnvoyeur].idClient)}">
+                                                [[${clientsMap[comptesMap[transfert.compteEnvoyeur].idClient].nom}]] [[${clientsMap[comptesMap[transfert.compteEnvoyeur].idClient].prenom}]]
                                             </span>
                                         </span>
                                     </small>
                                 </td>
                                 <td style="padding: 8px;">
-                                    [[${transfert.receveur}]]
+                                    [[${transfert.compteReceveur}]]
                                     <br><small style="color: #6c757d;">
-                                        <span th:if="${comptesMap != null and comptesMap.containsKey(transfert.receveur)}">
-                                            <span th:if="${clientsMap != null and clientsMap.containsKey(comptesMap[transfert.receveur].idClient)}">
-                                                [[${clientsMap[comptesMap[transfert.receveur].idClient].nom}]] [[${clientsMap[comptesMap[transfert.receveur].idClient].prenom}]]
+                                        <span th:if="${comptesMap != null and comptesMap.containsKey(transfert.compteReceveur)}">
+                                            <span th:if="${clientsMap != null and clientsMap.containsKey(comptesMap[transfert.compteReceveur].idClient)}">
+                                                [[${clientsMap[comptesMap[transfert.compteReceveur].idClient].nom}]] [[${clientsMap[comptesMap[transfert.compteReceveur].idClient].prenom}]]
                                             </span>
                                         </span>
                                     </small>
                                 </td>
                                 <td style="padding: 8px; color: #007bff; font-weight: bold;">
                                     [[${#numbers.formatCurrency(transfert.montant)}]]
+                                </td>
+                                <td style="padding: 8px;">
+                                    <span th:if="${transfert.fraisEnvoyeur != null and transfert.fraisEnvoyeur > 0}" 
+                                          style="color: #dc3545; font-size: 0.9em;">
+                                        [[${#numbers.formatCurrency(transfert.fraisEnvoyeur)}]]
+                                        <br><small th:text="${transfert.libelleFraisEnvoyeur}" style="color: #6c757d;"></small>
+                                    </span>
+                                    <span th:unless="${transfert.fraisEnvoyeur != null and transfert.fraisEnvoyeur > 0}" 
+                                          style="color: #28a745; font-size: 0.9em;">
+                                        Gratuit
+                                    </span>
+                                </td>
+                                <td style="padding: 8px; font-weight: bold;">
+                                    <span th:if="${transfert.montantTotalEnvoyeur != null}" 
+                                          th:style="${transfert.fraisEnvoyeur != null and transfert.fraisEnvoyeur > 0} ? 'color: #dc3545;' : 'color: #007bff;'">
+                                        [[${#numbers.formatCurrency(transfert.montantTotalEnvoyeur)}]]
+                                    </span>
+                                    <span th:unless="${transfert.montantTotalEnvoyeur != null}" 
+                                          style="color: #007bff;">
+                                        [[${#numbers.formatCurrency(transfert.montant)}]]
+                                    </span>
                                 </td>
                                 <td style="padding: 8px;">
                                     <span style="color: green;">✓ Effectué</span>

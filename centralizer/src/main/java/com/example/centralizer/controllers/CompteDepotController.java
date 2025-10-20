@@ -25,6 +25,7 @@ import com.example.centralizer.models.Client;
 import com.example.centralizer.models.compteDepotDTO.Compte;
 import com.example.centralizer.models.compteDepotDTO.Transaction;
 import com.example.centralizer.models.compteDepotDTO.Transfert;
+import com.example.centralizer.models.compteDepotDTO.TransfertAvecFrais;
 import com.example.centralizer.services.ClientService;
 import com.example.centralizer.services.CompteDepotService;
 import com.example.centralizer.services.ExceptionHandlingService;
@@ -140,13 +141,14 @@ public class CompteDepotController {
             Client client = clientService.getClientById(compte.getIdClient());
             model.addAttribute("client", client);
             
-            // Récupérer les transactions
-            List<Transaction> transactions;
+            // Récupérer les transactions avec frais
+            List<com.example.centralizer.models.compteDepotDTO.TransactionAvecFrais> transactions;
             if (typeId != null) {
-                transactions = transactionService.getTransactionsByCompteAndType(compteId, typeId);
+                // Pour l'instant, utiliser la méthode normale et convertir plus tard
+                transactions = transactionService.getTransactionsByCompteAvecFrais(compteId);
                 model.addAttribute("filtreType", typeId);
             } else {
-                transactions = transactionService.getTransactionsByCompte(compteId);
+                transactions = transactionService.getTransactionsByCompteAvecFrais(compteId);
             }
             model.addAttribute("transactions", transactions);
             
@@ -219,11 +221,11 @@ public class CompteDepotController {
             comptesMap.put(compte.getIdCompte(), compte); // Ajouter le compte envoyeur
             model.addAttribute("comptesMap", comptesMap);
             
-            // Récupérer les transferts récents du compte (limités aux 5 derniers)
+            // Récupérer les transferts récents du compte avec frais (limités aux 5 derniers)
             try {
-                List<Transfert> tousTransferts = transactionService.getAllTransferts();
-                List<Transfert> transfertsRecents = tousTransferts.stream()
-                    .filter(t -> t.getEnvoyer().equals(compteId) || t.getReceveur().equals(compteId))
+                List<TransfertAvecFrais> tousTransferts = transactionService.getAllTransfertsAvecFrais();
+                List<TransfertAvecFrais> transfertsRecents = tousTransferts.stream()
+                    .filter(t -> t.getCompteEnvoyeur().equals(compteId) || t.getCompteReceveur().equals(compteId))
                     .sorted((t1, t2) -> t2.getDateTransfert().compareTo(t1.getDateTransfert()))
                     .limit(5)
                     .collect(Collectors.toList());

@@ -12,11 +12,12 @@ import com.example.serveurcomptecourant.models.CompteCourant;
 import com.example.serveurcomptecourant.models.Decouverte;
 import com.example.serveurcomptecourant.models.Frais;
 import com.example.serveurcomptecourant.models.Transaction;
-import com.example.serveurcomptecourant.models.TypeTransaction;
+import com.example.serveurcomptecourant.models.TransactionAvecFrais;
 import com.example.serveurcomptecourant.models.Transfert;
+import com.example.serveurcomptecourant.models.TypeTransaction;
+import com.example.serveurcomptecourant.repository.CompteCourantRepository;
 import com.example.serveurcomptecourant.repository.TransactionRepository;
 import com.example.serveurcomptecourant.repository.TypeTransactionRepository;
-import com.example.serveurcomptecourant.repository.CompteCourantRepository;
 
 import jakarta.ejb.EJB;
 import jakarta.ejb.Stateless;
@@ -114,6 +115,111 @@ public class TransactionService {
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Erreur lors de la récupération des transactions du compte " + compteId + " et type " + typeId, e);
             throw new CompteCourantException("Erreur lors de la récupération des transactions", e);
+        }
+    }
+
+    /**
+     * Récupère les transactions d'un compte avec les frais appliqués
+     */
+    public List<TransactionAvecFrais> getTransactionsByCompteAvecFrais(String compteId) throws CompteCourantException {
+        try {
+            if (compteId == null || compteId.trim().isEmpty()) {
+                throw new CompteCourantBusinessException("L'ID du compte est obligatoire");
+            }
+            
+            // Vérifier que le compte existe
+            CompteCourant compte = compteRepository.find(compteId);
+            if (compte == null) {
+                throw new CompteCourantBusinessException.CompteNotFoundException(0L);
+            }
+            
+            List<Transaction> transactions = transactionRepository.findByCompteId(compteId);
+            return enrichirTransactionsAvecFrais(transactions);
+        } catch (CompteCourantBusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Erreur lors de la récupération des transactions avec frais du compte " + compteId, e);
+            throw new CompteCourantException("Erreur lors de la récupération des transactions avec frais", e);
+        }
+    }
+
+    /**
+     * Récupère les transactions d'un compte par type avec les frais appliqués
+     */
+    public List<TransactionAvecFrais> getTransactionsByCompteAndTypeAvecFrais(String compteId, Integer typeId) throws CompteCourantException {
+        try {
+            if (compteId == null || compteId.trim().isEmpty()) {
+                throw new CompteCourantBusinessException("L'ID du compte est obligatoire");
+            }
+            if (typeId == null || typeId <= 0) {
+                throw new CompteCourantBusinessException("L'ID du type de transaction est obligatoire");
+            }
+            
+            // Vérifier que le compte existe
+            CompteCourant compte = compteRepository.find(compteId);
+            if (compte == null) {
+                throw new CompteCourantBusinessException.CompteNotFoundException(0L);
+            }
+            
+            // Vérifier que le type de transaction existe
+            TypeTransaction typeTransaction = typeTransactionRepository.findById(typeId);
+            if (typeTransaction == null) {
+                throw new CompteCourantBusinessException("Type de transaction introuvable");
+            }
+            
+            List<Transaction> transactions = transactionRepository.findByCompteIdAndTypeTransaction(compteId, typeId);
+            return enrichirTransactionsAvecFrais(transactions);
+        } catch (CompteCourantBusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Erreur lors de la récupération des transactions avec frais du compte " + compteId + " et type " + typeId, e);
+            throw new CompteCourantException("Erreur lors de la récupération des transactions avec frais", e);
+        }
+    }
+
+    /**
+     * Enrichit une liste de transactions avec les informations de frais
+     */
+    private List<TransactionAvecFrais> enrichirTransactionsAvecFrais(List<Transaction> transactions) {
+        return transactions.stream()
+            .map(this::enrichirTransactionAvecFrais)
+            .toList();
+    }
+
+    /**
+     * Enrichit une transaction avec les informations de frais
+     */
+    private TransactionAvecFrais enrichirTransactionAvecFrais(Transaction transaction) {
+        try {
+            // Récupérer le type de transaction
+            TypeTransaction typeTransaction = typeTransactionRepository.findById(transaction.getIdTypeTransaction());
+            
+            // Vérifier si des frais s'appliquent à ce type de transaction
+            if (typeTransaction != null && 
+                ("Retrait".equalsIgnoreCase(typeTransaction.getLibelle()) || 
+                 "Virement sortant".equalsIgnoreCase(typeTransaction.getLibelle()))) {
+                
+                // Récupérer les frais applicables
+                LocalDateTime dateRef = transaction.getDateTransaction() != null ? 
+                                      transaction.getDateTransaction() : LocalDateTime.now();
+                
+                Frais fraisApplicables = fraisService.findCurrentFrais(
+                    typeTransaction.getLibelle(), 
+                    transaction.getMontant(), 
+                    dateRef);
+                
+                return new TransactionAvecFrais(transaction, typeTransaction, fraisApplicables);
+            } else {
+                return new TransactionAvecFrais(transaction, typeTransaction);
+            }
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Erreur lors de l'enrichissement de la transaction " + transaction.getId(), e);
+            // En cas d'erreur, retourner la transaction sans frais
+            TypeTransaction typeTransaction = null;
+            try {
+                typeTransaction = typeTransactionRepository.findById(transaction.getIdTypeTransaction());
+            } catch (Exception ignored) {}
+            return new TransactionAvecFrais(transaction, typeTransaction);
         }
     }
 

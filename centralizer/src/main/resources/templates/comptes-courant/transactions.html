@@ -117,6 +117,8 @@
                             <th style="padding: 10px; text-align: left;">Date</th>
                             <th style="padding: 10px; text-align: left;">Type</th>
                             <th style="padding: 10px; text-align: left;">Montant</th>
+                            <th style="padding: 10px; text-align: left;">Frais</th>
+                            <th style="padding: 10px; text-align: left;">Total</th>
                             <th style="padding: 10px; text-align: left;">Statut</th>
                         </tr>
                     </thead>
@@ -125,14 +127,28 @@
                             <td style="padding: 10px;">[[${transaction.idTransaction}]]</td>
                             <td style="padding: 10px;">[[${#temporals.format(transaction.dateTransaction, 'dd/MM/yyyy HH:mm')}]]</td>
                             <td style="padding: 10px;">
-                                <span th:if="${typesMap != null and typesMap.containsKey(transaction.idTypeTransaction)}" 
-                                      th:text="${typesMap[transaction.idTypeTransaction]}"></span>
-                                <span th:unless="${typesMap != null and typesMap.containsKey(transaction.idTypeTransaction)}">
-                                    Type [[${transaction.idTypeTransaction}]]
+                                <span th:if="${transaction.typeTransactionLibelle != null}" 
+                                      th:text="${transaction.typeTransactionLibelle}"></span>
+                                <span th:unless="${transaction.typeTransactionLibelle != null}">
+                                    <span th:if="${typesMap != null and typesMap.containsKey(transaction.idTypeTransaction)}" 
+                                          th:text="${typesMap[transaction.idTypeTransaction]}"></span>
+                                    <span th:unless="${typesMap != null and typesMap.containsKey(transaction.idTypeTransaction)}">
+                                        Type [[${transaction.idTypeTransaction}]]
+                                    </span>
                                 </span>
                             </td>
                             <td style="padding: 10px;" th:style="${transaction.montant < 0} ? 'color: red;' : 'color: green;'">
                                 [[${#numbers.formatCurrency(transaction.montant)}]]
+                            </td>
+                            <td style="padding: 10px;">
+                                <span th:if="${transaction.hasFrais()}" style="color: red;">
+                                    [[${#numbers.formatCurrency(transaction.fraisAppliques)}]]
+                                    <br><small th:text="${transaction.nomFrais}" style="color: #6c757d;"></small>
+                                </span>
+                                <span th:unless="${transaction.hasFrais()}" style="color: #6c757d;">-</span>
+                            </td>
+                            <td style="padding: 10px;" th:style="${transaction.montantTotal < 0} ? 'color: red; font-weight: bold;' : 'color: green; font-weight: bold;'">
+                                [[${#numbers.formatCurrency(transaction.montantTotal)}]]
                             </td>
                             <td style="padding: 10px;">
                                 <span style="color: green;">✓ Validée</span>

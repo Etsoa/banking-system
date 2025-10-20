@@ -111,3 +111,19 @@ INSERT INTO comptes (date_ouverture, decouvert, id_client, solde) VALUES
 -- Données de test pour les historiques de statut (utilise l'id_compte généré)
 INSERT INTO historiques_statut_compte (date_changement, id_compte, id_type_statut_compte) VALUES
    ('2025-10-15 17:28:33.459', 'C1', 1); -- Compte C1 est Actif
+
+
+-- Données pour la table frais
+INSERT INTO frais (date_debut, nom, montant_min, montant_max, valeur) VALUES
+   ('2025-01-01 00:00:00', 'Frais de retrait', 0, 10000, 10),
+   ('2025-01-01 00:00:00', 'Frais de retrait', 10001, 20000, 20),
+   ('2025-01-01 00:00:00', 'Frais de retrait', 20001, 30000, 30),
+   ('2025-01-01 00:00:00', 'Frais de virement sortant', 0, 5000, 5),
+   ('2025-01-01 00:00:00', 'Frais de virement sortant', 5001, 15000, 10),
+   ('2025-01-01 00:00:00', 'Frais de virement sortant', 15001, 50000, 15);
+
+-- Données pour la table decouverte
+INSERT INTO decouverte (date_debut, revenu_min, revenu_max, valeur) VALUES
+   ('2025-01-01 00:00:00', 0, 1000, 50),
+   ('2025-01-01 00:00:00', 1000, 5000, 100),
+   ('2025-01-01 00:00:00', 5000, 10000, 200);

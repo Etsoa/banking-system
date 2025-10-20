@@ -9,9 +9,12 @@ import com.example.serveurcomptecourant.exceptions.CompteCourantBusinessExceptio
 import com.example.serveurcomptecourant.exceptions.CompteCourantException;
 import com.example.serveurcomptecourant.models.CompteCourant;
 import com.example.serveurcomptecourant.models.Transfert;
+import com.example.serveurcomptecourant.models.TransfertAvecFrais;
 import com.example.serveurcomptecourant.models.Transaction;
+import com.example.serveurcomptecourant.models.Frais;
 import com.example.serveurcomptecourant.repository.TransfertRepository;
 import com.example.serveurcomptecourant.repository.CompteCourantRepository;
+import com.example.serveurcomptecourant.repository.TransactionRepository;
 
 import jakarta.ejb.EJB;
 import jakarta.ejb.Stateless;
@@ -27,6 +30,12 @@ public class TransfertService {
     
     @EJB
     private CompteCourantRepository compteRepository;
+    
+    @EJB
+    private TransactionRepository transactionRepository;
+    
+    @EJB
+    private FraisService fraisService;
 
     /**
      * Récupère tous les transferts
@@ -38,6 +47,92 @@ public class TransfertService {
             LOGGER.log(Level.SEVERE, "Erreur lors de la récupération des transferts", e);
             throw new CompteCourantException("Erreur lors de la récupération des transferts", e);
         }
+    }
+
+    /**
+     * Récupère les transferts d'un compte avec les frais associés
+     */
+    public List<TransfertAvecFrais> getTransfertsByCompteAvecFrais(String compteId) throws CompteCourantException {
+        try {
+            List<Transfert> transferts = getTransfertsByCompte(compteId);
+            return enrichirTransfertsAvecFrais(transferts);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Erreur lors de la récupération des transferts avec frais du compte " + compteId, e);
+            throw new CompteCourantException("Erreur lors de la récupération des transferts avec frais", e);
+        }
+    }
+    
+    /**
+     * Récupère tous les transferts avec les frais associés
+     */
+    public List<TransfertAvecFrais> getAllTransfertsAvecFrais() throws CompteCourantException {
+        try {
+            List<Transfert> transferts = getAllTransferts();
+            return enrichirTransfertsAvecFrais(transferts);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Erreur lors de la récupération de tous les transferts avec frais", e);
+            throw new CompteCourantException("Erreur lors de la récupération des transferts avec frais", e);
+        }
+    }
+    
+    /**
+     * Enrichit une liste de transferts avec les informations sur les frais
+     */
+    private List<TransfertAvecFrais> enrichirTransfertsAvecFrais(List<Transfert> transferts) throws CompteCourantException {
+        List<TransfertAvecFrais> transfertsAvecFrais = new java.util.ArrayList<>();
+        
+        for (Transfert transfert : transferts) {
+            TransfertAvecFrais transfertAvecFrais = new TransfertAvecFrais(transfert);
+            
+            try {
+                // Récupérer la transaction de sortie (virement sortant)
+                if (transfert.getIdTransactionEnvoyeur() != null) {
+                    Long idTransactionEnvoyeur = Long.parseLong(transfert.getIdTransactionEnvoyeur());
+                    Transaction transactionEnvoyeur = transactionRepository.findById(idTransactionEnvoyeur.intValue());
+                    
+                    if (transactionEnvoyeur != null) {
+                        // Récupérer les frais applicables pour cette transaction de type "Virement sortant"
+                        Frais frais = fraisService.findCurrentFrais(
+                            "Virement sortant",
+                            transfert.getMontant(),
+                            transactionEnvoyeur.getDateTransaction()
+                        );
+                        
+                        if (frais != null) {
+                            // Calculer le montant des frais
+                            BigDecimal montantFrais = BigDecimal.valueOf(frais.getValeur());
+                            
+                            transfertAvecFrais.setFraisEnvoyeur(montantFrais);
+                            transfertAvecFrais.setLibelleFraisEnvoyeur(frais.getNom());
+                            transfertAvecFrais.setMontantTotalEnvoyeur(transfert.getMontant().add(montantFrais));
+                        } else {
+                            // Pas de frais applicables
+                            transfertAvecFrais.setFraisEnvoyeur(BigDecimal.ZERO);
+                            transfertAvecFrais.setLibelleFraisEnvoyeur("Aucun frais");
+                            transfertAvecFrais.setMontantTotalEnvoyeur(transfert.getMontant());
+                        }
+                    }
+                }
+                
+                // Si pas de transaction trouvée, initialiser avec des valeurs par défaut
+                if (transfertAvecFrais.getFraisEnvoyeur() == null) {
+                    transfertAvecFrais.setFraisEnvoyeur(BigDecimal.ZERO);
+                    transfertAvecFrais.setLibelleFraisEnvoyeur("Non calculé");
+                    transfertAvecFrais.setMontantTotalEnvoyeur(transfert.getMontant());
+                }
+                
+            } catch (Exception e) {
+                LOGGER.log(Level.WARNING, "Erreur lors du calcul des frais pour le transfert " + transfert.getId(), e);
+                // En cas d'erreur, initialiser avec des valeurs par défaut
+                transfertAvecFrais.setFraisEnvoyeur(BigDecimal.ZERO);
+                transfertAvecFrais.setLibelleFraisEnvoyeur("Erreur calcul");
+                transfertAvecFrais.setMontantTotalEnvoyeur(transfert.getMontant());
+            }
+            
+            transfertsAvecFrais.add(transfertAvecFrais);
+        }
+        
+        return transfertsAvecFrais;
     }
 
     /**

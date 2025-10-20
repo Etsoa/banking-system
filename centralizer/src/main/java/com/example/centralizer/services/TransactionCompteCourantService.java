@@ -1,8 +1,10 @@
 package com.example.centralizer.services;
 
 import com.example.centralizer.models.compteCourantDTO.Transaction;
+import com.example.centralizer.models.compteCourantDTO.TransactionAvecFrais;
 import com.example.centralizer.models.compteCourantDTO.TypeTransaction;
 import com.example.centralizer.models.compteCourantDTO.Transfert;
+import com.example.centralizer.models.compteCourantDTO.TransfertAvecFrais;
 import com.example.centralizer.services.HistoriqueRevenuService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -62,6 +64,30 @@ public class TransactionCompteCourantService {
     }
 
     /**
+     * Récupère toutes les transactions d'un compte avec les frais appliqués
+     */
+    public List<TransactionAvecFrais> getTransactionsByCompteAvecFrais(String compteId) {
+        try {
+             
+            String url =  serverUrl + "/transactions/compte/" + compteId + "/avec-frais";
+            LOGGER.info("Appel GET vers: " + url);
+            
+            ResponseEntity<List<TransactionAvecFrais>> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<TransactionAvecFrais>>() {}
+            );
+            
+            return response.getBody();
+        } catch (RestClientException e) {
+            LOGGER.severe("Erreur lors de la récupération des transactions avec frais du compte " + compteId + ": " + e.getMessage());
+            exceptionHandlingService.handleServerException(e, "ServeurCompteCourant");
+            return null;
+        }
+    }
+
+    /**
      * Récupère les transactions d'un compte filtrées par type
      */
     public List<Transaction> getTransactionsByCompteAndType(String compteId, Integer typeId) {
@@ -80,6 +106,30 @@ public class TransactionCompteCourantService {
             return response.getBody();
         } catch (RestClientException e) {
             LOGGER.severe("Erreur lors de la récupération des transactions filtrées du compte " + compteId + ": " + e.getMessage());
+            exceptionHandlingService.handleServerException(e, "ServeurCompteCourant");
+            return null;
+        }
+    }
+
+    /**
+     * Récupère les transactions d'un compte filtrées par type avec les frais appliqués
+     */
+    public List<TransactionAvecFrais> getTransactionsByCompteAndTypeAvecFrais(String compteId, Integer typeId) {
+        try {
+             
+            String url =  serverUrl + "/transactions/compte/" + compteId + "/type/" + typeId + "/avec-frais";
+            LOGGER.info("Appel GET vers: " + url);
+            
+            ResponseEntity<List<TransactionAvecFrais>> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<TransactionAvecFrais>>() {}
+            );
+            
+            return response.getBody();
+        } catch (RestClientException e) {
+            LOGGER.severe("Erreur lors de la récupération des transactions avec frais filtrées du compte " + compteId + ": " + e.getMessage());
             exceptionHandlingService.handleServerException(e, "ServeurCompteCourant");
             return null;
         }
@@ -167,6 +217,44 @@ public class TransactionCompteCourantService {
         } catch (RestClientException e) {
             LOGGER.severe("Erreur lors de la création du transfert: " + e.getMessage());
             exceptionHandlingService.handleServerException(e, "ServeurCompteCourant");
+            return null;
+        }
+    }
+
+    /**
+     * Récupère tous les transferts avec frais
+     */
+    public List<TransfertAvecFrais> getAllTransfertsAvecFrais() {
+        try {
+            String url = serverUrl + "/transferts/avec-frais";
+            ResponseEntity<List<TransfertAvecFrais>> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<TransfertAvecFrais>>() {}
+            );
+            return response.getBody();
+        } catch (Exception e) {
+            LOGGER.severe("Erreur lors de la récupération des transferts avec frais: " + e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Récupère les transferts d'un compte avec frais
+     */
+    public List<TransfertAvecFrais> getTransfertsByCompteAvecFrais(String compteId) {
+        try {
+            String url = serverUrl + "/transferts/compte/" + compteId + "/avec-frais";
+            ResponseEntity<List<TransfertAvecFrais>> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<TransfertAvecFrais>>() {}
+            );
+            return response.getBody();
+        } catch (Exception e) {
+            LOGGER.severe("Erreur lors de la récupération des transferts avec frais du compte " + compteId + ": " + e.getMessage());
             return null;
         }
     }

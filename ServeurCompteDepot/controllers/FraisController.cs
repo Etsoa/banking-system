@@ -86,7 +86,7 @@ namespace ServeurCompteDepot.Controllers
         {
             try
             {
-                var dateRef = dateReference ?? DateTime.Now;
+                var dateRef = dateReference ?? DateTime.UtcNow; // Utiliser UTC au lieu de Now
                 var frais = await _fraisService.FindCurrentFraisAsync(typeTransaction, montant, dateRef);
                 
                 if (frais == null)

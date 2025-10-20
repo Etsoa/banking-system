@@ -1,8 +1,10 @@
 package com.example.centralizer.services;
 
 import com.example.centralizer.models.compteDepotDTO.Transaction;
+import com.example.centralizer.models.compteDepotDTO.TransactionAvecFrais;
 import com.example.centralizer.models.compteDepotDTO.TransactionRequest;
 import com.example.centralizer.models.compteDepotDTO.Transfert;
+import com.example.centralizer.models.compteDepotDTO.TransfertAvecFrais;
 import com.example.centralizer.models.compteDepotDTO.TransfertRequest;
 import com.example.centralizer.models.compteDepotDTO.CompteRequest;
 import com.example.centralizer.models.compteDepotDTO.TransactionsByCompteAndTypeRequest;
@@ -58,6 +60,29 @@ public class TransactionCompteDepotService {
             return response.getBody();
         } catch (RestClientException e) {
             LOGGER.severe("Erreur lors de la récupération des transactions: " + e.getMessage());
+            exceptionHandlingService.handleServerException(e, "ServeurCompteDepot");
+            return null;
+        }
+    }
+
+    /**
+     * Récupère toutes les transactions d'un compte avec les frais appliqués
+     */
+    public List<TransactionAvecFrais> getTransactionsByCompteAvecFrais(String compteId) {
+        try {
+            String url = serverUrl + "/transaction/compte/" + compteId + "/avec-frais";
+            LOGGER.info("Appel GET vers: " + url);
+            
+            ResponseEntity<List<TransactionAvecFrais>> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<TransactionAvecFrais>>() {}
+            );
+            
+            return response.getBody();
+        } catch (RestClientException e) {
+            LOGGER.severe("Erreur lors de la récupération des transactions avec frais: " + e.getMessage());
             exceptionHandlingService.handleServerException(e, "ServeurCompteDepot");
             return null;
         }
@@ -126,6 +151,44 @@ public class TransactionCompteDepotService {
         } catch (RestClientException e) {
             LOGGER.severe("Erreur lors de la création du transfert: " + e.getMessage());
             exceptionHandlingService.handleServerException(e, "ServeurCompteDepot");
+            return null;
+        }
+    }
+
+    /**
+     * Récupère tous les transferts avec frais
+     */
+    public List<TransfertAvecFrais> getAllTransfertsAvecFrais() {
+        try {
+            String url = serverUrl + "/transfert/avec-frais";
+            ResponseEntity<List<TransfertAvecFrais>> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<TransfertAvecFrais>>() {}
+            );
+            return response.getBody();
+        } catch (Exception e) {
+            LOGGER.severe("Erreur lors de la récupération des transferts avec frais: " + e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Récupère les transferts d'un compte avec frais
+     */
+    public List<TransfertAvecFrais> getTransfertsByCompteAvecFrais(String compteId) {
+        try {
+            String url = serverUrl + "/transfert/compte/" + compteId + "/avec-frais";
+            ResponseEntity<List<TransfertAvecFrais>> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<TransfertAvecFrais>>() {}
+            );
+            return response.getBody();
+        } catch (Exception e) {
+            LOGGER.severe("Erreur lors de la récupération des transferts avec frais du compte " + compteId + ": " + e.getMessage());
             return null;
         }
     }

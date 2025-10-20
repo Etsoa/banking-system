@@ -66,11 +66,11 @@ namespace ServeurCompteDepot.Services
                 string nomFrais;
                 if (typeTransaction.Equals("Retrait", StringComparison.OrdinalIgnoreCase))
                 {
-                    nomFrais = "frais retrait";
+                    nomFrais = "Frais de retrait";
                 }
                 else if (typeTransaction.Equals("Virement sortant", StringComparison.OrdinalIgnoreCase))
                 {
-                    nomFrais = "frais envois";
+                    nomFrais = "Frais de virement sortant";
                 }
                 else
                 {

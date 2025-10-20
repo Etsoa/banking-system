@@ -23,6 +23,7 @@ import com.example.centralizer.models.compteCourantDTO.CompteCourant;
 import com.example.centralizer.models.compteCourantDTO.CompteCourantAvecStatut;
 import com.example.centralizer.models.compteCourantDTO.Transaction;
 import com.example.centralizer.models.compteCourantDTO.Transfert;
+import com.example.centralizer.models.compteCourantDTO.TransfertAvecFrais;
 import com.example.centralizer.models.compteCourantDTO.TypeTransaction;
 import com.example.centralizer.services.ClientService;
 import com.example.centralizer.services.CompteCourantService;
@@ -151,12 +152,12 @@ public class CompteCourantController {
             Client client = clientService.getClientById(compte.getIdClient());
             model.addAttribute("client", client);
             
-            // Récupérer les transactions (filtrées ou non)
-            List<Transaction> transactions;
+            // Récupérer les transactions avec frais (filtrées ou non)
+            List<com.example.centralizer.models.compteCourantDTO.TransactionAvecFrais> transactions;
             if (typeId != null && typeId > 0) {
-                transactions = transactionService.getTransactionsByCompteAndType(compteId, typeId);
+                transactions = transactionService.getTransactionsByCompteAndTypeAvecFrais(compteId, typeId);
             } else {
-                transactions = transactionService.getTransactionsByCompte(compteId);
+                transactions = transactionService.getTransactionsByCompteAvecFrais(compteId);
             }
             model.addAttribute("transactions", transactions);
             
@@ -247,8 +248,8 @@ public class CompteCourantController {
             }
             model.addAttribute("clientsMap", clientsMap);
             
-            // Récupérer les transferts pour ce compte
-            List<Transfert> transferts = transactionService.getTransfertsByCompte(compteId);
+            // Récupérer les transferts avec frais pour ce compte
+            List<TransfertAvecFrais> transferts = transactionService.getTransfertsByCompteAvecFrais(compteId);
             if (transferts == null) {
                 model.addAttribute("error", "Impossible de récupérer les transferts - problème de connexion au serveur");
                 transferts = java.util.Collections.emptyList(); // Initialiser une liste vide pour éviter les erreurs dans le template
@@ -301,13 +302,13 @@ public class CompteCourantController {
     @GetMapping("/comptes-courant/transferts/list")
     public String getTransferts(@RequestParam(required = false) String compteId, Model model) {
         try {
-            List<Transfert> transferts;
+            List<TransfertAvecFrais> transferts;
             if (compteId != null && !compteId.trim().isEmpty()) {
-                transferts = transactionService.getTransfertsByCompte(compteId);
+                transferts = transactionService.getTransfertsByCompteAvecFrais(compteId);
                 CompteCourant compte = compteCourantService.getCompteById(compteId);
                 model.addAttribute("compte", compte);
             } else {
-                transferts = transactionService.getAllTransferts();
+                transferts = transactionService.getAllTransfertsAvecFrais();
             }
             model.addAttribute("transferts", transferts);
             
