@@ -8,18 +8,18 @@
     <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 20px;">
         <h1>Centralizer</h1>
         <div style="margin-top: 30px; display: flex; gap: 20px;">
-            <form action="/clients" method="get" style="display: inline;">
+            {% comment %} <form action="/clients" method="get" style="display: inline;">
                 <button type="submit">Clients</button>
-            </form>
-            <form action="/prets" method="get" style="display: inline;">
+            </form> {% endcomment %}
+            {% comment %} <form action="/prets" method="get" style="display: inline;">
                 <button type="submit">Prêts</button>
-            </form>
+            </form> {% endcomment %}
             <form action="/comptes-courant" method="get" style="display: inline;">
                 <button type="submit">Comptes Courant</button>
             </form>
-            <form action="/comptes-depot" method="get" style="display: inline;">
+            {% comment %} <form action="/comptes-depot" method="get" style="display: inline;">
                 <button type="submit">Comptes Dépôt</button>
-            </form>
+            </form> {% endcomment %}
         </div>
     </div>
 </body>

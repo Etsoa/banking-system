@@ -4,12 +4,8 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
-import com.example.serveurcomptecourant.exceptions.CompteCourantBusinessException;
-import com.example.serveurcomptecourant.exceptions.CompteCourantException;
 import com.example.serveurcomptecourant.models.CompteCourant;
-import com.example.serveurcomptecourant.models.CompteCourantAvecStatut;
 import com.example.serveurcomptecourant.repository.CompteCourantRepository;
 
 import jakarta.ejb.EJB;
@@ -22,95 +18,124 @@ public class CompteCourantService {
     @EJB
     private CompteCourantRepository repository;
 
-    public List<CompteCourant> getAllComptes() throws CompteCourantException {
+    /**
+     * Récupère tous les comptes
+     */
+    public List<CompteCourant> getAllComptes() {
         try {
             return repository.findAll();
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Erreur lors de la récupération de tous les comptes", e);
-            throw new CompteCourantException("Erreur lors de la récupération des comptes", e);
+            throw new RuntimeException("Erreur lors de la récupération des comptes", e);
         }
     }
 
-    public List<CompteCourantAvecStatut> getAllComptesAvecStatut() throws CompteCourantException {
+    /**
+     * Récupère un compte par son ID
+     */
+    public CompteCourant getCompteById(Integer id) {
         try {
-            List<CompteCourant> comptes = repository.findAll();
-            return comptes.stream()
-                    .map(compte -> new CompteCourantAvecStatut(compte, repository.getCurrentStatut(compte.getIdCompte())))
-                    .collect(Collectors.toList());
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Erreur lors de la récupération des comptes avec statut", e);
-            throw new CompteCourantException("Erreur lors de la récupération des comptes", e);
-        }
-    }
-
-    public List<CompteCourant> getComptesByClientId(int clientId) throws CompteCourantException {
-        try {
-            if (clientId <= 0) {
-                throw new CompteCourantBusinessException.ClientInexistantException((long)clientId);
-            }
-            return repository.findByClientId(clientId);
-        } catch (CompteCourantBusinessException e) {
-            throw e; // Re-lancer les exceptions métier
-        } catch (RuntimeException e) {
-            LOGGER.log(Level.SEVERE, "Erreur lors de la récupération des comptes pour le client " + clientId, e);
-            throw new CompteCourantException("Erreur lors de la récupération des comptes du client", e);
-        }
-    }
-
-    public CompteCourant getCompteById(String id) throws CompteCourantException {
-        try {
-            if (id == null || id.trim().isEmpty()) {
-                throw new CompteCourantBusinessException.CompteNotFoundException(0L);
+            if (id == null || id <= 0) {
+                throw new IllegalArgumentException("ID du compte invalide");
             }
             
             CompteCourant compte = repository.find(id);
             if (compte == null) {
-                throw new CompteCourantBusinessException.CompteNotFoundException(0L);
+                throw new RuntimeException("Compte non trouvé avec l'ID: " + id);
             }
             
             return compte;
-        } catch (CompteCourantBusinessException e) {
-            throw e; // Re-lancer les exceptions métier
         } catch (RuntimeException e) {
+            throw e; // Re-lancer les exceptions runtime
+        } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Erreur lors de la récupération du compte " + id, e);
-            throw new CompteCourantException("Erreur lors de la récupération du compte", e);
+            throw new RuntimeException("Erreur lors de la récupération du compte", e);
         }
     }
 
-    public CompteCourant createCompte(CompteCourant compte) throws CompteCourantException {
+    /**
+     * Crée un nouveau compte
+     */
+    public CompteCourant createCompte(CompteCourant compte) {
         try {
             // Validation des données
             validateCompteData(compte);
             
-            // Vérifier l'existence du client (utiliser idClient, pas clientId)
-            if (compte.getIdClient() == null || compte.getIdClient() <= 0) {
-                throw new CompteCourantBusinessException.ClientInexistantException(compte.getIdClient().longValue());
+            repository.save(compte);
+            return compte;
+        } catch (RuntimeException e) {
+            throw e; // Re-lancer les exceptions runtime
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Erreur lors de la création du compte", e);
+            throw new RuntimeException("Erreur lors de la création du compte", e);
+        }
+    }
+
+    /**
+     * Met à jour un compte existant
+     */
+    public CompteCourant updateCompte(CompteCourant compte) {
+        try {
+            // Validation des données
+            validateCompteData(compte);
+            
+            // Vérifier que le compte existe
+            if (compte.getIdCompte() == null || repository.find(compte.getIdCompte()) == null) {
+                throw new RuntimeException("Compte non trouvé avec l'ID: " + compte.getIdCompte());
             }
             
             repository.save(compte);
             return compte;
-        } catch (CompteCourantBusinessException e) {
-            throw e; // Re-lancer les exceptions métier
+        } catch (RuntimeException e) {
+            throw e; // Re-lancer les exceptions runtime
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Erreur lors de la création du compte", e);
-            throw new CompteCourantException("Erreur lors de la création du compte", e);
+            LOGGER.log(Level.SEVERE, "Erreur lors de la mise à jour du compte", e);
+            throw new RuntimeException("Erreur lors de la mise à jour du compte", e);
+        }
+    }
+
+    /**
+     * Supprime un compte
+     */
+    public void deleteCompte(Integer id) {
+        try {
+            CompteCourant compte = getCompteById(id);
+            repository.delete(compte);
+        } catch (RuntimeException e) {
+            throw e; // Re-lancer les exceptions runtime
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Erreur lors de la suppression du compte " + id, e);
+            throw new RuntimeException("Erreur lors de la suppression du compte", e);
+        }
+    }
+
+    /**
+     * Met à jour le solde d'un compte
+     */
+    public CompteCourant updateSolde(Integer idCompte, BigDecimal nouveauSolde) {
+        try {
+            CompteCourant compte = getCompteById(idCompte);
+            compte.setSolde(nouveauSolde);
+            repository.save(compte);
+            return compte;
+        } catch (RuntimeException e) {
+            throw e; // Re-lancer les exceptions runtime
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Erreur lors de la mise à jour du solde du compte " + idCompte, e);
+            throw new RuntimeException("Erreur lors de la mise à jour du solde", e);
         }
     }
 
     /**
      * Validation des données du compte
      */
-    private void validateCompteData(CompteCourant compte) throws CompteCourantBusinessException {
+    private void validateCompteData(CompteCourant compte) {
         if (compte == null) {
-            throw new CompteCourantBusinessException("Les données du compte sont obligatoires");
+            throw new IllegalArgumentException("Les données du compte sont obligatoires");
         }
         
-        if (compte.getSolde() != null && compte.getSolde().compareTo(BigDecimal.ZERO) < 0) {
-            throw new CompteCourantBusinessException.MontantInvalideException(compte.getSolde().doubleValue());
-        }
-        
-        if (compte.getIdClient() == null) {
-            throw new CompteCourantBusinessException("L'ID du client est obligatoire");
+        if (compte.getSolde() == null) {
+            compte.setSolde(BigDecimal.ZERO);
         }
     }
 }

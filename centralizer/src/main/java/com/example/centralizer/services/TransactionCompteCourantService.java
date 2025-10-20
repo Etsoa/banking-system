@@ -33,16 +33,10 @@ public class TransactionCompteCourantService {
     @Autowired
     private RestTemplate restTemplate;
 
-    @Autowired
-    private ExceptionHandlingService exceptionHandlingService;
-
-    @Autowired
-    private HistoriqueRevenuService historiqueRevenuService;
-
     /**
      * Récupère toutes les transactions d'un compte
      */
-    public List<Transaction> getTransactionsByCompte(String compteId) {
+    public List<Transaction> getTransactionsByCompte(String compteId) throws Exception {
         try {
              
             String url =  serverUrl + "/transactions/compte/" + compteId;
@@ -57,88 +51,14 @@ public class TransactionCompteCourantService {
             
             return response.getBody();
         } catch (RestClientException e) {
-            LOGGER.severe("Erreur lors de la récupération des transactions du compte " + compteId + ": " + e.getMessage());
-            exceptionHandlingService.handleServerException(e, "ServeurCompteCourant");
-            return null;
-        }
-    }
-
-    /**
-     * Récupère toutes les transactions d'un compte avec les frais appliqués
-     */
-    public List<TransactionAvecFrais> getTransactionsByCompteAvecFrais(String compteId) {
-        try {
-             
-            String url =  serverUrl + "/transactions/compte/" + compteId + "/avec-frais";
-            LOGGER.info("Appel GET vers: " + url);
-            
-            ResponseEntity<List<TransactionAvecFrais>> response = restTemplate.exchange(
-                url,
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<List<TransactionAvecFrais>>() {}
-            );
-            
-            return response.getBody();
-        } catch (RestClientException e) {
-            LOGGER.severe("Erreur lors de la récupération des transactions avec frais du compte " + compteId + ": " + e.getMessage());
-            exceptionHandlingService.handleServerException(e, "ServeurCompteCourant");
-            return null;
-        }
-    }
-
-    /**
-     * Récupère les transactions d'un compte filtrées par type
-     */
-    public List<Transaction> getTransactionsByCompteAndType(String compteId, Integer typeId) {
-        try {
-             
-            String url =  serverUrl + "/transactions/compte/" + compteId + "/type/" + typeId;
-            LOGGER.info("Appel GET vers: " + url);
-            
-            ResponseEntity<List<Transaction>> response = restTemplate.exchange(
-                url,
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<List<Transaction>>() {}
-            );
-            
-            return response.getBody();
-        } catch (RestClientException e) {
-            LOGGER.severe("Erreur lors de la récupération des transactions filtrées du compte " + compteId + ": " + e.getMessage());
-            exceptionHandlingService.handleServerException(e, "ServeurCompteCourant");
-            return null;
-        }
-    }
-
-    /**
-     * Récupère les transactions d'un compte filtrées par type avec les frais appliqués
-     */
-    public List<TransactionAvecFrais> getTransactionsByCompteAndTypeAvecFrais(String compteId, Integer typeId) {
-        try {
-             
-            String url =  serverUrl + "/transactions/compte/" + compteId + "/type/" + typeId + "/avec-frais";
-            LOGGER.info("Appel GET vers: " + url);
-            
-            ResponseEntity<List<TransactionAvecFrais>> response = restTemplate.exchange(
-                url,
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<List<TransactionAvecFrais>>() {}
-            );
-            
-            return response.getBody();
-        } catch (RestClientException e) {
-            LOGGER.severe("Erreur lors de la récupération des transactions avec frais filtrées du compte " + compteId + ": " + e.getMessage());
-            exceptionHandlingService.handleServerException(e, "ServeurCompteCourant");
-            return null;
+            throw e;
         }
     }
 
     /**
      * Récupère tous les types de transaction
      */
-    public List<TypeTransaction> getAllTypesTransaction() {
+    public List<TypeTransaction> getAllTypesTransaction() throws Exception{
         try {
              
             String url =  serverUrl + "/transactions/types";
@@ -153,16 +73,14 @@ public class TransactionCompteCourantService {
             
             return response.getBody();
         } catch (RestClientException e) {
-            LOGGER.severe("Erreur lors de la récupération des types de transaction: " + e.getMessage());
-            exceptionHandlingService.handleServerException(e, "ServeurCompteCourant");
-            return null;
+            throw e;
         }
     }
 
     /**
      * Créer une nouvelle transaction en récupérant automatiquement le revenu du client
      */
-    public Transaction createTransaction(Transaction transaction, Integer idClient) {
+    public Transaction createTransaction(Transaction transaction, Integer idClient) throws Exception{
         try {
             BigDecimal revenu = null;
             
@@ -190,120 +108,7 @@ public class TransactionCompteCourantService {
             Transaction result = restTemplate.postForObject(url, transaction, Transaction.class);
             return result;
         } catch (RestClientException e) {
-            LOGGER.severe("Erreur lors de la création de la transaction: " + e.getMessage());
-            exceptionHandlingService.handleServerException(e, "ServeurCompteCourant");
-            return null;
-        }
-    }
-
-    /**
-     * Créer un transfert entre deux comptes avec date personnalisée
-     */
-    public Transfert createTransfert(String compteEnvoyeur, String compteReceveur, BigDecimal montant, LocalDateTime dateTransfert) {
-        try {
-            String url = serverUrl + "/transferts";
-            LOGGER.info("Appel POST vers: " + url);
-            
-            // Créer l'objet transfert
-            Transfert transfert = new Transfert();
-            transfert.setEnvoyer(compteEnvoyeur);
-            transfert.setReceveur(compteReceveur);
-            transfert.setMontant(montant);
-            // Convertir LocalDateTime en LocalDate
-            transfert.setDateTransfert(dateTransfert.toLocalDate());
-            
-            Transfert result = restTemplate.postForObject(url, transfert, Transfert.class);
-            return result;
-        } catch (RestClientException e) {
-            LOGGER.severe("Erreur lors de la création du transfert: " + e.getMessage());
-            exceptionHandlingService.handleServerException(e, "ServeurCompteCourant");
-            return null;
-        }
-    }
-
-    /**
-     * Récupère tous les transferts avec frais
-     */
-    public List<TransfertAvecFrais> getAllTransfertsAvecFrais() {
-        try {
-            String url = serverUrl + "/transferts/avec-frais";
-            ResponseEntity<List<TransfertAvecFrais>> response = restTemplate.exchange(
-                url,
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<List<TransfertAvecFrais>>() {}
-            );
-            return response.getBody();
-        } catch (Exception e) {
-            LOGGER.severe("Erreur lors de la récupération des transferts avec frais: " + e.getMessage());
-            return null;
-        }
-    }
-
-    /**
-     * Récupère les transferts d'un compte avec frais
-     */
-    public List<TransfertAvecFrais> getTransfertsByCompteAvecFrais(String compteId) {
-        try {
-            String url = serverUrl + "/transferts/compte/" + compteId + "/avec-frais";
-            ResponseEntity<List<TransfertAvecFrais>> response = restTemplate.exchange(
-                url,
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<List<TransfertAvecFrais>>() {}
-            );
-            return response.getBody();
-        } catch (Exception e) {
-            LOGGER.severe("Erreur lors de la récupération des transferts avec frais du compte " + compteId + ": " + e.getMessage());
-            return null;
-        }
-    }
-
-    /**
-     * Récupère tous les transferts
-     */
-    public List<Transfert> getAllTransferts() {
-        try {
-             
-            String url =  serverUrl + "/transferts";
-            LOGGER.info("Appel GET vers: " + url);
-            
-            ResponseEntity<List<Transfert>> response = restTemplate.exchange(
-                url,
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<List<Transfert>>() {}
-            );
-            
-            return response.getBody();
-        } catch (RestClientException e) {
-            LOGGER.severe("Erreur lors de la récupération des transferts: " + e.getMessage());
-            exceptionHandlingService.handleServerException(e, "ServeurCompteCourant");
-            return null;
-        }
-    }
-
-    /**
-     * Récupère les transferts d'un compte
-     */
-    public List<Transfert> getTransfertsByCompte(String compteId) {
-        try {
-             
-            String url =  serverUrl + "/transferts/compte/" + compteId;
-            LOGGER.info("Appel GET vers: " + url);
-            
-            ResponseEntity<List<Transfert>> response = restTemplate.exchange(
-                url,
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<List<Transfert>>() {}
-            );
-            
-            return response.getBody();
-        } catch (RestClientException e) {
-            LOGGER.severe("Erreur lors de la récupération des transferts du compte " + compteId + ": " + e.getMessage());
-            exceptionHandlingService.handleServerException(e, "ServeurCompteCourant");
-            return null;
+            throw e;
         }
     }
 }

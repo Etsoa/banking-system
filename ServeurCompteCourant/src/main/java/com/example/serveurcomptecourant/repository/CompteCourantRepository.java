@@ -14,47 +14,19 @@ public class CompteCourantRepository {
     private EntityManager em;
 
     public void save(CompteCourant compte) {
-        if (compte.getIdNum() == null) {
+        if (compte.getIdCompte() == null) {
             em.persist(compte);
         } else {
             em.merge(compte);
         }
     }
 
-    public CompteCourant find(String idCompte) {
-        try {
-            return em.createQuery("SELECT c FROM CompteCourant c WHERE c.idCompte = :idCompte", CompteCourant.class)
-                    .setParameter("idCompte", idCompte)
-                    .getSingleResult();
-        } catch (jakarta.persistence.NoResultException e) {
-            return null;
-        }
+    public CompteCourant find(Integer idCompte) {
+        return em.find(CompteCourant.class, idCompte);
     }
 
     public List<CompteCourant> findAll() {
         return em.createQuery("SELECT c FROM CompteCourant c", CompteCourant.class).getResultList();
-    }
-
-    public List<CompteCourant> findByClientId(int clientId) {
-        return em.createQuery("SELECT c FROM CompteCourant c WHERE c.idClient = :clientId", CompteCourant.class)
-                .setParameter("clientId", clientId)
-                .getResultList();
-    }
-
-    public String getCurrentStatut(String compteId) {
-        try {
-            String statutLibelle = em.createQuery(
-                "SELECT ts.libelle FROM HistoriqueStatutCompte h " +
-                "JOIN TypeStatutCompte ts ON h.idTypeStatutCompte = ts.idTypeStatutCompte " +
-                "WHERE h.idCompte = :compteId " +
-                "ORDER BY h.dateChangement DESC", String.class)
-                .setParameter("compteId", compteId)
-                .setMaxResults(1)
-                .getSingleResult();
-            return statutLibelle;
-        } catch (Exception e) {
-            return "Actif"; // Statut par défaut si aucun historique
-        }
     }
 
     public void delete(CompteCourant compte) {
