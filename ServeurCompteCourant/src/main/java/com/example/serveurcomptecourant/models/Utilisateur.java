@@ -1,5 +1,6 @@
 package com.example.serveurcomptecourant.models;
 
+import jakarta.json.bind.annotation.JsonbTransient;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -23,6 +24,7 @@ public class Utilisateur {
     private String nomUtilisateur;
 
     @Column(name = "mot_de_passe", length = 100, nullable = false)
+    @JsonbTransient
     private String motDePasse;
 
     @Column(name = "id_direction")
@@ -34,6 +36,7 @@ public class Utilisateur {
     // Navigation property
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_direction", insertable = false, updatable = false)
+    @JsonbTransient
     private Direction direction;
 
     // Constructors

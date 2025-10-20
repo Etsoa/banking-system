@@ -1,6 +1,8 @@
 package com.example.serveurcomptecourant.repository;
 
 import com.example.serveurcomptecourant.models.Transaction;
+import com.example.serveurcomptecourant.models.TypeTransaction;
+import com.example.serveurcomptecourant.models.StatutTransaction;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -23,19 +25,19 @@ public class TransactionRepository {
                 .getResultList();
     }
 
-    public List<Transaction> findByTypeTransaction(Transaction.TypeTransaction typeTransaction) {
+    public List<Transaction> findByTypeTransaction(TypeTransaction typeTransaction) {
         return em.createQuery("SELECT t FROM Transaction t WHERE t.typeTransaction = :typeTransaction ORDER BY t.dateTransaction DESC", Transaction.class)
                 .setParameter("typeTransaction", typeTransaction)
                 .getResultList();
     }
 
-    public List<Transaction> findByStatutTransaction(Transaction.StatutTransaction statutTransaction) {
+    public List<Transaction> findByStatutTransaction(StatutTransaction statutTransaction) {
         return em.createQuery("SELECT t FROM Transaction t WHERE t.statutTransaction = :statutTransaction ORDER BY t.dateTransaction DESC", Transaction.class)
                 .setParameter("statutTransaction", statutTransaction)
                 .getResultList();
     }
 
-    public List<Transaction> findByCompteIdAndStatut(Integer compteId, Transaction.StatutTransaction statutTransaction) {
+    public List<Transaction> findByCompteIdAndStatut(Integer compteId, StatutTransaction statutTransaction) {
         return em.createQuery("SELECT t FROM Transaction t WHERE t.idCompte = :compteId AND t.statutTransaction = :statutTransaction ORDER BY t.dateTransaction DESC", Transaction.class)
                 .setParameter("compteId", compteId)
                 .setParameter("statutTransaction", statutTransaction)

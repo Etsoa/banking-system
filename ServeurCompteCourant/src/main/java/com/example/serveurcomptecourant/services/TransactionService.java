@@ -10,6 +10,8 @@ import com.example.serveurcomptecourant.exceptions.SecurityException;
 import com.example.serveurcomptecourant.exceptions.TransactionException;
 import com.example.serveurcomptecourant.models.CompteCourant;
 import com.example.serveurcomptecourant.models.Transaction;
+import com.example.serveurcomptecourant.models.TypeTransaction;
+import com.example.serveurcomptecourant.models.StatutTransaction;
 import com.example.serveurcomptecourant.repository.CompteCourantRepository;
 import com.example.serveurcomptecourant.repository.TransactionRepository;
 
@@ -96,7 +98,7 @@ public class TransactionService {
     /**
      * Récupère les transactions d'un compte par type (nécessite autorisation)
      */
-    public List<Transaction> getTransactionsByCompteAndType(Integer idCompte, Transaction.TypeTransaction typeTransaction) throws SecurityException, TransactionException {
+    public List<Transaction> getTransactionsByCompteAndType(Integer idCompte, TypeTransaction typeTransaction) throws SecurityException, TransactionException {
         utilisateurService.exigerAutorisation("transactions", "read");
         
         if (idCompte == null || idCompte <= 0) {
@@ -128,7 +130,7 @@ public class TransactionService {
     /**
      * Récupère les transactions par statut (nécessite autorisation)
      */
-    public List<Transaction> getTransactionsByStatut(Transaction.StatutTransaction statutTransaction) throws SecurityException, TransactionException {
+    public List<Transaction> getTransactionsByStatut(StatutTransaction statutTransaction) throws SecurityException, TransactionException {
         utilisateurService.exigerAutorisation("transactions", "read");
         
         if (statutTransaction == null) {
@@ -146,7 +148,7 @@ public class TransactionService {
     /**
      * Récupère les transactions d'un compte par statut (nécessite autorisation)
      */
-    public List<Transaction> getTransactionsByCompteAndStatut(Integer idCompte, Transaction.StatutTransaction statutTransaction) throws SecurityException, TransactionException {
+    public List<Transaction> getTransactionsByCompteAndStatut(Integer idCompte, StatutTransaction statutTransaction) throws SecurityException, TransactionException {
         utilisateurService.exigerAutorisation("transactions", "read");
         
         if (idCompte == null || idCompte <= 0) {
@@ -198,7 +200,7 @@ public class TransactionService {
             }
             
             // IMPORTANT: Toute nouvelle transaction commence en "en_attente"
-            transaction.setStatutTransaction(Transaction.StatutTransaction.en_attente);
+            transaction.setStatutTransaction(StatutTransaction.en_attente);
             
             Transaction savedTransaction = transactionRepository.save(transaction);
             
@@ -237,15 +239,15 @@ public class TransactionService {
                 throw new TransactionException.TransactionNotFoundException(idTransaction);
             }
             
-            if (transaction.getStatutTransaction() != Transaction.StatutTransaction.en_attente) {
+            if (transaction.getStatutTransaction() != StatutTransaction.en_attente) {
                 throw new TransactionException.TransactionStatutInvalideException(
                     idTransaction, transaction.getStatutTransaction().toString(), "en_attente");
             }
             
             // Appliquer la validation
-            Transaction.StatutTransaction nouveauStatut = approuver 
-                ? Transaction.StatutTransaction.confirmee 
-                : Transaction.StatutTransaction.refusee;
+            StatutTransaction nouveauStatut = approuver 
+                ? StatutTransaction.confirmee 
+                : StatutTransaction.refusee;
             
             transaction.setStatutTransaction(nouveauStatut);
             Transaction savedTransaction = transactionRepository.save(transaction);
@@ -286,7 +288,7 @@ public class TransactionService {
             }
             
             // Empêcher la modification de transactions confirmées ou refusées
-            if (existingTransaction.getStatutTransaction() != Transaction.StatutTransaction.en_attente) {
+            if (existingTransaction.getStatutTransaction() != StatutTransaction.en_attente) {
                 throw new TransactionException.TransactionStatutInvalideException(
                     transaction.getIdTransaction(), 
                     existingTransaction.getStatutTransaction().toString(), 
@@ -302,7 +304,7 @@ public class TransactionService {
             }
             
             // Maintenir le statut en_attente pour les modifications
-            transaction.setStatutTransaction(Transaction.StatutTransaction.en_attente);
+            transaction.setStatutTransaction(StatutTransaction.en_attente);
             
             Transaction savedTransaction = transactionRepository.save(transaction);
             
@@ -338,7 +340,7 @@ public class TransactionService {
             }
             
             // Empêcher la suppression de transactions confirmées
-            if (transaction.getStatutTransaction() == Transaction.StatutTransaction.confirmee) {
+            if (transaction.getStatutTransaction() == StatutTransaction.confirmee) {
                 throw new TransactionException.TransactionNonModifiableException(id);
             }
             
@@ -378,7 +380,7 @@ public class TransactionService {
         utilisateurService.exigerAutorisation("transactions", "validate");
         
         try {
-            return transactionRepository.findByStatutTransaction(Transaction.StatutTransaction.en_attente);
+            return transactionRepository.findByStatutTransaction(StatutTransaction.en_attente);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Erreur lors de la récupération des transactions en attente", e);
             throw new TransactionException("Erreur lors de la récupération des transactions en attente", e);

@@ -5,6 +5,8 @@ import java.util.List;
 import com.example.serveurcomptecourant.exceptions.SecurityException;
 import com.example.serveurcomptecourant.exceptions.TransactionException;
 import com.example.serveurcomptecourant.models.Transaction;
+import com.example.serveurcomptecourant.models.TypeTransaction;
+import com.example.serveurcomptecourant.models.StatutTransaction;
 import com.example.serveurcomptecourant.services.TransactionService;
 import com.example.serveurcomptecourant.services.UtilisateurService;
 
@@ -97,7 +99,7 @@ public class TransactionController {
                                                    @PathParam("typeTransaction") String typeTransaction) {
         try {
             utilisateurService.exigerAutorisation("transactions", "read");
-            Transaction.TypeTransaction type = Transaction.TypeTransaction.valueOf(typeTransaction);
+            TypeTransaction type = TypeTransaction.valueOf(typeTransaction);
             List<Transaction> transactions = transactionService.getTransactionsByCompteAndType(compteId, type);
             return Response.ok(transactions).build();
         } catch (SecurityException e) {
@@ -120,7 +122,7 @@ public class TransactionController {
     public Response getTransactionsByStatut(@PathParam("statutTransaction") String statutTransaction) {
         try {
             utilisateurService.exigerAutorisation("transactions", "read");
-            Transaction.StatutTransaction statut = Transaction.StatutTransaction.valueOf(statutTransaction);
+            StatutTransaction statut = StatutTransaction.valueOf(statutTransaction);
             List<Transaction> transactions = transactionService.getTransactionsByStatut(statut);
             return Response.ok(transactions).build();
         } catch (SecurityException e) {
@@ -144,7 +146,7 @@ public class TransactionController {
                                                      @PathParam("statutTransaction") String statutTransaction) {
         try {
             utilisateurService.exigerAutorisation("transactions", "read");
-            Transaction.StatutTransaction statut = Transaction.StatutTransaction.valueOf(statutTransaction);
+            StatutTransaction statut = StatutTransaction.valueOf(statutTransaction);
             List<Transaction> transactions = transactionService.getTransactionsByCompteAndStatut(compteId, statut);
             return Response.ok(transactions).build();
         } catch (SecurityException e) {

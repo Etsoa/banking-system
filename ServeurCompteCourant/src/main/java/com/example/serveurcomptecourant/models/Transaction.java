@@ -17,14 +17,6 @@ import jakarta.persistence.Table;
 @Table(name = "transactions")
 public class Transaction {
 
-    public enum TypeTransaction {
-        debit, credit, virement
-    }
-
-    public enum StatutTransaction {
-        en_attente, confirmee, refusee
-    }
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_transaction")

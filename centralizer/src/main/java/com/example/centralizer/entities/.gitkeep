@@ -1,0 +1,3 @@
+# Ce dossier est intentionnellement vide
+# Le centralizer n'a pas d'entités JPA car il n'a pas de tables locales
+# Il utilise uniquement des DTOs pour communiquer avec les autres serveurs
