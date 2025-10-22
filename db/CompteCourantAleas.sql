@@ -65,24 +65,28 @@ INSERT INTO directions (libelle, niveau) VALUES
 ('Agence Nord', 4);
 
 -- Insertion des actions et rôles
+-- Logique : roleUtilisateur >= role_minimum
+-- Plus le numéro est élevé, plus le rôle a de pouvoir (1=Caissier, 2=Employé, 3=Manager, 4=Admin)
 INSERT INTO actions_roles (nom_table, nom_action, role_minimum) VALUES 
-('comptes', 'create', 2),
-('comptes', 'read', 3),
-('comptes', 'update', 2),
-('comptes', 'delete', 1),
-('transactions', 'create', 3),
-('transactions', 'read', 3),
-('transactions', 'valider', 2),
-('transactions', 'refuser', 2);
+('comptes', 'create', 3),        
+('comptes', 'read', 2),           
+('comptes', 'update', 3),         
+('comptes', 'delete', 4),         
+('transactions', 'create', 4),    
+('transactions', 'read', 2),      
+('transactions', 'update', 3),
+('transactions', 'delete', 4);   
+
 
 -- Insertion des utilisateurs
 -- Mot de passe pour tous : 'password123' (à hasher en production)
+-- Rôles : 1=Caissier, 2=Employé, 3=Manager, 4=Admin
 INSERT INTO utilisateurs (nom_utilisateur, mot_de_passe, id_direction, role_utilisateur) VALUES 
-('admin', 'password123', 1, 1),
-('manager', 'password123', 2, 2),
-('employe1', 'password123', 3, 3),
-('employe2', 'password123', 4, 3),
-('caissier', 'password123', 5, 4);
+('admin', 'password123', 1, 4),       -- Admin = rôle 4 (accès total)
+('manager', 'password123', 2, 3),     -- Manager = rôle 3
+('employe1', 'password123', 3, 2),    -- Employé = rôle 2
+('employe2', 'password123', 4, 2),    -- Employé = rôle 2
+('caissier', 'password123', 5, 1);    -- Caissier = rôle 1 (accès minimal)
 
 -- Insertion des comptes
 INSERT INTO comptes (solde) VALUES 
@@ -94,26 +98,3 @@ INSERT INTO comptes (solde) VALUES
 (5000.00),
 (0.00),
 (1200.30);
-
--- Insertion des transactions
-INSERT INTO transactions (montant, id_compte, id_compte_contrpartie, type_transaction, statut_transaction, date_transaction) VALUES 
--- Transactions confirmées
-(200.00, 1, NULL, 'depot', 'confirmee', '2025-10-15'),
-(150.50, 1, NULL, 'retrait', 'confirmee', '2025-10-16'),
-(500.00, 2, NULL, 'depot', 'confirmee', '2025-10-17'),
-(100.25, 3, NULL, 'depot', 'confirmee', '2025-10-18'),
-(2000.00, 4, NULL, 'depot', 'confirmee', '2025-10-19'),
-
--- Transactions en attente
-(300.00, 2, NULL, 'retrait', 'en_attente', '2025-10-20'),
-(75.50, 3, NULL, 'retrait', 'en_attente', '2025-10-20'),
-(1000.00, 4, NULL, 'retrait', 'en_attente', '2025-10-20'),
-
--- Transactions refusées
-(5000.00, 3, NULL, 'retrait', 'refusee', '2025-10-19'),
-(15000.00, 4, NULL, 'retrait', 'refusee', '2025-10-18'),
-
--- Transferts entre comptes
-(250.00, 1, 2, 'retrait', 'confirmee', '2025-10-17'),
-(100.00, 2, 3, 'retrait', 'confirmee', '2025-10-18'),
-(50.75, 5, 6, 'retrait', 'en_attente', '2025-10-20');

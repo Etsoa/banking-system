@@ -1,6 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
-<%@ page import="com.example.centralizer.entities.CompteCourant" %>
+<%@ page import="com.example.centralizer.dto.CompteCourant" %>
 <!DOCTYPE html>
 <html lang="fr">
 <head>

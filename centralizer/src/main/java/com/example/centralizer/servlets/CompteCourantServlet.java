@@ -1,9 +1,12 @@
 package com.example.centralizer.servlets;
 
-import com.example.centralizer.ejb.AuthenticationServiceImpl;
-import com.example.centralizer.ejb.CompteCourantServiceImpl;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.logging.Logger;
+
 import com.example.centralizer.dto.CompteCourant;
-import jakarta.ejb.EJB;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -11,23 +14,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.logging.Logger;
-
 /**
- * Servlet pour gérer les comptes courants - utilise JSP
+ * Servlet pour gérer les comptes courants - utilise JSP et session beans
  */
 @WebServlet(urlPatterns = {"/comptes", "/comptes/*"})
 public class CompteCourantServlet extends HttpServlet {
     private static final Logger LOGGER = Logger.getLogger(CompteCourantServlet.class.getName());
-
-    @EJB
-    private AuthenticationServiceImpl authenticationService;
-    
-    @EJB
-    private CompteCourantServiceImpl compteCourantService;
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -77,21 +69,24 @@ public class CompteCourantServlet extends HttpServlet {
 
     private boolean checkAuthentication(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         HttpSession session = req.getSession(false);
-        if (session == null || session.getAttribute("authenticated") == null) {
+        if (session == null || session.getAttribute("authenticated") == null || 
+            !(Boolean) session.getAttribute("authenticated")) {
             resp.sendRedirect(req.getContextPath() + "/login");
             return false;
         }
-
-        if (!authenticationService.isAuthenticated()) {
-            session.invalidate();
-            resp.sendRedirect(req.getContextPath() + "/login");
-            return false;
-        }
-
         return true;
     }
 
     private void listComptes(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        HttpSession session = req.getSession();
+        com.example.centralizer.ejb.CompteCourantServiceImpl compteCourantService = 
+            (com.example.centralizer.ejb.CompteCourantServiceImpl) session.getAttribute("compteCourantService");
+        
+        if (compteCourantService == null) {
+            resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Service non disponible - veuillez vous reconnecter");
+            return;
+        }
+        
         try {
             List<CompteCourant> comptes = compteCourantService.getAllComptes();
             req.setAttribute("comptes", comptes);
@@ -104,10 +99,25 @@ public class CompteCourantServlet extends HttpServlet {
     }
 
     private void showCompteDetails(HttpServletRequest req, HttpServletResponse resp, Integer idCompte) throws ServletException, IOException {
+        HttpSession session = req.getSession();
+        com.example.centralizer.ejb.CompteCourantServiceImpl compteCourantService = 
+            (com.example.centralizer.ejb.CompteCourantServiceImpl) session.getAttribute("compteCourantService");
+        
+        if (compteCourantService == null) {
+            resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Service non disponible - veuillez vous reconnecter");
+            return;
+        }
+        
         try {
             CompteCourant compte = compteCourantService.getCompteById(idCompte);
             if (compte != null) {
                 req.setAttribute("compte", compte);
+                
+                // Récupérer les transactions du compte
+                List<com.example.centralizer.dto.Transaction> transactions = 
+                    compteCourantService.getTransactionsByCompte(idCompte);
+                req.setAttribute("transactions", transactions);
+                
                 req.getRequestDispatcher("/comptes-courant/details.jsp").forward(req, resp);
             } else {
                 resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Compte non trouvé");
@@ -119,6 +129,15 @@ public class CompteCourantServlet extends HttpServlet {
     }
 
     private void createCompte(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        HttpSession session = req.getSession();
+        com.example.centralizer.ejb.CompteCourantServiceImpl compteCourantService = 
+            (com.example.centralizer.ejb.CompteCourantServiceImpl) session.getAttribute("compteCourantService");
+        
+        if (compteCourantService == null) {
+            resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Service non disponible - veuillez vous reconnecter");
+            return;
+        }
+        
         try {
             String soldeStr = req.getParameter("solde");
             BigDecimal solde = new BigDecimal(soldeStr != null ? soldeStr : "0");
@@ -138,6 +157,15 @@ public class CompteCourantServlet extends HttpServlet {
     }
 
     private void effectuerDepot(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        HttpSession session = req.getSession();
+        com.example.centralizer.ejb.CompteCourantServiceImpl compteCourantService = 
+            (com.example.centralizer.ejb.CompteCourantServiceImpl) session.getAttribute("compteCourantService");
+        
+        if (compteCourantService == null) {
+            resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Service non disponible - veuillez vous reconnecter");
+            return;
+        }
+        
         try {
             Integer idCompte = Integer.parseInt(req.getParameter("idCompte"));
             BigDecimal montant = new BigDecimal(req.getParameter("montant"));
@@ -153,6 +181,15 @@ public class CompteCourantServlet extends HttpServlet {
     }
 
     private void effectuerRetrait(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        HttpSession session = req.getSession();
+        com.example.centralizer.ejb.CompteCourantServiceImpl compteCourantService = 
+            (com.example.centralizer.ejb.CompteCourantServiceImpl) session.getAttribute("compteCourantService");
+        
+        if (compteCourantService == null) {
+            resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Service non disponible - veuillez vous reconnecter");
+            return;
+        }
+        
         try {
             Integer idCompte = Integer.parseInt(req.getParameter("idCompte"));
             BigDecimal montant = new BigDecimal(req.getParameter("montant"));

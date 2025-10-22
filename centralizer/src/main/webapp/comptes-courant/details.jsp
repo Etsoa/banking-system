@@ -1,5 +1,9 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ page import="com.example.centralizer.entities.CompteCourant" %>
+<%@ page import="com.example.centralizer.dto.CompteCourant" %>
+<%@ page import="com.example.centralizer.dto.Transaction" %>
+<%@ page import="java.util.List" %>
+<%@ page import="java.text.NumberFormat" %>
+<%@ page import="java.util.Locale" %>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -23,14 +27,17 @@
     <div class="container">
         <%
             CompteCourant compte = (CompteCourant) request.getAttribute("compte");
+            List<Transaction> transactions = (List<Transaction>) request.getAttribute("transactions");
+            NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(Locale.FRANCE);
+            
             if (compte != null) {
         %>
         <h2>Détails du Compte #<%= compte.getIdCompte() %></h2>
         
-        <div class="card">
+        <div class="account-info">
             <h3>Informations du compte</h3>
             <p><strong>ID Compte:</strong> <%= compte.getIdCompte() %></p>
-            <p><strong>Solde:</strong> <%= compte.getSolde() %> €</p>
+            <p><strong>Solde:</strong> <span class="balance"><%= currencyFormatter.format(compte.getSolde()) %></span></p>
         </div>
         
         <div class="actions">
@@ -41,6 +48,70 @@
             <button onclick="document.getElementById('retraitModal').style.display='block'" class="btn btn-warning">
                 Retrait
             </button>
+        </div>
+        
+        <!-- Historique des transactions -->
+        <div class="transactions-history">
+            <h3>Historique des transactions</h3>
+            
+            <%
+                if (transactions != null && !transactions.isEmpty()) {
+            %>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Montant</th>
+                            <th>Contrepartie</th>
+                            <th>Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <%
+                            for (Transaction t : transactions) {
+                                String typeClass = t.getTypeTransaction() != null ? 
+                                    "type-" + t.getTypeTransaction().name() : "";
+                                String statusClass = t.getStatutTransaction() != null ?
+                                    "status-" + t.getStatutTransaction().name() : "";
+                        %>
+                        <tr>
+                            <td>#<%= t.getIdTransaction() %></td>
+                            <td><%= t.getDateTransaction() %></td>
+                            <td class="<%= typeClass %>">
+                                <%= t.getTypeTransaction() != null ? 
+                                    t.getTypeTransaction().name().toUpperCase() : "N/A" %>
+                            </td>
+                            <td><%= currencyFormatter.format(t.getMontant()) %></td>
+                            <td>
+                                <% if (t.getIdCompteContrepartie() != null) { %>
+                                    Compte #<%= t.getIdCompteContrepartie() %>
+                                <% } else { %>
+                                    -
+                                <% } %>
+                            </td>
+                            <td>
+                                <span class="status-badge <%= statusClass %>">
+                                    <%= t.getStatutTransaction() != null ? 
+                                        t.getStatutTransaction().name() : "N/A" %>
+                                </span>
+                            </td>
+                        </tr>
+                        <%
+                            }
+                        %>
+                    </tbody>
+                </table>
+            </div>
+            <%
+                } else {
+            %>
+            <p>Aucune transaction pour ce compte.</p>
+            <%
+                }
+            %>
         </div>
         
         <!-- Modal Dépôt -->

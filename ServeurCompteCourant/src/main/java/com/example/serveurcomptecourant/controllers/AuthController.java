@@ -1,21 +1,19 @@
 package com.example.serveurcomptecourant.controllers;
 
-import java.util.List;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 
-import com.example.serveurcomptecourant.models.Direction;
 import com.example.serveurcomptecourant.models.Utilisateur;
-import com.example.serveurcomptecourant.services.DirectionService;
 import com.example.serveurcomptecourant.services.UtilisateurService;
 
-import jakarta.ejb.EJB;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
-import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
@@ -23,12 +21,28 @@ import jakarta.ws.rs.core.Response;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class AuthController {
-
-    @EJB
-    private UtilisateurService utilisateurService;
     
-    @EJB
-    private DirectionService directionService;
+    @Context
+    private HttpServletRequest httpRequest;
+    
+    /**
+     * Obtenir ou créer un UtilisateurService via JNDI pour la session
+     */
+    private UtilisateurService getUtilisateurService() throws NamingException {
+        HttpSession session = httpRequest.getSession(false);
+        
+        // Essayer de récupérer le service depuis la session
+        if (session != null) {
+            UtilisateurService service = (UtilisateurService) session.getAttribute("utilisateurService");
+            if (service != null) {
+                return service;
+            }
+        }
+        
+        // Créer un nouveau service via JNDI
+        InitialContext ctx = new InitialContext();
+        return (UtilisateurService) ctx.lookup("java:module/UtilisateurService");
+    }
 
     /**
      * Endpoint de connexion
@@ -43,9 +57,19 @@ public class AuthController {
                     .build();
             }
             
+            // Obtenir un nouveau service utilisateur
+            UtilisateurService utilisateurService = getUtilisateurService();
+            
             boolean success = utilisateurService.login(request.nomUtilisateur, request.motDePasse);
             
             if (success) {
+                // Créer une session HTTP pour générer le cookie JSESSIONID
+                HttpSession session = httpRequest.getSession(true);
+                session.setAttribute("authenticated", true);
+                session.setAttribute("username", request.nomUtilisateur);
+                // Stocker le bean @Stateful dans la session
+                session.setAttribute("utilisateurService", utilisateurService);
+                
                 Utilisateur utilisateur = utilisateurService.getUtilisateurConnecte();
                 LoginResponse response = new LoginResponse();
                 response.success = true;
@@ -73,7 +97,15 @@ public class AuthController {
     @Path("/logout")
     public Response logout() {
         try {
+            UtilisateurService utilisateurService = getUtilisateurService();
             utilisateurService.logout();
+            
+            // Invalider la session HTTP
+            HttpSession session = httpRequest.getSession(false);
+            if (session != null) {
+                session.invalidate();
+            }
+            
             return Response.ok("{\"message\":\"Déconnexion réussie\"}").build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
@@ -89,6 +121,8 @@ public class AuthController {
     @Path("/current")
     public Response getCurrentUser() {
         try {
+            UtilisateurService utilisateurService = getUtilisateurService();
+            
             if (!utilisateurService.estConnecte()) {
                 return Response.status(Response.Status.UNAUTHORIZED)
                     .entity("{\"error\":\"Aucun utilisateur connecté\"}")
@@ -105,154 +139,6 @@ public class AuthController {
         }
     }
 
-    /**
-     * Endpoint pour vérifier une autorisation
-     */
-    @GET
-    @Path("/check/{table}/{action}")
-    public Response checkAuthorization(@PathParam("table") String table, @PathParam("action") String action) {
-        try {
-            if (!utilisateurService.estConnecte()) {
-                return Response.status(Response.Status.UNAUTHORIZED)
-                    .entity("{\"authorized\":false,\"error\":\"Aucun utilisateur connecté\"}")
-                    .build();
-            }
-            
-            boolean authorized = utilisateurService.aAutorisationPour(table, action);
-            AuthorizationResponse response = new AuthorizationResponse();
-            response.authorized = authorized;
-            response.table = table;
-            response.action = action;
-            response.userRole = utilisateurService.getRoleUtilisateurConnecte();
-            
-            return Response.ok(response).build();
-            
-        } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                .entity("{\"error\":\"Erreur lors de la vérification d'autorisation: " + e.getMessage() + "\"}")
-                .build();
-        }
-    }
-
-    // ===== Gestion des utilisateurs =====
-
-    @GET
-    @Path("/users")
-    public Response getAllUsers() {
-        try {
-            List<Utilisateur> utilisateurs = utilisateurService.getAllUtilisateurs();
-            return Response.ok(utilisateurs).build();
-        } catch (SecurityException e) {
-            return Response.status(Response.Status.FORBIDDEN)
-                .entity("{\"error\":\"" + e.getMessage() + "\"}")
-                .build();
-        } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                .entity("{\"error\":\"" + e.getMessage() + "\"}")
-                .build();
-        }
-    }
-
-    @GET
-    @Path("/users/{id}")
-    public Response getUserById(@PathParam("id") Integer id) {
-        try {
-            Utilisateur utilisateur = utilisateurService.getUtilisateurById(id);
-            return Response.ok(utilisateur).build();
-        } catch (SecurityException e) {
-            return Response.status(Response.Status.FORBIDDEN)
-                .entity("{\"error\":\"" + e.getMessage() + "\"}")
-                .build();
-        } catch (IllegalArgumentException e) {
-            return Response.status(Response.Status.NOT_FOUND)
-                .entity("{\"error\":\"" + e.getMessage() + "\"}")
-                .build();
-        } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                .entity("{\"error\":\"" + e.getMessage() + "\"}")
-                .build();
-        }
-    }
-
-    @POST
-    @Path("/users")
-    public Response createUser(Utilisateur utilisateur) {
-        try {
-            Utilisateur nouvelUtilisateur = utilisateurService.createUtilisateur(utilisateur);
-            return Response.status(Response.Status.CREATED).entity(nouvelUtilisateur).build();
-        } catch (SecurityException e) {
-            return Response.status(Response.Status.FORBIDDEN)
-                .entity("{\"error\":\"" + e.getMessage() + "\"}")
-                .build();
-        } catch (IllegalArgumentException e) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                .entity("{\"error\":\"" + e.getMessage() + "\"}")
-                .build();
-        } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                .entity("{\"error\":\"" + e.getMessage() + "\"}")
-                .build();
-        }
-    }
-
-    @PUT
-    @Path("/users/{id}")
-    public Response updateUser(@PathParam("id") Integer id, Utilisateur utilisateur) {
-        try {
-            utilisateur.setIdUtilisateur(id);
-            Utilisateur utilisateurMisAJour = utilisateurService.updateUtilisateur(utilisateur);
-            return Response.ok(utilisateurMisAJour).build();
-        } catch (SecurityException e) {
-            return Response.status(Response.Status.FORBIDDEN)
-                .entity("{\"error\":\"" + e.getMessage() + "\"}")
-                .build();
-        } catch (IllegalArgumentException e) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                .entity("{\"error\":\"" + e.getMessage() + "\"}")
-                .build();
-        } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                .entity("{\"error\":\"" + e.getMessage() + "\"}")
-                .build();
-        }
-    }
-
-    @DELETE
-    @Path("/users/{id}")
-    public Response deleteUser(@PathParam("id") Integer id) {
-        try {
-            utilisateurService.deleteUtilisateur(id);
-            return Response.ok("{\"message\":\"Utilisateur supprimé avec succès\"}").build();
-        } catch (SecurityException e) {
-            return Response.status(Response.Status.FORBIDDEN)
-                .entity("{\"error\":\"" + e.getMessage() + "\"}")
-                .build();
-        } catch (IllegalArgumentException e) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                .entity("{\"error\":\"" + e.getMessage() + "\"}")
-                .build();
-        } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                .entity("{\"error\":\"" + e.getMessage() + "\"}")
-                .build();
-        }
-    }
-
-    // ===== Gestion des directions =====
-
-    @GET
-    @Path("/directions")
-    public Response getAllDirections() {
-        try {
-            List<Direction> directions = directionService.getAllDirections();
-            return Response.ok(directions).build();
-        } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                .entity("{\"error\":\"" + e.getMessage() + "\"}")
-                .build();
-        }
-    }
-
     // ===== Classes internes pour les requêtes/réponses =====
 
     public static class LoginRequest {
@@ -264,12 +150,5 @@ public class AuthController {
         public boolean success;
         public Utilisateur utilisateur;
         public String message;
-    }
-
-    public static class AuthorizationResponse {
-        public boolean authorized;
-        public String table;
-        public String action;
-        public Integer userRole;
     }
 }

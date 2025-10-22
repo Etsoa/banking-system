@@ -9,9 +9,8 @@ import java.util.logging.Logger;
 import com.example.serveurcomptecourant.exceptions.SecurityException;
 import com.example.serveurcomptecourant.exceptions.TransactionException;
 import com.example.serveurcomptecourant.models.CompteCourant;
-import com.example.serveurcomptecourant.models.Transaction;
-import com.example.serveurcomptecourant.models.TypeTransaction;
 import com.example.serveurcomptecourant.models.StatutTransaction;
+import com.example.serveurcomptecourant.models.Transaction;
 import com.example.serveurcomptecourant.repository.CompteCourantRepository;
 import com.example.serveurcomptecourant.repository.TransactionRepository;
 
@@ -28,8 +27,14 @@ public class TransactionService {
     @EJB
     private CompteCourantRepository compteRepository;
     
-    @EJB
     private UtilisateurService utilisateurService;
+    
+    /**
+     * Injecte le UtilisateurService de la session
+     */
+    public void setUtilisateurService(UtilisateurService utilisateurService) {
+        this.utilisateurService = utilisateurService;
+    }
 
     /**
      * Récupère toutes les transactions (nécessite autorisation)
@@ -42,30 +47,6 @@ public class TransactionService {
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Erreur lors de la récupération de toutes les transactions", e);
             throw new TransactionException("Erreur lors de la récupération des transactions", e);
-        }
-    }
-
-    /**
-     * Récupère une transaction par ID (nécessite autorisation)
-     */
-    public Transaction getTransactionById(Integer id) throws SecurityException, TransactionException {
-        utilisateurService.exigerAutorisation("transactions", "read");
-        
-        if (id == null || id <= 0) {
-            throw new IllegalArgumentException("L'ID de la transaction est obligatoire");
-        }
-        
-        try {
-            Transaction transaction = transactionRepository.findById(id);
-            if (transaction == null) {
-                throw new TransactionException.TransactionNotFoundException(id);
-            }
-            return transaction;
-        } catch (TransactionException e) {
-            throw e;
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Erreur lors de la récupération de la transaction {0}", new Object[]{id, e});
-            throw new TransactionException("Erreur lors de la récupération de la transaction", e);
         }
     }
 
@@ -96,38 +77,6 @@ public class TransactionService {
     }
 
     /**
-     * Récupère les transactions d'un compte par type (nécessite autorisation)
-     */
-    public List<Transaction> getTransactionsByCompteAndType(Integer idCompte, TypeTransaction typeTransaction) throws SecurityException, TransactionException {
-        utilisateurService.exigerAutorisation("transactions", "read");
-        
-        if (idCompte == null || idCompte <= 0) {
-            throw new IllegalArgumentException("L'ID du compte est obligatoire");
-        }
-        if (typeTransaction == null) {
-            throw new IllegalArgumentException("Le type de transaction est obligatoire");
-        }
-        
-        try {
-            // Vérifier que le compte existe
-            CompteCourant compte = compteRepository.find(idCompte);
-            if (compte == null) {
-                throw new IllegalArgumentException("Compte introuvable avec ID: " + idCompte);
-            }
-            
-            // Pour l'instant, filtrer par compte puis par type en Java (on pourrait optimiser avec une requête JPQL)
-            return transactionRepository.findByCompteId(idCompte).stream()
-                    .filter(t -> t.getTypeTransaction() == typeTransaction)
-                    .toList();
-        } catch (IllegalArgumentException e) {
-            throw e;
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Erreur lors de la récupération des transactions du compte {0} et type {1}", new Object[]{idCompte, typeTransaction, e});
-            throw new TransactionException("Erreur lors de la récupération des transactions", e);
-        }
-    }
-
-    /**
      * Récupère les transactions par statut (nécessite autorisation)
      */
     public List<Transaction> getTransactionsByStatut(StatutTransaction statutTransaction) throws SecurityException, TransactionException {
@@ -141,35 +90,6 @@ public class TransactionService {
             return transactionRepository.findByStatutTransaction(statutTransaction);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Erreur lors de la récupération des transactions par statut {0}", new Object[]{statutTransaction, e});
-            throw new TransactionException("Erreur lors de la récupération des transactions", e);
-        }
-    }
-
-    /**
-     * Récupère les transactions d'un compte par statut (nécessite autorisation)
-     */
-    public List<Transaction> getTransactionsByCompteAndStatut(Integer idCompte, StatutTransaction statutTransaction) throws SecurityException, TransactionException {
-        utilisateurService.exigerAutorisation("transactions", "read");
-        
-        if (idCompte == null || idCompte <= 0) {
-            throw new IllegalArgumentException("L'ID du compte est obligatoire");
-        }
-        if (statutTransaction == null) {
-            throw new IllegalArgumentException("Le statut de transaction est obligatoire");
-        }
-        
-        try {
-            // Vérifier que le compte existe
-            CompteCourant compte = compteRepository.find(idCompte);
-            if (compte == null) {
-                throw new IllegalArgumentException("Compte introuvable avec ID: " + idCompte);
-            }
-            
-            return transactionRepository.findByCompteIdAndStatut(idCompte, statutTransaction);
-        } catch (IllegalArgumentException e) {
-            throw e;
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Erreur lors de la récupération des transactions du compte {0} et statut {1}", new Object[]{idCompte, statutTransaction, e});
             throw new TransactionException("Erreur lors de la récupération des transactions", e);
         }
     }
@@ -227,7 +147,7 @@ public class TransactionService {
      * Cette méthode confirme ou refuse une transaction selon l'action demandée
      */
     public Transaction validerTransaction(Integer idTransaction, boolean approuver) throws SecurityException, TransactionException {
-        utilisateurService.exigerAutorisation("transactions", "validate");
+        utilisateurService.exigerAutorisation("transactions", "create");
         
         if (idTransaction == null || idTransaction <= 0) {
             throw new IllegalArgumentException("L'ID de la transaction est obligatoire");
@@ -250,6 +170,40 @@ public class TransactionService {
                 : StatutTransaction.refusee;
             
             transaction.setStatutTransaction(nouveauStatut);
+            
+            // Si la transaction est approuvée, mettre à jour les soldes
+            if (approuver) {
+                CompteCourant compte = compteRepository.find(transaction.getIdCompte());
+                if (compte == null) {
+                    throw new TransactionException("Compte introuvable avec ID: " + transaction.getIdCompte());
+                }
+                
+                BigDecimal nouveauSolde;
+                if (transaction.getTypeTransaction() == com.example.serveurcomptecourant.models.TypeTransaction.depot) {
+                    // Dépôt : ajouter le montant au solde
+                    nouveauSolde = compte.getSolde().add(transaction.getMontant());
+                } else {
+                    // Retrait : soustraire le montant du solde
+                    nouveauSolde = compte.getSolde().subtract(transaction.getMontant());
+                    
+                    // Vérifier que le solde ne devient pas négatif
+                    if (nouveauSolde.compareTo(BigDecimal.ZERO) < 0) {
+                        throw new TransactionException("Solde insuffisant pour effectuer le retrait");
+                    }
+                }
+                
+                compte.setSolde(nouveauSolde);
+                compteRepository.save(compte);
+                
+                LOGGER.log(Level.INFO, "Solde du compte {0} mis à jour: {1} -> {2}", 
+                    new Object[]{
+                        compte.getIdCompte(),
+                        compte.getSolde().subtract(transaction.getTypeTransaction() == com.example.serveurcomptecourant.models.TypeTransaction.depot 
+                            ? transaction.getMontant() : transaction.getMontant().negate()),
+                        nouveauSolde
+                    });
+            }
+            
             Transaction savedTransaction = transactionRepository.save(transaction);
             
             String action = approuver ? "approuvée" : "refusée";
@@ -271,131 +225,16 @@ public class TransactionService {
     }
 
     /**
-     * Met à jour une transaction (nécessite autorisation)
-     */
-    public Transaction updateTransaction(Transaction transaction) throws SecurityException, TransactionException {
-        utilisateurService.exigerAutorisation("transactions", "update");
-        
-        if (transaction == null || transaction.getIdTransaction() == null) {
-            throw new IllegalArgumentException("La transaction et son ID sont obligatoires");
-        }
-        
-        try {
-            // Vérifier que la transaction existe
-            Transaction existingTransaction = transactionRepository.findById(transaction.getIdTransaction());
-            if (existingTransaction == null) {
-                throw new TransactionException.TransactionNotFoundException(transaction.getIdTransaction());
-            }
-            
-            // Empêcher la modification de transactions confirmées ou refusées
-            if (existingTransaction.getStatutTransaction() != StatutTransaction.en_attente) {
-                throw new TransactionException.TransactionStatutInvalideException(
-                    transaction.getIdTransaction(), 
-                    existingTransaction.getStatutTransaction().toString(), 
-                    "en_attente");
-            }
-            
-            validateTransactionData(transaction);
-            
-            // Vérifier que le compte existe
-            CompteCourant compte = compteRepository.find(transaction.getIdCompte());
-            if (compte == null) {
-                throw new IllegalArgumentException("Compte introuvable avec ID: " + transaction.getIdCompte());
-            }
-            
-            // Maintenir le statut en_attente pour les modifications
-            transaction.setStatutTransaction(StatutTransaction.en_attente);
-            
-            Transaction savedTransaction = transactionRepository.save(transaction);
-            
-            LOGGER.log(Level.INFO, "Transaction modifiée par {0}: ID={1}", 
-                new Object[]{
-                    utilisateurService.getUtilisateurConnecte().getNomUtilisateur(),
-                    transaction.getIdTransaction()
-                });
-            
-            return savedTransaction;
-        } catch (IllegalArgumentException | TransactionException e) {
-            throw e;
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Erreur lors de la mise à jour de la transaction {0}", new Object[]{transaction.getIdTransaction(), e});
-            throw new TransactionException("Erreur lors de la mise à jour de la transaction", e);
-        }
-    }
-
-    /**
-     * Supprime une transaction (nécessite autorisation)
-     */
-    public void deleteTransaction(Integer id) throws SecurityException, TransactionException {
-        utilisateurService.exigerAutorisation("transactions", "delete");
-        
-        if (id == null || id <= 0) {
-            throw new IllegalArgumentException("L'ID de la transaction est obligatoire");
-        }
-        
-        try {
-            Transaction transaction = transactionRepository.findById(id);
-            if (transaction == null) {
-                throw new TransactionException.TransactionNotFoundException(id);
-            }
-            
-            // Empêcher la suppression de transactions confirmées
-            if (transaction.getStatutTransaction() == StatutTransaction.confirmee) {
-                throw new TransactionException.TransactionNonModifiableException(id);
-            }
-            
-            transactionRepository.delete(transaction);
-            
-            LOGGER.log(Level.INFO, "Transaction supprimée par {0}: ID={1}", 
-                new Object[]{
-                    utilisateurService.getUtilisateurConnecte().getNomUtilisateur(),
-                    id
-                });
-        } catch (IllegalArgumentException | TransactionException e) {
-            throw e;
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Erreur lors de la suppression de la transaction {0}", new Object[]{id, e});
-            throw new TransactionException("Erreur lors de la suppression de la transaction", e);
-        }
-    }
-
-    /**
-     * Confirme une transaction en attente (utilise la logique de validation)
-     */
-    public Transaction confirmerTransaction(Integer id) throws SecurityException, TransactionException {
-        return validerTransaction(id, true);
-    }
-
-    /**
-     * Refuse une transaction en attente (utilise la logique de validation)
-     */
-    public Transaction refuserTransaction(Integer id) throws SecurityException, TransactionException {
-        return validerTransaction(id, false);
-    }
-
-    /**
      * Récupère les transactions en attente de validation (nécessite autorisation de validation)
      */
     public List<Transaction> getTransactionsEnAttente() throws SecurityException, TransactionException {
-        utilisateurService.exigerAutorisation("transactions", "validate");
+        utilisateurService.exigerAutorisation("transactions", "create");
         
         try {
             return transactionRepository.findByStatutTransaction(StatutTransaction.en_attente);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Erreur lors de la récupération des transactions en attente", e);
             throw new TransactionException("Erreur lors de la récupération des transactions en attente", e);
-        }
-    }
-
-    /**
-     * Vérifie si l'utilisateur connecté peut valider les transactions
-     */
-    public boolean peutValiderTransactions() {
-        try {
-            return utilisateurService.aAutorisationPour("transactions", "validate");
-        } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Erreur lors de la vérification des autorisations de validation", e);
-            return false;
         }
     }
 

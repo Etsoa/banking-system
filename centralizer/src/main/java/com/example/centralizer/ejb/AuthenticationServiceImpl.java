@@ -1,10 +1,11 @@
 package com.example.centralizer.ejb;
 
+import java.util.logging.Logger;
+
 import com.example.centralizer.dto.LoginRequest;
 import com.example.centralizer.dto.LoginResponse;
-import jakarta.ejb.EJB;
+
 import jakarta.ejb.Stateful;
-import java.util.logging.Logger;
 
 /**
  * Service EJB Stateful pour l'authentification
@@ -13,25 +14,19 @@ import java.util.logging.Logger;
 public class AuthenticationServiceImpl {
     private static final Logger LOGGER = Logger.getLogger(AuthenticationServiceImpl.class.getName());
     
-    @EJB
-    private CompteCourantServiceImpl compteCourantService;
-    
     private Integer currentUserId;
     private String currentUsername;
     private boolean authenticated = false;
     
     public LoginResponse login(LoginRequest request) {
         try {
-            // Appeler le serveur de compte courant via CompteCourantService
-            // Pour l'instant, utilisons une authentification simple
-            // TODO: Implémenter la vraie logique avec ServeurCompteCourant
-            
+            // Validation simple - l'authentification réelle se fait dans CompteCourantServiceImpl
             if (request.getNomUtilisateur() != null && request.getMotDePasse() != null) {
                 this.currentUsername = request.getNomUtilisateur();
-                this.currentUserId = 1; // Mock - devrait être récupéré du serveur
+                this.currentUserId = request.getIdUtilisateur() != null ? request.getIdUtilisateur() : 1;
                 this.authenticated = true;
                 
-                LOGGER.info("Utilisateur " + currentUsername + " authentifié avec succès");
+                LOGGER.info("Utilisateur " + currentUsername + " (ID: " + currentUserId + ") session créée");
                 
                 LoginResponse response = new LoginResponse(true, "Authentification réussie");
                 response.setIdUtilisateur(currentUserId);

@@ -20,7 +20,7 @@ public class Transaction implements Serializable {
     // Constructors
     public Transaction() {
         this.dateTransaction = LocalDate.now();
-        this.statutTransaction = StatutTransaction.EN_ATTENTE;
+        this.statutTransaction = StatutTransaction.en_attente;
     }
     
     // Getters & Setters

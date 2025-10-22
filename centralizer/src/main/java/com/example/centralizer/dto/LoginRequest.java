@@ -9,6 +9,7 @@ public class LoginRequest implements Serializable {
     
     private String nomUtilisateur;
     private String motDePasse;
+    private Integer idUtilisateur; // ID utilisateur optionnel (rempli après récupération du serveur)
     
     // Constructors
     public LoginRequest() {}
@@ -16,6 +17,12 @@ public class LoginRequest implements Serializable {
     public LoginRequest(String nomUtilisateur, String motDePasse) {
         this.nomUtilisateur = nomUtilisateur;
         this.motDePasse = motDePasse;
+    }
+    
+    public LoginRequest(String nomUtilisateur, String motDePasse, Integer idUtilisateur) {
+        this.nomUtilisateur = nomUtilisateur;
+        this.motDePasse = motDePasse;
+        this.idUtilisateur = idUtilisateur;
     }
     
     // Getters & Setters
@@ -33,5 +40,13 @@ public class LoginRequest implements Serializable {
     
     public void setMotDePasse(String motDePasse) {
         this.motDePasse = motDePasse;
+    }
+    
+    public Integer getIdUtilisateur() {
+        return idUtilisateur;
+    }
+    
+    public void setIdUtilisateur(Integer idUtilisateur) {
+        this.idUtilisateur = idUtilisateur;
     }
 }

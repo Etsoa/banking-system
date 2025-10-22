@@ -43,17 +43,26 @@ public class CompteCourantServiceImpl {
      */
     public boolean login(String username, String password) {
         try {
+            LOGGER.info("Tentative d'authentification pour: " + username + " sur " + SERVER_URL + "/auth/login");
+            
             // Créer la requête de login
             String loginJson = String.format("{\"nomUtilisateur\":\"%s\",\"motDePasse\":\"%s\"}", 
                 username, password);
+            
+            LOGGER.info("Payload JSON: " + loginJson);
             
             WebTarget target = client.target(SERVER_URL).path("auth/login");
             Response response = target.request(MediaType.APPLICATION_JSON)
                     .post(Entity.json(loginJson));
             
-            if (response.getStatus() == 200) {
+            int status = response.getStatus();
+            LOGGER.info("Réponse du serveur: Status " + status);
+            
+            if (status == 200) {
                 // Capturer le cookie de session
                 Map<String, NewCookie> cookies = response.getCookies();
+                LOGGER.info("Cookies reçus: " + cookies.keySet());
+                
                 if (cookies.containsKey("JSESSIONID")) {
                     NewCookie jsessionid = cookies.get("JSESSIONID");
                     this.sessionCookie = jsessionid.getName() + "=" + jsessionid.getValue();
@@ -61,12 +70,19 @@ public class CompteCourantServiceImpl {
                     LOGGER.info("Authentification réussie pour: " + username + " (Cookie: " + this.sessionCookie + ")");
                     response.close();
                     return true;
+                } else {
+                    LOGGER.warning("Pas de cookie JSESSIONID dans la réponse");
                 }
+            } else {
+                String errorBody = response.readEntity(String.class);
+                LOGGER.warning("Échec d'authentification - Status: " + status + ", Body: " + errorBody);
             }
+            
             response.close();
             return false;
         } catch (Exception e) {
-            LOGGER.severe("Erreur d'authentification: " + e.getMessage());
+            LOGGER.severe("Erreur d'authentification: " + e.getClass().getName() + " - " + e.getMessage());
+            e.printStackTrace();
             return false;
         }
     }
@@ -92,6 +108,75 @@ public class CompteCourantServiceImpl {
             this.isAuthenticated = false;
             this.sessionCookie = null;
         }
+    }
+    
+    /**
+     * Récupère les informations de l'utilisateur actuellement connecté
+     */
+    public com.example.centralizer.dto.LoginResponse getCurrentUser() {
+        try {
+            WebTarget target = client.target(SERVER_URL).path("auth/current");
+            Response response = target.request(MediaType.APPLICATION_JSON)
+                    .header("Cookie", sessionCookie)
+                    .get();
+            
+            if (response.getStatus() == 200) {
+                // Le serveur renvoie un objet Utilisateur
+                String jsonResponse = response.readEntity(String.class);
+                response.close();
+                
+                // Parser manuellement le JSON pour extraire idUtilisateur et nomUtilisateur
+                // Format attendu: {"idUtilisateur":1,"nomUtilisateur":"admin",...}
+                Integer userId = extractUserId(jsonResponse);
+                String username = extractUsername(jsonResponse);
+                
+                com.example.centralizer.dto.LoginResponse loginResponse = 
+                    new com.example.centralizer.dto.LoginResponse(true, "Utilisateur récupéré");
+                loginResponse.setIdUtilisateur(userId);
+                loginResponse.setNomUtilisateur(username);
+                return loginResponse;
+            }
+            
+            response.close();
+            return null;
+        } catch (Exception e) {
+            LOGGER.severe("Erreur lors de la récupération de l'utilisateur courant: " + e.getMessage());
+            return null;
+        }
+    }
+    
+    /**
+     * Extrait l'ID utilisateur du JSON
+     */
+    private Integer extractUserId(String json) {
+        try {
+            String pattern = "\"idUtilisateur\"\\s*:\\s*(\\d+)";
+            java.util.regex.Pattern p = java.util.regex.Pattern.compile(pattern);
+            java.util.regex.Matcher m = p.matcher(json);
+            if (m.find()) {
+                return Integer.parseInt(m.group(1));
+            }
+        } catch (Exception e) {
+            LOGGER.warning("Impossible d'extraire idUtilisateur du JSON: " + e.getMessage());
+        }
+        return null;
+    }
+    
+    /**
+     * Extrait le nom d'utilisateur du JSON
+     */
+    private String extractUsername(String json) {
+        try {
+            String pattern = "\"nomUtilisateur\"\\s*:\\s*\"([^\"]+)\"";
+            java.util.regex.Pattern p = java.util.regex.Pattern.compile(pattern);
+            java.util.regex.Matcher m = p.matcher(json);
+            if (m.find()) {
+                return m.group(1);
+            }
+        } catch (Exception e) {
+            LOGGER.warning("Impossible d'extraire nomUtilisateur du JSON: " + e.getMessage());
+        }
+        return null;
     }
 
     public List<CompteCourant> getAllComptes() {
@@ -165,11 +250,11 @@ public class CompteCourantServiceImpl {
             Transaction transaction = new Transaction();
             transaction.setIdCompte(idCompte);
             transaction.setMontant(montant);
-            transaction.setTypeTransaction(TypeTransaction.DEPOT);
+            transaction.setTypeTransaction(TypeTransaction.depot);
             transaction.setDateTransaction(LocalDate.now());
-            transaction.setStatutTransaction(StatutTransaction.EN_ATTENTE);
+            transaction.setStatutTransaction(StatutTransaction.en_attente);
             
-            WebTarget target = client.target(SERVER_URL).path("transactions/depot");
+            WebTarget target = client.target(SERVER_URL).path("transactions/demander");
             Response response = target.request(MediaType.APPLICATION_JSON)
                     .header("Cookie", sessionCookie)
                     .post(Entity.json(transaction));
@@ -193,11 +278,11 @@ public class CompteCourantServiceImpl {
             Transaction transaction = new Transaction();
             transaction.setIdCompte(idCompte);
             transaction.setMontant(montant);
-            transaction.setTypeTransaction(TypeTransaction.RETRAIT);
+            transaction.setTypeTransaction(TypeTransaction.retrait);
             transaction.setDateTransaction(LocalDate.now());
-            transaction.setStatutTransaction(StatutTransaction.EN_ATTENTE);
+            transaction.setStatutTransaction(StatutTransaction.en_attente);
             
-            WebTarget target = client.target(SERVER_URL).path("transactions/retrait");
+            WebTarget target = client.target(SERVER_URL).path("transactions/demander");
             Response response = target.request(MediaType.APPLICATION_JSON)
                     .header("Cookie", sessionCookie)
                     .post(Entity.json(transaction));
@@ -239,7 +324,130 @@ public class CompteCourantServiceImpl {
 
     public List<Transaction> getAllTransactions() {
         try {
+            LOGGER.info("Tentative de récupération de toutes les transactions");
+            LOGGER.info("Cookie utilisé: " + sessionCookie);
             WebTarget target = client.target(SERVER_URL).path("transactions");
+            Response response = target.request(MediaType.APPLICATION_JSON)
+                    .header("Cookie", sessionCookie)
+                    .get();
+            
+            LOGGER.info("Réponse getAllTransactions - Status: " + response.getStatus());
+            
+            if (response.getStatus() == 200) {
+                List<Transaction> transactions = response.readEntity(new GenericType<List<Transaction>>() {});
+                LOGGER.info("Nombre de transactions reçues du serveur: " + (transactions != null ? transactions.size() : "null"));
+                response.close();
+                return transactions;
+            } else {
+                String errorBody = response.readEntity(String.class);
+                LOGGER.warning("Échec getAllTransactions - Status: " + response.getStatus() + ", Body: " + errorBody);
+            }
+            
+            response.close();
+            return new ArrayList<>();
+        } catch (Exception e) {
+            LOGGER.severe("Erreur lors de la récupération des transactions: " + e.getMessage());
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
+
+    /**
+     * Valider une transaction
+     */
+    public boolean validerTransaction(Integer idTransaction) {
+        try {
+            LOGGER.info("=== DEBUT validerTransaction ===");
+            LOGGER.info("ID Transaction: " + idTransaction);
+            LOGGER.info("Cookie utilisé: " + sessionCookie);
+            LOGGER.info("URL cible: " + SERVER_URL + "/transactions/" + idTransaction + "/valider");
+            
+            WebTarget target = client.target(SERVER_URL)
+                    .path("transactions/" + idTransaction + "/valider");
+            
+            LOGGER.info("Envoi de la requête PUT...");
+            Response response = target.request(MediaType.APPLICATION_JSON)
+                    .header("Cookie", sessionCookie)
+                    .put(Entity.json(""));
+            
+            int status = response.getStatus();
+            LOGGER.info("Réponse reçue - Status: " + status);
+            
+            if (status != 200) {
+                String errorBody = response.readEntity(String.class);
+                LOGGER.warning("Erreur du serveur - Body: " + errorBody);
+                response.close();
+                return false;
+            }
+            
+            boolean success = response.getStatus() == 200;
+            response.close();
+            
+            if (success) {
+                LOGGER.info("Transaction #" + idTransaction + " validée avec succès");
+            }
+            
+            return success;
+        } catch (Exception e) {
+            LOGGER.severe("Exception lors de la validation de la transaction: " + e.getClass().getName());
+            LOGGER.severe("Message: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Refuser une transaction
+     */
+    public boolean refuserTransaction(Integer idTransaction) {
+        try {
+            LOGGER.info("=== DEBUT refuserTransaction ===");
+            LOGGER.info("ID Transaction: " + idTransaction);
+            LOGGER.info("Cookie utilisé: " + sessionCookie);
+            LOGGER.info("URL cible: " + SERVER_URL + "/transactions/" + idTransaction + "/refuser");
+            
+            WebTarget target = client.target(SERVER_URL)
+                    .path("transactions/" + idTransaction + "/refuser");
+            
+            LOGGER.info("Envoi de la requête PUT...");
+            Response response = target.request(MediaType.APPLICATION_JSON)
+                    .header("Cookie", sessionCookie)
+                    .put(Entity.json(""));
+            
+            int status = response.getStatus();
+            LOGGER.info("Réponse reçue - Status: " + status);
+            
+            if (status != 200) {
+                String errorBody = response.readEntity(String.class);
+                LOGGER.warning("Erreur du serveur - Body: " + errorBody);
+                response.close();
+                return false;
+            }
+            
+            boolean success = response.getStatus() == 200;
+            response.close();
+            
+            if (success) {
+                LOGGER.info("Transaction #" + idTransaction + " refusée avec succès");
+            }
+            
+            return success;
+        } catch (Exception e) {
+            LOGGER.severe("Exception lors du refus de la transaction: " + e.getClass().getName());
+            LOGGER.severe("Message: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Récupérer les transactions en attente de validation
+     */
+    public List<Transaction> getTransactionsEnAttente() {
+        try {
+            WebTarget target = client.target(SERVER_URL)
+                    .path("transactions/statut/en_attente");
+            
             Response response = target.request(MediaType.APPLICATION_JSON)
                     .header("Cookie", sessionCookie)
                     .get();
@@ -253,7 +461,7 @@ public class CompteCourantServiceImpl {
             response.close();
             return new ArrayList<>();
         } catch (Exception e) {
-            LOGGER.severe("Erreur lors de la récupération des transactions: " + e.getMessage());
+            LOGGER.severe("Erreur lors de la récupération des transactions en attente: " + e.getMessage());
             return new ArrayList<>();
         }
     }
