@@ -31,7 +31,7 @@ public class CompteCourantServiceImpl {
     private static final String SERVER_URL = "http://localhost:8080/comptecourant/api";
     
     private Client client;
-    private String sessionCookie; // JSESSIONID=value
+    private String sessionCookie;
     private boolean isAuthenticated = false;
 
     public CompteCourantServiceImpl() {
@@ -471,5 +471,21 @@ public class CompteCourantServiceImpl {
      */
     public boolean isAuthenticated() {
         return isAuthenticated && sessionCookie != null;
+    }
+    
+    /**
+     * Crée un dépôt (alias pour depot)
+     */
+    public boolean creerDepot(Integer idCompte, BigDecimal montant) {
+        Transaction transaction = depot(idCompte, montant);
+        return transaction != null;
+    }
+    
+    /**
+     * Crée un retrait (alias pour retrait)
+     */
+    public boolean creerRetrait(Integer idCompte, BigDecimal montant) {
+        Transaction transaction = retrait(idCompte, montant);
+        return transaction != null;
     }
 }

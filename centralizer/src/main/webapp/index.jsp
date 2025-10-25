@@ -40,24 +40,12 @@
                     <p>Valider ou refuser les transactions</p>
                     <a href="${pageContext.request.contextPath}/transactions/en-attente" class="btn btn-warning">Accéder</a>
                 </div>
-<%--                 
+                
                 <div class="card">
                     <h3>Comptes Dépôt</h3>
                     <p>Gérer les comptes dépôt</p>
                     <a href="${pageContext.request.contextPath}/comptes-depot" class="btn btn-primary">Accéder</a>
                 </div>
-                
-                <div class="card">
-                    <h3>Prêts</h3>
-                    <p>Gérer les prêts</p>
-                    <a href="${pageContext.request.contextPath}/prets" class="btn btn-primary">Accéder</a>
-                </div>
-                
-                <div class="card">
-                    <h3>Transactions</h3>
-                    <p>Historique des transactions</p>
-                    <a href="${pageContext.request.contextPath}/transactions" class="btn btn-primary">Accéder</a>
-                </div> --%>
             </div>
         </div>
     </div>

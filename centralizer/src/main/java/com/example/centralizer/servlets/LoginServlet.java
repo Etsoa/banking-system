@@ -10,6 +10,7 @@ import com.example.centralizer.dto.LoginRequest;
 import com.example.centralizer.dto.LoginResponse;
 import com.example.centralizer.ejb.AuthenticationServiceImpl;
 import com.example.centralizer.ejb.CompteCourantServiceImpl;
+import com.example.centralizer.ejb.EchangeServiceImpl;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -74,6 +75,10 @@ public class LoginServlet extends HttpServlet {
             // Obtenir une nouvelle instance du service CompteCourant via JNDI
             CompteCourantServiceImpl compteCourantService = getCompteCourantService();
             
+            // Créer une instance du service Echange (client REST Stateful, pas EJB JNDI)
+            EchangeServiceImpl echangeService = new EchangeServiceImpl();
+            LOGGER.info("EchangeService créé pour la session");
+            
             // Authentifier d'abord sur le serveur backend
             boolean backendLoginSuccess = compteCourantService.login(username, password);
             
@@ -111,6 +116,7 @@ public class LoginServlet extends HttpServlet {
                 session.setAttribute("authenticated", true);
                 session.setAttribute("authService", authService); // Stocker l'EJB d'authentification dans la session
                 session.setAttribute("compteCourantService", compteCourantService); // Stocker l'EJB de compte courant dans la session
+                session.setAttribute("echangeService", echangeService); // Stocker le service Echange dans la session
                 
                 LOGGER.info("Login réussi pour: " + realUsername + " (ID: " + realUserId + ") - Services EJB initialisés et authentifiés sur le serveur backend");
                 

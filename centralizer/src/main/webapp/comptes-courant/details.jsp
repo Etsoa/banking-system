@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="com.example.centralizer.dto.CompteCourant" %>
 <%@ page import="com.example.centralizer.dto.Transaction" %>
+<%@ page import="com.example.centralizer.dto.echange.Echange" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.text.NumberFormat" %>
 <%@ page import="java.util.Locale" %>
@@ -119,12 +120,39 @@
             <div class="modal-content">
                 <span class="close" onclick="document.getElementById('depotModal').style.display='none'">&times;</span>
                 <h3>Effectuer un dépôt</h3>
-                <form method="post" action="${pageContext.request.contextPath}/comptes">
+                <form method="post" action="${pageContext.request.contextPath}/transactions">
                     <input type="hidden" name="action" value="depot">
                     <input type="hidden" name="idCompte" value="<%= compte.getIdCompte() %>">
+                    
+                    <div class="form-group">
+                        <label for="dateDepot">Date de transaction:</label>
+                        <input type="date" id="dateDepot" name="dateTransaction" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="deviseDepot">Devise:</label>
+                        <select id="deviseDepot" name="devise" required>
+                            <option value="MGA">MGA (Ariary malgache)</option>
+                            <%
+                            List<Echange> devises = (List<Echange>) request.getAttribute("devises");
+                            if (devises != null) {
+                                for (Echange echange : devises) {
+                                    String code = echange.getNom().split("/")[0];
+                            %>
+                                <option value="<%= code %>">
+                                    <%= code %> (1 <%= code %> = <%= echange.getValeur() %> MGA)
+                                </option>
+                            <%
+                                }
+                            }
+                            %>
+                        </select>
+                    </div>
+                    
                     <div class="form-group">
                         <label for="montantDepot">Montant:</label>
                         <input type="number" id="montantDepot" name="montant" step="0.01" min="0.01" required>
+                        <small>Le montant sera automatiquement converti en Ariary si vous choisissez une autre devise</small>
                     </div>
                     <button type="submit" class="btn btn-success">Déposer</button>
                 </form>
@@ -136,12 +164,38 @@
             <div class="modal-content">
                 <span class="close" onclick="document.getElementById('retraitModal').style.display='none'">&times;</span>
                 <h3>Effectuer un retrait</h3>
-                <form method="post" action="${pageContext.request.contextPath}/comptes">
+                <form method="post" action="${pageContext.request.contextPath}/transactions">
                     <input type="hidden" name="action" value="retrait">
                     <input type="hidden" name="idCompte" value="<%= compte.getIdCompte() %>">
+                    
+                    <div class="form-group">
+                        <label for="dateRetrait">Date de transaction:</label>
+                        <input type="date" id="dateRetrait" name="dateTransaction" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="deviseRetrait">Devise:</label>
+                        <select id="deviseRetrait" name="devise" required>
+                            <option value="MGA">MGA (Ariary malgache)</option>
+                            <%
+                            if (devises != null) {
+                                for (Echange echange : devises) {
+                                    String code = echange.getNom().split("/")[0];
+                            %>
+                                <option value="<%= code %>">
+                                    <%= code %> (1 <%= code %> = <%= echange.getValeur() %> MGA)
+                                </option>
+                            <%
+                                }
+                            }
+                            %>
+                        </select>
+                    </div>
+                    
                     <div class="form-group">
                         <label for="montantRetrait">Montant:</label>
                         <input type="number" id="montantRetrait" name="montant" step="0.01" min="0.01" required>
+                        <small>Le montant sera automatiquement converti en Ariary si vous choisissez une autre devise</small>
                     </div>
                     <button type="submit" class="btn btn-warning">Retirer</button>
                 </form>

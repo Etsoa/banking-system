@@ -1,0 +1,26 @@
+[
+  {
+    "nom": "EUR/MGA",
+    "dateDebut": "2024-01-01",
+    "dateFin": "2024-06-30",
+    "valeur": "4950.00"
+  },
+  {
+    "nom": "EUR/MGA",
+    "dateDebut": "2024-07-01",
+    "dateFin": null,
+    "valeur": "5200.00"
+  },
+  {
+    "nom": "USD/MGA",
+    "dateDebut": "2024-01-01",
+    "dateFin": "2024-06-30",
+    "valeur": "4450.00"
+  },
+  {
+    "nom": "USD/MGA",
+    "dateDebut": "2024-07-01",
+    "dateFin": null,
+    "valeur": "4700.00"
+  }
+]

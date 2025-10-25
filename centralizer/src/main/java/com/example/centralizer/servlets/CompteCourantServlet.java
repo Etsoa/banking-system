@@ -118,6 +118,39 @@ public class CompteCourantServlet extends HttpServlet {
                     compteCourantService.getTransactionsByCompte(idCompte);
                 req.setAttribute("transactions", transactions);
                 
+                // Récupérer les devises disponibles pour les dépôts/retraits
+                LOGGER.info("=== DEBUT récupération des devises ===");
+                com.example.centralizer.ejb.EchangeServiceImpl echangeService = 
+                    (com.example.centralizer.ejb.EchangeServiceImpl) session.getAttribute("echangeService");
+                
+                LOGGER.info("EchangeService depuis session: " + (echangeService != null ? "EXISTE" : "NULL"));
+                
+                if (echangeService != null) {
+                    try {
+                        LOGGER.info("Appel de getEchangesActifs()...");
+                        List<com.example.centralizer.dto.echange.Echange> devises = echangeService.getEchangesActifs();
+                        LOGGER.info("Devises récupérées: " + (devises != null ? devises.size() + " devises" : "NULL"));
+                        
+                        if (devises != null) {
+                            for (com.example.centralizer.dto.echange.Echange dev : devises) {
+                                LOGGER.info("  - " + dev.getNom() + " = " + dev.getValeur() + " MGA");
+                            }
+                        }
+                        
+                        req.setAttribute("devises", devises);
+                        LOGGER.info("Devises ajoutées à l'attribut de requête");
+                    } catch (Exception e) {
+                        LOGGER.severe("Erreur lors de la récupération des devises: " + e.getClass().getName());
+                        LOGGER.severe("Message: " + e.getMessage());
+                        e.printStackTrace();
+                        // Continuer sans les devises - seul MGA sera disponible
+                    }
+                } else {
+                    LOGGER.warning("EchangeService non disponible dans la session - seul MGA sera disponible");
+                }
+                
+                LOGGER.info("=== FIN récupération des devises ===");
+                
                 req.getRequestDispatcher("/comptes-courant/details.jsp").forward(req, resp);
             } else {
                 resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Compte non trouvé");

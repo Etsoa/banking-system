@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  echange:
+    build: .
+    container_name: echange-service
+    ports:
+      - "8081:8080"
+      - "9991:9990"  # Port admin WildFly (optionnel)
+    environment:
+      - JAVA_OPTS=-Xms512m -Xmx1024m
+    networks:
+      - banking-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/echange/api/echanges"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+networks:
+  banking-network:
+    driver: bridge

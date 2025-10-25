@@ -47,13 +47,11 @@
     %>
     
     <p><a href="${pageContext.request.contextPath}/transactions">Toutes</a> | 
-       <a href="${pageContext.request.contextPath}/transactions/en-attente">En attente</a></p>
+       <a href="${pageContext.request.contextPath}/transactions/en-attente">En attente</a> |
     <hr>
     
     <p>DEBUG: Nombre de transactions = <%= transactions != null ? transactions.size() : "null" %></p>
     <%
-        NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(Locale.FRANCE);
-        
         if (transactions != null && !transactions.isEmpty()) {
             System.out.println("Affichage du tableau avec " + transactions.size() + " transactions");
     %>
@@ -74,7 +72,7 @@
             <td><%= t.getIdTransaction() %></td>
             <td><%= t.getDateTransaction() %></td>
             <td><%= t.getTypeTransaction() %></td>
-            <td><%= currencyFormatter.format(t.getMontant()) %></td>
+            <td><%= t.getMontant() %></td>
             <td><%= t.getIdCompte() %></td>
             <td><%= t.getStatutTransaction() %></td>
             <td>
