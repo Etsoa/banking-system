@@ -22,6 +22,19 @@
             <remote>com.example.comptecourant.ejb.UtilisateurServiceRemote</remote>
             <ejb-class>com.example.comptecourant.ejb.UtilisateurServiceBean</ejb-class>
             <session-type>Stateful</session-type>
+        <session>
+            <ejb-name>EchangeServiceImpl</ejb-name>
+            <remote>com.example.echange.ejb.EchangeServiceRemote</remote>
+            <ejb-class>com.example.echange.ejb.EchangeServiceBean</ejb-class>
+            <session-type>Stateless</session-type>
         </session>
-    </enterprise-beans>
-</ejb-jar>
+        <session>
+            <ejb-name>CompteCourantServiceImpl</ejb-name>
+            <ejb-class>com.example.centralizer.ejb.CompteCourantServiceImpl</ejb-class>
+            <session-type>Stateless</session-type>
+        </session>
+        <session>
+            <ejb-name>AuthenticationServiceImpl</ejb-name>
+            <ejb-class>com.example.centralizer.ejb.AuthenticationServiceImpl</ejb-class>
+            <session-type>Stateful</session-type>
+        </session>

@@ -5,6 +5,8 @@ import java.util.logging.Logger;
 
 import com.example.centralizer.dto.comptecourant.LoginResponse;
 import com.example.centralizer.dto.comptecourant.SessionUtilisateur;
+import com.example.comptecourant.ejb.UtilisateurServiceRemote;
+import com.example.centralizer.dto.comptecourant.Utilisateur;
 import jakarta.ejb.Stateful;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -19,25 +21,24 @@ public class AuthenticationServiceImpl implements Serializable {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(AuthenticationServiceImpl.class.getName());
     
-    private Object utilisateurServiceRemote;
+    private UtilisateurServiceRemote utilisateurServiceRemote;
     private SessionUtilisateur sessionUtilisateur;  // Session complète de l'utilisateur
     private boolean authenticated = false;
     
     /**
-     * Initialise le service EJB local via JNDI
-     * Format JNDI pour EJB local dans WildFly: java:global/<module-name>/<bean-name>!<interface>
+     * Initialise le service EJB distant via JNDI
+     * Format JNDI pour EJB distant: ejb:<app-name>/<module-name>/<bean-name>!<interface>
      * Pour Stateful beans, pas de suffixe spécial dans le lookup
      */
     private void initializeRemoteService() {
         if (utilisateurServiceRemote == null) {
             try {
                 InitialContext ctx = new InitialContext();
-                // Chemin JNDI local: java:global/comptecourant + bean UtilisateurServiceBean
-                // Pour Stateful, on crée une session via ejb:
-                String jndiPath = "java:global/comptecourant/UtilisateurServiceBean!com.example.comptecourant.ejb.UtilisateurServiceRemote";
-                LOGGER.info("Tentative lookup JNDI local: " + jndiPath);
-                utilisateurServiceRemote = ctx.lookup(jndiPath);
-                LOGGER.info("UtilisateurServiceRemote initialisé avec succès");
+                // Chemin JNDI pour EJB déployé dans un JAR séparé
+                String jndiPath = "java:jboss/exported/comptecourant/UtilisateurServiceBean!com.example.comptecourant.ejb.UtilisateurServiceRemote";
+                LOGGER.info("Tentative lookup JNDI distant: " + jndiPath);
+                utilisateurServiceRemote = (UtilisateurServiceRemote) ctx.lookup(jndiPath);
+                LOGGER.info("UtilisateurServiceRemote distant initialisé avec succès");
             } catch (NamingException e) {
                 LOGGER.severe("Erreur lors du lookup du service EJB distant: " + e.getMessage());
                 throw new RuntimeException("Impossible de localiser le service EJB distant", e);
@@ -54,30 +55,16 @@ public class AuthenticationServiceImpl implements Serializable {
             initializeRemoteService();
             LOGGER.info("Tentative d'authentification pour: " + nomUtilisateur);
             
-            // Utiliser la réflexion pour appeler login(String, String)
-            boolean result = (boolean) utilisateurServiceRemote.getClass()
-                .getMethod("login", String.class, String.class)
-                .invoke(utilisateurServiceRemote, nomUtilisateur, motDePasse);
+            boolean result = utilisateurServiceRemote.login(nomUtilisateur, motDePasse);
             
             if (result) {
                 // Récupérer les informations complètes de l'utilisateur connecté
-                // Utiliser la réflexion pour appeler getUtilisateurConnecte()
-                Object utilisateur = utilisateurServiceRemote.getClass()
-                    .getMethod("getUtilisateurConnecte")
-                    .invoke(utilisateurServiceRemote);
+                Utilisateur utilisateur = utilisateurServiceRemote.getUtilisateurConnecte();
                 
                 if (utilisateur != null) {
-                    Integer idUtilisateur = null;
-                    String nomUtilisateurConnecte = null;
-                    Integer roleUtilisateur = null;
-                    
-                    Object idObj = utilisateur.getClass().getMethod("getIdUtilisateur").invoke(utilisateur);
-                    Object nomObj = utilisateur.getClass().getMethod("getNomUtilisateur").invoke(utilisateur);
-                    Object roleObj = utilisateur.getClass().getMethod("getRoleUtilisateur").invoke(utilisateur);
-                    
-                    if (idObj != null) idUtilisateur = ((Number) idObj).intValue();
-                    if (nomObj != null) nomUtilisateurConnecte = nomObj.toString();
-                    if (roleObj != null && roleObj instanceof Number) roleUtilisateur = ((Number) roleObj).intValue();
+                    Integer idUtilisateur = utilisateur.getIdUtilisateur();
+                    String nomUtilisateurConnecte = utilisateur.getNomUtilisateur();
+                    Integer roleUtilisateur = utilisateur.getRoleUtilisateur();
                     
                     // Créer la session utilisateur complète
                     sessionUtilisateur = new SessionUtilisateur(
@@ -116,10 +103,7 @@ public class AuthenticationServiceImpl implements Serializable {
         try {
             if (sessionUtilisateur != null) {
                 initializeRemoteService();
-                // Utiliser la réflexion pour appeler logout()
-                utilisateurServiceRemote.getClass()
-                    .getMethod("logout")
-                    .invoke(utilisateurServiceRemote);
+                utilisateurServiceRemote.logout();
                 
                 LOGGER.info("Utilisateur " + sessionUtilisateur.getNomUtilisateur() + " déconnecté");
             }
@@ -155,10 +139,7 @@ public class AuthenticationServiceImpl implements Serializable {
             }
             
             initializeRemoteService();
-            // Utiliser la réflexion pour appeler estConnecte()
-            return (boolean) utilisateurServiceRemote.getClass()
-                .getMethod("estConnecte")
-                .invoke(utilisateurServiceRemote);
+            return utilisateurServiceRemote.estConnecte();
         } catch (Exception e) {
             LOGGER.warning("Erreur lors de la vérification de connexion: " + e.getMessage());
             return false;
@@ -202,10 +183,7 @@ public class AuthenticationServiceImpl implements Serializable {
                 return false;
             }
             
-            // Utiliser la réflexion pour appeler aAutorisationPour(String, String)
-            return (boolean) utilisateurServiceRemote.getClass()
-                .getMethod("aAutorisationPour", String.class, String.class)
-                .invoke(utilisateurServiceRemote, nomTable, nomAction);
+            return utilisateurServiceRemote.aAutorisationPour(nomTable, nomAction);
         } catch (Exception e) {
             LOGGER.warning("Erreur lors de la vérification d'autorisation: " + e.getMessage());
             return false;

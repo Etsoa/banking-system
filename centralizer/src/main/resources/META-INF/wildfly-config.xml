@@ -12,6 +12,11 @@
             <host>host.docker.internal</host>
             <port>8081</port>
         </connection>
+        <connection name="comptecourant">
+            <protocol>remote</protocol>
+            <host>localhost</host>
+            <port>8080</port>
+        </connection>
     </connections>
     
     <!-- Configuration SSL/TLS (désactivée) -->

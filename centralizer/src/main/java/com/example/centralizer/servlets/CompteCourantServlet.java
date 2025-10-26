@@ -5,6 +5,10 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.logging.Logger;
 
+import com.example.centralizer.ejb.CompteCourantServiceImpl;
+import com.example.centralizer.ejb.EchangeServiceImpl;
+import jakarta.ejb.EJB;
+
 import com.example.centralizer.dto.comptecourant.CompteCourant;
 import com.example.centralizer.dto.comptecourant.SessionUtilisateur;
 
@@ -13,9 +17,6 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 
 /**
  * Servlet pour gérer les comptes courants - utilise SessionManager et session HTTP
@@ -25,15 +26,11 @@ public class CompteCourantServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(CompteCourantServlet.class.getName());
     
-    private static final String COMPTE_COURANT_SERVICE_JNDI = "java:module/CompteCourantServiceImpl";
+    @EJB
+    private CompteCourantServiceImpl compteCourantService;
     
-    /**
-     * Obtenir une nouvelle instance de CompteCourantService via JNDI lookup
-     */
-    private com.example.centralizer.ejb.CompteCourantServiceImpl getCompteCourantService() throws NamingException {
-        InitialContext ctx = new InitialContext();
-        return (com.example.centralizer.ejb.CompteCourantServiceImpl) ctx.lookup(COMPTE_COURANT_SERVICE_JNDI);
-    }
+    @EJB
+    private EchangeServiceImpl echangeService;
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -89,8 +86,6 @@ public class CompteCourantServlet extends HttpServlet {
 
     private void listComptes(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
-            com.example.centralizer.ejb.CompteCourantServiceImpl compteCourantService = getCompteCourantService();
-            
             List<CompteCourant> comptes = compteCourantService.getAllComptes();
             req.setAttribute("comptes", comptes);
             
@@ -112,8 +107,6 @@ public class CompteCourantServlet extends HttpServlet {
 
     private void showCompteDetails(HttpServletRequest req, HttpServletResponse resp, Integer idCompte) throws ServletException, IOException {
         try {
-            com.example.centralizer.ejb.CompteCourantServiceImpl compteCourantService = getCompteCourantService();
-            
             CompteCourant compte = compteCourantService.getCompteById(idCompte);
             if (compte != null) {
                 req.setAttribute("compte", compte);
@@ -123,22 +116,13 @@ public class CompteCourantServlet extends HttpServlet {
                     compteCourantService.getTransactionsByCompte(idCompte);
                 req.setAttribute("transactions", transactions);
                 
-                // Récupérer le service Echange de la session
-                HttpSession httpSession = req.getSession(false);
-                if (httpSession != null) {
-                    com.example.centralizer.ejb.EchangeServiceImpl echangeService = 
-                        (com.example.centralizer.ejb.EchangeServiceImpl) httpSession.getAttribute("echangeService");
-                    
-                    if (echangeService != null) {
-                        try {
-                            // Récupérer les devises actives pour aujourd'hui
-                            List<com.example.centralizer.dto.echange.Echange> devises = echangeService.getEchangesActifs(java.time.LocalDate.now());
-                            req.setAttribute("devises", devises);
-                        } catch (Exception e) {
-                            LOGGER.warning("Erreur lors de la récupération des devises: " + e.getMessage());
-                            // Continuer sans les devises - seul MGA sera disponible
-                        }
-                    }
+                // Récupérer les devises actives pour aujourd'hui
+                try {
+                    List<com.example.centralizer.dto.echange.Echange> devises = echangeService.getEchangesActifs(java.time.LocalDate.now());
+                    req.setAttribute("devises", devises);
+                } catch (Exception e) {
+                    LOGGER.warning("Erreur lors de la récupération des devises: " + e.getMessage());
+                    // Continuer sans les devises - seul MGA sera disponible
                 }
                 
                 // Ajouter les infos de session
@@ -157,8 +141,6 @@ public class CompteCourantServlet extends HttpServlet {
 
     private void createCompte(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         try {
-            com.example.centralizer.ejb.CompteCourantServiceImpl compteCourantService = getCompteCourantService();
-            
             String soldeStr = req.getParameter("solde");
             BigDecimal solde = new BigDecimal(soldeStr != null ? soldeStr : "0");
             
@@ -178,8 +160,6 @@ public class CompteCourantServlet extends HttpServlet {
 
     private void effectuerDepot(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         try {
-            com.example.centralizer.ejb.CompteCourantServiceImpl compteCourantService = getCompteCourantService();
-            
             Integer idCompte = Integer.parseInt(req.getParameter("idCompte"));
             BigDecimal montant = new BigDecimal(req.getParameter("montant"));
             
@@ -195,8 +175,6 @@ public class CompteCourantServlet extends HttpServlet {
 
     private void effectuerRetrait(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         try {
-            com.example.centralizer.ejb.CompteCourantServiceImpl compteCourantService = getCompteCourantService();
-            
             Integer idCompte = Integer.parseInt(req.getParameter("idCompte"));
             BigDecimal montant = new BigDecimal(req.getParameter("montant"));
             

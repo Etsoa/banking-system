@@ -16,9 +16,8 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.ejb.EJB;
 import jakarta.servlet.http.HttpSession;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 
 /**
  * Servlet pour la gestion des transactions
@@ -28,15 +27,11 @@ public class TransactionServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(TransactionServlet.class.getName());
     
-    private static final String COMPTE_COURANT_SERVICE_JNDI = "java:module/CompteCourantServiceImpl";
+    @EJB
+    private CompteCourantServiceImpl compteCourantService;
     
-    /**
-     * Obtenir une nouvelle instance de CompteCourantService via JNDI lookup
-     */
-    private CompteCourantServiceImpl getCompteCourantService() throws NamingException {
-        InitialContext ctx = new InitialContext();
-        return (CompteCourantServiceImpl) ctx.lookup(COMPTE_COURANT_SERVICE_JNDI);
-    }
+    @EJB
+    private EchangeServiceImpl echangeService;
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -51,14 +46,12 @@ public class TransactionServlet extends HttpServlet {
         String pathInfo = req.getPathInfo();
         
         try {
-            CompteCourantServiceImpl service = getCompteCourantService();
-            
             if (pathInfo == null) {
                 // /transactions
-                afficherToutesTransactions(req, resp, service);
+                afficherToutesTransactions(req, resp);
             } else if (pathInfo.equals("/en-attente")) {
                 // /transactions/en-attente
-                afficherTransactionsEnAttente(req, resp, service);
+                afficherTransactionsEnAttente(req, resp);
             } else if (pathInfo.equals("/depot") || pathInfo.equals("/retrait")) {
                 // /transactions/depot ou /transactions/retrait
                 afficherFormulaireTransaction(req, resp, pathInfo.substring(1));
@@ -66,7 +59,7 @@ public class TransactionServlet extends HttpServlet {
                 // /transactions/compte/{id}
                 String idStr = pathInfo.substring("/compte/".length());
                 Integer idCompte = Integer.parseInt(idStr);
-                afficherTransactionsCompte(req, resp, service, idCompte);
+                afficherTransactionsCompte(req, resp, idCompte);
             }
         } catch (Exception e) {
             LOGGER.severe("Erreur lors du traitement de la requête: " + e.getMessage());
@@ -95,15 +88,6 @@ public class TransactionServlet extends HttpServlet {
             return;
         }
         
-        CompteCourantServiceImpl service;
-        try {
-            service = getCompteCourantService();
-        } catch (NamingException e) {
-            LOGGER.severe("Erreur lors de la récupération du service: " + e.getMessage());
-            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Service non disponible");
-            return;
-        }
-        
         String action = req.getParameter("action");
         
         LOGGER.info("Action reçue: " + action);
@@ -118,12 +102,12 @@ public class TransactionServlet extends HttpServlet {
             switch (action) {
                 case "valider":
                 case "refuser":
-                    traiterValidationRefus(req, resp, service, session, action);
+                    traiterValidationRefus(req, resp, session, action);
                     break;
                     
                 case "depot":
                 case "retrait":
-                    traiterDepotRetrait(req, resp, service, session, action);
+                    traiterDepotRetrait(req, resp, session, action);
                     break;
                     
                 default:
@@ -139,8 +123,7 @@ public class TransactionServlet extends HttpServlet {
     }
     
     private void traiterValidationRefus(HttpServletRequest req, HttpServletResponse resp,
-                                       CompteCourantServiceImpl service, HttpSession session,
-                                       String action) throws IOException {
+                                       HttpSession session, String action) throws IOException {
         String idTransactionStr = req.getParameter("idTransaction");
         
         LOGGER.info("ID Transaction: " + idTransactionStr);
@@ -160,13 +143,13 @@ public class TransactionServlet extends HttpServlet {
             
             if ("valider".equals(action)) {
                 LOGGER.info("=== DEBUT validerTransaction pour ID: " + idTransaction + " ===");
-                success = service.validerTransaction(idTransaction);
+                success = compteCourantService.validerTransaction(idTransaction);
                 LOGGER.info("Résultat validerTransaction: " + success);
                 message = success ? "Transaction #" + idTransaction + " validée avec succès" 
                                  : "Erreur lors de la validation de la transaction";
             } else {
                 LOGGER.info("=== DEBUT refuserTransaction pour ID: " + idTransaction + " ===");
-                success = service.refuserTransaction(idTransaction);
+                success = compteCourantService.refuserTransaction(idTransaction);
                 LOGGER.info("Résultat refuserTransaction: " + success);
                 message = success ? "Transaction #" + idTransaction + " refusée avec succès" 
                                  : "Erreur lors du refus de la transaction";
@@ -186,8 +169,7 @@ public class TransactionServlet extends HttpServlet {
     }
     
     private void traiterDepotRetrait(HttpServletRequest req, HttpServletResponse resp,
-                                     CompteCourantServiceImpl service, HttpSession session,
-                                     String action) throws IOException {
+                                     HttpSession session, String action) throws IOException {
         String idCompteStr = req.getParameter("idCompte");
         String montantStr = req.getParameter("montant");
         String devise = req.getParameter("devise");
@@ -226,17 +208,17 @@ public class TransactionServlet extends HttpServlet {
             String message = "";
             
             if ("depot".equals(action)) {
-                success = service.creerDepot(idCompte, montantAriary);
+                success = compteCourantService.creerDepot(idCompte, montantAriary);
                 message = success ? "Dépôt de " + montantDevise + " " + devise + " (" + montantAriary + " MGA) effectué avec succès à la date du " + dateTransaction 
                                  : "Erreur lors du dépôt";
             } else {
-                success = service.creerRetrait(idCompte, montantAriary);
+                success = compteCourantService.creerRetrait(idCompte, montantAriary);
                 message = success ? "Retrait de " + montantDevise + " " + devise + " (" + montantAriary + " MGA) effectué avec succès à la date du " + dateTransaction 
                                  : "Erreur lors du retrait";
             }
             
             session.setAttribute(success ? "successMessage" : "errorMessage", message);
-            resp.sendRedirect(req.getContextPath() + "/comptes-courant/" + idCompte);
+            resp.sendRedirect(req.getContextPath() + "/comptes/" + idCompte);
             
         } catch (NumberFormatException e) {
             LOGGER.severe("Paramètre invalide: " + e.getMessage());
@@ -253,10 +235,9 @@ public class TransactionServlet extends HttpServlet {
         }
     }
 
-    private void afficherToutesTransactions(HttpServletRequest req, HttpServletResponse resp, 
-                                           CompteCourantServiceImpl service) throws ServletException, IOException {
+    private void afficherToutesTransactions(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         LOGGER.info("=== DEBUT afficherToutesTransactions ===");
-        List<Transaction> transactions = service.getAllTransactions();
+        List<Transaction> transactions = compteCourantService.getAllTransactions();
         LOGGER.info("Nombre de transactions récupérées: " + (transactions != null ? transactions.size() : "null"));
         req.setAttribute("transactions", transactions);
         req.setAttribute("titre", "Toutes les transactions");
@@ -271,9 +252,8 @@ public class TransactionServlet extends HttpServlet {
         LOGGER.info("Après forward vers /transactions/list.jsp");
     }
 
-    private void afficherTransactionsEnAttente(HttpServletRequest req, HttpServletResponse resp,
-                                              CompteCourantServiceImpl service) throws ServletException, IOException {
-        List<Transaction> transactions = service.getTransactionsEnAttente();
+    private void afficherTransactionsEnAttente(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        List<Transaction> transactions = compteCourantService.getTransactionsEnAttente();
         LOGGER.info("Nombre de transactions en attente: " + (transactions != null ? transactions.size() : "null"));
         req.setAttribute("transactions", transactions);
         req.setAttribute("titre", "Transactions en attente de validation");
@@ -287,8 +267,8 @@ public class TransactionServlet extends HttpServlet {
     }
 
     private void afficherTransactionsCompte(HttpServletRequest req, HttpServletResponse resp,
-                                           CompteCourantServiceImpl service, Integer idCompte) throws ServletException, IOException {
-        List<Transaction> transactions = service.getTransactionsByCompte(idCompte);
+                                           Integer idCompte) throws ServletException, IOException {
+        List<Transaction> transactions = compteCourantService.getTransactionsByCompte(idCompte);
         req.setAttribute("transactions", transactions);
         req.setAttribute("titre", "Transactions du compte #" + idCompte);
         req.setAttribute("type", "compte");
@@ -304,29 +284,20 @@ public class TransactionServlet extends HttpServlet {
     private void afficherFormulaireTransaction(HttpServletRequest req, HttpServletResponse resp,
                                               String type) throws ServletException, IOException {
         // Récupérer la liste des devises disponibles
-        HttpSession httpSession = req.getSession(false);
-        if (httpSession != null) {
-            EchangeServiceImpl echangeService = (EchangeServiceImpl) httpSession.getAttribute("echangeService");
-            if (echangeService != null) {
-                try {
-                    List<Echange> devises = echangeService.getEchangesActifs(java.time.LocalDate.now());
-                    req.setAttribute("devises", devises);
-                } catch (Exception e) {
-                    LOGGER.warning("Erreur lors de la récupération des devises: " + e.getMessage());
-                    // Continuer sans les devises
-                }
-            } else {
-                LOGGER.warning("EchangeService non disponible dans la session");
-            }
+        try {
+            List<Echange> devises = echangeService.getEchangesActifs(java.time.LocalDate.now());
+            req.setAttribute("devises", devises);
+        } catch (Exception e) {
+            LOGGER.warning("Erreur lors de la récupération des devises: " + e.getMessage());
+            // Continuer sans les devises
         }
         
         req.setAttribute("type", type);
         
         // Récupérer la liste des comptes pour le dropdown
         try {
-            CompteCourantServiceImpl compteCourantService = getCompteCourantService();
             req.setAttribute("comptes", compteCourantService.getAllComptes());
-        } catch (NamingException e) {
+        } catch (Exception e) {
             LOGGER.warning("Erreur lors de la récupération de la liste des comptes: " + e.getMessage());
         }
         

@@ -4,7 +4,19 @@
              xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence 
              https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd"
              version="3.0">
-    
+    <persistence-unit name="CompteCourantPU" transaction-type="JTA">
+        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+        <jta-data-source>java:/CompteCourant</jta-data-source>
+        <class>com.example.comptecourant.models.CompteCourant</class>
+        <class>com.example.comptecourant.models.Transaction</class>
+        <class>com.example.comptecourant.models.Utilisateur</class>
+        <class>com.example.comptecourant.models.Direction</class>
+        <class>com.example.comptecourant.models.ActionRole</class>
+        <properties>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
+            <property name="hibernate.hbm2ddl.auto" value="update"/>
+            <property name="hibernate.show_sql" value="true"/>
+            <property name="hibernate.format_sql" value="true"/>
     <persistence-unit name="centralizerPU" transaction-type="JTA">
         <jta-data-source>java:/Centralizer</jta-data-source>
         
@@ -15,4 +27,3 @@
             <property name="hibernate.format_sql" value="false"/>
         </properties>
     </persistence-unit>
-</persistence>

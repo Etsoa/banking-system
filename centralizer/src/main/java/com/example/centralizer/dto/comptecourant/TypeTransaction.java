@@ -4,8 +4,8 @@ package com.example.centralizer.dto.comptecourant;
  * Enum TypeTransaction - Serializable
  */
 public enum TypeTransaction {
-    DEPOT("Depot"),
-    RETRAIT("Retrait");
+    depot("Depot"),
+    retrait("Retrait");
 
     private final String libelle;
 

@@ -4,9 +4,9 @@ package com.example.centralizer.dto.comptecourant;
  * Enum StatutTransaction - Serializable
  */
 public enum StatutTransaction {
-    EN_ATTENTE("En attente"),
-    CONFIRMEE("Confirmee"),
-    REFUSEE("Refusee");
+    en_attente("En attente"),
+    confirmee("Confirmee"),
+    refusee("Refusee");
 
     private final String libelle;
 

@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import com.example.comptecourant.exceptions.CompteCourantException;
 import com.example.comptecourant.models.CompteCourant;
@@ -29,12 +30,59 @@ public class TransactionServiceBean implements TransactionServiceRemote {
     private EntityManager em;
 
     /**
+     * Convertit une entité Transaction en DTO
+     */
+    private com.example.centralizer.dto.comptecourant.Transaction convertToDTO(Transaction entity) {
+        if (entity == null) {
+            return null;
+        }
+        com.example.centralizer.dto.comptecourant.Transaction dto = new com.example.centralizer.dto.comptecourant.Transaction();
+        dto.setIdTransaction(entity.getIdTransaction());
+        dto.setMontant(entity.getMontant());
+        dto.setDateTransaction(entity.getDateTransaction());
+        dto.setStatutTransaction(com.example.centralizer.dto.comptecourant.StatutTransaction.valueOf(entity.getStatutTransaction().name()));
+        dto.setTypeTransaction(com.example.centralizer.dto.comptecourant.TypeTransaction.valueOf(entity.getTypeTransaction().name()));
+        if (entity.getCompte() != null) {
+            dto.setIdCompte(entity.getCompte().getIdCompte());
+        }
+        if (entity.getCompteContrepartie() != null) {
+            dto.setIdCompteContrepartie(entity.getCompteContrepartie().getIdCompte());
+        }
+        return dto;
+    }
+
+    /**
+     * Convertit un DTO Transaction en entité
+     */
+    private Transaction convertToEntity(com.example.centralizer.dto.comptecourant.Transaction dto) {
+        if (dto == null) {
+            return null;
+        }
+        Transaction entity = new Transaction();
+        entity.setIdTransaction(dto.getIdTransaction());
+        entity.setMontant(dto.getMontant());
+        entity.setDateTransaction(dto.getDateTransaction());
+        entity.setStatutTransaction(StatutTransaction.valueOf(dto.getStatutTransaction().name()));
+        entity.setTypeTransaction(TypeTransaction.valueOf(dto.getTypeTransaction().name()));
+        if (dto.getIdCompte() != null) {
+            CompteCourant compte = em.find(CompteCourant.class, dto.getIdCompte());
+            entity.setCompte(compte);
+        }
+        if (dto.getIdCompteContrepartie() != null) {
+            CompteCourant compteContrepartie = em.find(CompteCourant.class, dto.getIdCompteContrepartie());
+            entity.setCompteContrepartie(compteContrepartie);
+        }
+        return entity;
+    }
+
+    /**
      * Récupère toutes les transactions
      */
     @Override
-    public List<Transaction> getAllTransactions() throws CompteCourantException {
+    public List<com.example.centralizer.dto.comptecourant.Transaction> getAllTransactions() throws CompteCourantException {
         try {
-            return em.createQuery("SELECT t FROM Transaction t", Transaction.class).getResultList();
+            List<Transaction> entities = em.createQuery("SELECT t FROM Transaction t", Transaction.class).getResultList();
+            return entities.stream().map(this::convertToDTO).collect(Collectors.toList());
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Erreur lors de la récupération de toutes les transactions", e);
             throw new CompteCourantException("Erreur lors de la récupération des transactions: " + e.getMessage(), e);
@@ -45,7 +93,7 @@ public class TransactionServiceBean implements TransactionServiceRemote {
      * Récupère les transactions d'un compte
      */
     @Override
-    public List<Transaction> getTransactionsByCompte(Integer compteId) throws CompteCourantException {
+    public List<com.example.centralizer.dto.comptecourant.Transaction> getTransactionsByCompte(Integer compteId) throws CompteCourantException {
         if (compteId == null || compteId <= 0) {
             throw new CompteCourantException("L'ID du compte est obligatoire");
         }
@@ -57,10 +105,12 @@ public class TransactionServiceBean implements TransactionServiceRemote {
                 throw new CompteCourantException("Compte introuvable avec ID: " + compteId);
             }
 
-            return em.createQuery(
+            List<Transaction> entities = em.createQuery(
                 "SELECT t FROM Transaction t WHERE t.compte.idCompte = :compteId ORDER BY t.dateTransaction DESC",
                 Transaction.class
             ).setParameter("compteId", compteId).getResultList();
+            
+            return entities.stream().map(this::convertToDTO).collect(Collectors.toList());
         } catch (CompteCourantException e) {
             throw e;
         } catch (Exception e) {
@@ -73,16 +123,18 @@ public class TransactionServiceBean implements TransactionServiceRemote {
      * Récupère les transactions par statut
      */
     @Override
-    public List<Transaction> getTransactionsByStatut(StatutTransaction statut) throws CompteCourantException {
+    public List<com.example.centralizer.dto.comptecourant.Transaction> getTransactionsByStatut(com.example.centralizer.dto.comptecourant.StatutTransaction statut) throws CompteCourantException {
         if (statut == null) {
             throw new CompteCourantException("Le statut de transaction est obligatoire");
         }
 
         try {
-            return em.createQuery(
+            List<Transaction> entities = em.createQuery(
                 "SELECT t FROM Transaction t WHERE t.statutTransaction = :statut ORDER BY t.dateTransaction DESC",
                 Transaction.class
             ).setParameter("statut", statut).getResultList();
+            
+            return entities.stream().map(this::convertToDTO).collect(Collectors.toList());
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Erreur lors de la récupération des transactions par statut", e);
             throw new CompteCourantException("Erreur lors de la récupération des transactions: " + e.getMessage(), e);
@@ -93,34 +145,35 @@ public class TransactionServiceBean implements TransactionServiceRemote {
      * ÉTAPE 1: Crée une demande de transaction (en attente de validation)
      */
     @Override
-    public Transaction demanderTransaction(Transaction transaction) throws CompteCourantException {
+    public com.example.centralizer.dto.comptecourant.Transaction demanderTransaction(com.example.centralizer.dto.comptecourant.Transaction transaction) throws CompteCourantException {
         if (transaction == null) {
             throw new CompteCourantException("Les données de la transaction sont obligatoires");
         }
 
-        validateTransactionData(transaction);
+        Transaction entity = convertToEntity(transaction);
+        validateTransactionData(entity);
 
         try {
             // Vérifier que le compte existe
-            CompteCourant compte = em.find(CompteCourant.class, transaction.getIdCompte());
+            CompteCourant compte = em.find(CompteCourant.class, entity.getIdCompte());
             if (compte == null) {
-                throw new CompteCourantException("Compte introuvable avec ID: " + transaction.getIdCompte());
+                throw new CompteCourantException("Compte introuvable avec ID: " + entity.getIdCompte());
             }
 
             // Définir la date si elle n'est pas spécifiée
-            if (transaction.getDateTransaction() == null) {
-                transaction.setDateTransaction(LocalDate.now());
+            if (entity.getDateTransaction() == null) {
+                entity.setDateTransaction(LocalDate.now());
             }
 
             // Toute nouvelle transaction commence en "en_attente"
-            transaction.setStatutTransaction(StatutTransaction.en_attente);
+            entity.setStatutTransaction(StatutTransaction.en_attente);
 
-            em.persist(transaction);
+            em.persist(entity);
 
             LOGGER.log(Level.INFO, "Demande de transaction créée: ID={0}, Compte={1}, Type={2}, Montant={3}",
-                new Object[]{transaction.getIdTransaction(), transaction.getIdCompte(), transaction.getTypeTransaction(), transaction.getMontant()});
+                new Object[]{entity.getIdTransaction(), entity.getIdCompte(), entity.getTypeTransaction(), entity.getMontant()});
 
-            return transaction;
+            return convertToDTO(entity);
         } catch (CompteCourantException e) {
             throw e;
         } catch (Exception e) {
@@ -133,7 +186,7 @@ public class TransactionServiceBean implements TransactionServiceRemote {
      * ÉTAPE 2: Valide une transaction en attente (confirme ou refuse)
      */
     @Override
-    public Transaction validerTransaction(Integer idTransaction, boolean approuver) throws CompteCourantException {
+    public com.example.centralizer.dto.comptecourant.Transaction validerTransaction(Integer idTransaction, boolean approuver) throws CompteCourantException {
         if (idTransaction == null || idTransaction <= 0) {
             throw new CompteCourantException("L'ID de la transaction est obligatoire");
         }
@@ -189,7 +242,7 @@ public class TransactionServiceBean implements TransactionServiceRemote {
             LOGGER.log(Level.INFO, "Transaction {0}: ID={1}, Nouveau statut={2}",
                 new Object[]{action, idTransaction, nouveauStatut});
 
-            return transaction;
+            return convertToDTO(transaction);
         } catch (CompteCourantException e) {
             throw e;
         } catch (Exception e) {
@@ -202,12 +255,14 @@ public class TransactionServiceBean implements TransactionServiceRemote {
      * Récupère les transactions en attente de validation
      */
     @Override
-    public List<Transaction> getTransactionsEnAttente() throws CompteCourantException {
+    public List<com.example.centralizer.dto.comptecourant.Transaction> getTransactionsEnAttente() throws CompteCourantException {
         try {
-            return em.createQuery(
+            List<Transaction> entities = em.createQuery(
                 "SELECT t FROM Transaction t WHERE t.statutTransaction = :statut ORDER BY t.dateTransaction ASC",
                 Transaction.class
             ).setParameter("statut", StatutTransaction.en_attente).getResultList();
+            
+            return entities.stream().map(this::convertToDTO).collect(Collectors.toList());
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Erreur lors de la récupération des transactions en attente", e);
             throw new CompteCourantException("Erreur lors de la récupération des transactions en attente: " + e.getMessage(), e);

@@ -34,11 +34,39 @@
         <h1>Banking System - Transactions</h1>
     
     <%
+        // Afficher les messages de session
+        String successMessage = (String) session.getAttribute("successMessage");
+        String errorMessage = (String) session.getAttribute("errorMessage");
+        
+        if (successMessage != null) {
+            session.removeAttribute("successMessage");
+    %>
+        <div class="alert alert-success">
+            <%= successMessage %>
+        </div>
+    <%
+        }
+        
+        if (errorMessage != null) {
+            session.removeAttribute("errorMessage");
+    %>
+        <div class="alert alert-error">
+            <%= errorMessage %>
+        </div>
+    <%
+        }
+    %>
+    
+    <%
         List<Transaction> transactions = (List<Transaction>) request.getAttribute("transactions");
         String titre = (String) request.getAttribute("titre");
     %>
     
     <h2><%= titre != null ? titre : "Transactions" %></h2>
+    
+    <%
+        if (transactions != null && !transactions.isEmpty()) {
+    %>
     <table border="1" cellpadding="5" cellspacing="0">
         <tr>
             <th>ID</th>
@@ -86,11 +114,11 @@
             }
         %>
     </table>
-        <%
+    <%
         } else {
     %>
         <p><strong>Aucune transaction.</strong></p>
-        <%
+    <%
         }
     %>
     </div>

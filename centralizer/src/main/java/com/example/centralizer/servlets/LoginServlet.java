@@ -3,15 +3,13 @@ package com.example.centralizer.servlets;
 import java.io.IOException;
 import java.util.logging.Logger;
 
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-
 import com.example.centralizer.dto.comptecourant.LoginResponse;
 import com.example.centralizer.dto.comptecourant.SessionUtilisateur;
 import com.example.centralizer.ejb.AuthenticationServiceImpl;
 import com.example.centralizer.ejb.CompteCourantServiceImpl;
 import com.example.centralizer.ejb.EchangeServiceImpl;
 
+import jakarta.ejb.EJB;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -29,24 +27,15 @@ public class LoginServlet extends HttpServlet {
     private static final Logger LOGGER = Logger.getLogger(LoginServlet.class.getName());
     
     private static final String SESSION_UTILISATEUR_KEY = "sessionUtilisateur";
-    private static final String AUTH_SERVICE_JNDI = "java:module/AuthenticationServiceImpl";
-    private static final String COMPTE_COURANT_SERVICE_JNDI = "java:module/CompteCourantServiceImpl";
     
-    /**
-     * Obtenir une nouvelle instance d'AuthenticationService via JNDI lookup
-     */
-    private AuthenticationServiceImpl getAuthenticationService() throws NamingException {
-        InitialContext ctx = new InitialContext();
-        return (AuthenticationServiceImpl) ctx.lookup(AUTH_SERVICE_JNDI);
-    }
+    @EJB
+    private AuthenticationServiceImpl authenticationService;
     
-    /**
-     * Obtenir une nouvelle instance de CompteCourantService via JNDI lookup
-     */
-    private CompteCourantServiceImpl getCompteCourantService() throws NamingException {
-        InitialContext ctx = new InitialContext();
-        return (CompteCourantServiceImpl) ctx.lookup(COMPTE_COURANT_SERVICE_JNDI);
-    }
+    @EJB
+    private CompteCourantServiceImpl compteCourantService;
+    
+    @EJB
+    private EchangeServiceImpl echangeService;
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -72,12 +61,6 @@ public class LoginServlet extends HttpServlet {
         }
 
         try {
-            // Obtenir une nouvelle instance du service CompteCourant via JNDI
-            CompteCourantServiceImpl compteCourantService = getCompteCourantService();
-            
-            // Créer une instance du service Echange
-            EchangeServiceImpl echangeService = new EchangeServiceImpl();
-            
             // Authentifier l'utilisateur
             LoginResponse loginResponse = compteCourantService.login(username, password);
             
