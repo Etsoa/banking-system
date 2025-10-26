@@ -31,7 +31,8 @@ public class CompteCourantServiceImpl implements Serializable {
     private Object compteCourantServiceRemote;
     private Object transactionServiceRemote;    
     /**
-     * Initialise les services EJB distants via JNDI
+     * Initialise les services EJB locaux via JNDI
+     * Format JNDI pour EJB local dans WildFly: java:global/<module-name>/<bean-name>!<interface>
      */
     private void initializeRemoteServices() {
         if (compteCourantServiceRemote == null || transactionServiceRemote == null) {
@@ -39,16 +40,16 @@ public class CompteCourantServiceImpl implements Serializable {
                 InitialContext ctx = new InitialContext();
                 
                 if (compteCourantServiceRemote == null) {
-                    compteCourantServiceRemote = ctx.lookup(
-                        "ejb:eap/comptecourant/CompteCourantServiceBean!com.example.comptecourant.ejb.CompteCourantServiceRemote"
-                    );
+                    String jndiPath = "java:global/comptecourant/CompteCourantServiceBean!com.example.comptecourant.ejb.CompteCourantServiceRemote";
+                    LOGGER.info("Lookup CompteCourantServiceRemote: " + jndiPath);
+                    compteCourantServiceRemote = ctx.lookup(jndiPath);
                     LOGGER.info("CompteCourantServiceRemote initialisé avec succès");
                 }
                 
                 if (transactionServiceRemote == null) {
-                    transactionServiceRemote = ctx.lookup(
-                        "ejb:eap/comptecourant/TransactionServiceBean!com.example.comptecourant.ejb.TransactionServiceRemote"
-                    );
+                    String jndiPath = "java:global/comptecourant/TransactionServiceBean!com.example.comptecourant.ejb.TransactionServiceRemote";
+                    LOGGER.info("Lookup TransactionServiceRemote: " + jndiPath);
+                    transactionServiceRemote = ctx.lookup(jndiPath);
                     LOGGER.info("TransactionServiceRemote initialisé avec succès");
                 }
             } catch (NamingException e) {
@@ -120,13 +121,13 @@ public class CompteCourantServiceImpl implements Serializable {
         try {
             initializeRemoteServices();
             
-            @SuppressWarnings("unchecked")
-            List<Object> result = (List<Object>) compteCourantServiceRemote.getClass()
+            // Utiliser la réflexion pour appeler getAllComptes()
+            List<?> result = (List<?>) compteCourantServiceRemote.getClass()
                 .getMethod("getAllComptes")
                 .invoke(compteCourantServiceRemote);
             
             LOGGER.info("Comptes récupérés: " + (result != null ? result.size() : 0));
-            return convertToCompteCourantDTOList(result);
+            return convertToCompteCourantDTOList((List<Object>) result);
         } catch (Exception e) {
             LOGGER.severe("Erreur lors de la récupération des comptes: " + e.getMessage());
             return new ArrayList<>();
@@ -140,6 +141,7 @@ public class CompteCourantServiceImpl implements Serializable {
         try {
             initializeRemoteServices();
             
+            // Utiliser la réflexion pour appeler getCompteById(Integer)
             Object result = compteCourantServiceRemote.getClass()
                 .getMethod("getCompteById", Integer.class)
                 .invoke(compteCourantServiceRemote, idCompte);
@@ -167,7 +169,8 @@ public class CompteCourantServiceImpl implements Serializable {
             CompteCourant nouveau = new CompteCourant();
             nouveau.setSolde(soldeInitial);
             
-            // Appeler le service pour créer le compte
+            // On doit utiliser la réflexion car le service attend com.example.comptecourant.models.CompteCourant
+            // et non notre DTO com.example.centralizer.dto.comptecourant.CompteCourant
             Object result = compteCourantServiceRemote.getClass()
                 .getMethod("createCompte", Object.class)
                 .invoke(compteCourantServiceRemote, nouveau);
@@ -203,7 +206,7 @@ public class CompteCourantServiceImpl implements Serializable {
             transaction.setDateTransaction(LocalDate.now());
             transaction.setStatutTransaction(StatutTransaction.EN_ATTENTE);
             
-            // Appeler le service pour demander la transaction
+            // On doit utiliser la réflexion car le service attend com.example.comptecourant.models.Transaction
             Object result = transactionServiceRemote.getClass()
                 .getMethod("demanderTransaction", Object.class)
                 .invoke(transactionServiceRemote, transaction);
@@ -259,13 +262,13 @@ public class CompteCourantServiceImpl implements Serializable {
         try {
             initializeRemoteServices();
             
-            @SuppressWarnings("unchecked")
-            List<Object> result = (List<Object>) transactionServiceRemote.getClass()
+            // Utiliser la réflexion pour appeler getTransactionsByCompte(Integer)
+            List<?> result = (List<?>) transactionServiceRemote.getClass()
                 .getMethod("getTransactionsByCompte", Integer.class)
                 .invoke(transactionServiceRemote, idCompte);
             
             LOGGER.info("Transactions du compte " + idCompte + " récupérées: " + (result != null ? result.size() : 0));
-            return convertToTransactionDTOList(result);
+            return convertToTransactionDTOList((List<Object>) result);
         } catch (Exception e) {
             LOGGER.severe("Erreur lors de la récupération des transactions: " + e.getMessage());
             return new ArrayList<>();
@@ -280,13 +283,13 @@ public class CompteCourantServiceImpl implements Serializable {
             initializeRemoteServices();
             LOGGER.info("Tentative de récupération de toutes les transactions");
             
-            @SuppressWarnings("unchecked")
-            List<Object> result = (List<Object>) transactionServiceRemote.getClass()
+            // Utiliser la réflexion pour appeler getAllTransactions()
+            List<?> result = (List<?>) transactionServiceRemote.getClass()
                 .getMethod("getAllTransactions")
                 .invoke(transactionServiceRemote);
             
             LOGGER.info("Nombre de transactions reçues du serveur: " + (result != null ? result.size() : "null"));
-            return convertToTransactionDTOList(result);
+            return convertToTransactionDTOList((List<Object>) result);
         } catch (Exception e) {
             LOGGER.severe("Erreur lors de la récupération des transactions: " + e.getMessage());
             return new ArrayList<>();
@@ -301,6 +304,7 @@ public class CompteCourantServiceImpl implements Serializable {
             initializeRemoteServices();
             LOGGER.info("Validation de la transaction #" + idTransaction);
             
+            // Utiliser la réflexion pour appeler validerTransaction(Integer, boolean)
             Object result = transactionServiceRemote.getClass()
                 .getMethod("validerTransaction", Integer.class, boolean.class)
                 .invoke(transactionServiceRemote, idTransaction, true);
@@ -322,6 +326,7 @@ public class CompteCourantServiceImpl implements Serializable {
             initializeRemoteServices();
             LOGGER.info("Refus de la transaction #" + idTransaction);
             
+            // Utiliser la réflexion pour appeler validerTransaction(Integer, boolean)
             Object result = transactionServiceRemote.getClass()
                 .getMethod("validerTransaction", Integer.class, boolean.class)
                 .invoke(transactionServiceRemote, idTransaction, false);
@@ -342,13 +347,13 @@ public class CompteCourantServiceImpl implements Serializable {
         try {
             initializeRemoteServices();
             
-            @SuppressWarnings("unchecked")
-            List<Object> result = (List<Object>) transactionServiceRemote.getClass()
+            // Utiliser la réflexion pour appeler getTransactionsEnAttente()
+            List<?> result = (List<?>) transactionServiceRemote.getClass()
                 .getMethod("getTransactionsEnAttente")
                 .invoke(transactionServiceRemote);
             
             LOGGER.info("Transactions en attente récupérées: " + (result != null ? result.size() : 0));
-            return convertToTransactionDTOList(result);
+            return convertToTransactionDTOList((List<Object>) result);
         } catch (Exception e) {
             LOGGER.severe("Erreur lors de la récupération des transactions en attente: " + e.getMessage());
             return new ArrayList<>();

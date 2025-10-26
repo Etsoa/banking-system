@@ -23,17 +23,19 @@
             <version>10.0.0</version>
             <scope>provided</scope>
         </dependency>
-        <!-- Hibernate ORM -->
+        <!-- Hibernate ORM - Provided by WildFly -->
         <dependency>
             <groupId>org.hibernate.orm</groupId>
             <artifactId>hibernate-core</artifactId>
             <version>6.2.13.Final</version>
+            <scope>provided</scope>
         </dependency>
-        <!-- PostgreSQL JDBC Driver -->
+        <!-- PostgreSQL JDBC Driver - Provided by WildFly -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>42.7.1</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
@@ -45,6 +47,15 @@
                 <version>3.11.0</version>
                 <configuration>
                     <release>17</release>
+                </configuration>
+            </plugin>
+            <!-- EJB Plugin for proper EJB packaging -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-ejb-plugin</artifactId>
+                <version>3.2.1</version>
+                <configuration>
+                    <ejbVersion>3.2</ejbVersion>
                 </configuration>
             </plugin>
         </plugins>

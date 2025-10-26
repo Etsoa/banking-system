@@ -1,17 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<persistence xmlns="http://jakarta.ee/xml/ns/persistence" version="3.0">
+<persistence xmlns="http://xmlns.jcp.org/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_2.xsd"
+             version="2.2">
     <persistence-unit name="CompteCourantPU" transaction-type="JTA">
-        <provider>org.hibernate.jpa.HibernateJpaProvider</provider>
-        <jta-data-source>java:jboss/datasources/PostgresDS</jta-data-source>
+        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+        <jta-data-source>java:/CompteCourant</jta-data-source>
         <class>com.example.comptecourant.models.CompteCourant</class>
         <class>com.example.comptecourant.models.Transaction</class>
         <class>com.example.comptecourant.models.Utilisateur</class>
         <class>com.example.comptecourant.models.Direction</class>
         <class>com.example.comptecourant.models.ActionRole</class>
         <properties>
-            <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQL10Dialect"/>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
             <property name="hibernate.hbm2ddl.auto" value="update"/>
             <property name="hibernate.show_sql" value="true"/>
+            <property name="hibernate.format_sql" value="true"/>
         </properties>
     </persistence-unit>
 </persistence>

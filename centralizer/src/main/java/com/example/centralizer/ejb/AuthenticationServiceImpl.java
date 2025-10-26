@@ -24,15 +24,19 @@ public class AuthenticationServiceImpl implements Serializable {
     private boolean authenticated = false;
     
     /**
-     * Initialise le service EJB distant via JNDI
+     * Initialise le service EJB local via JNDI
+     * Format JNDI pour EJB local dans WildFly: java:global/<module-name>/<bean-name>!<interface>
+     * Pour Stateful beans, pas de suffixe spécial dans le lookup
      */
     private void initializeRemoteService() {
         if (utilisateurServiceRemote == null) {
             try {
                 InitialContext ctx = new InitialContext();
-                utilisateurServiceRemote = ctx.lookup(
-                    "ejb:eap/comptecourant/UtilisateurServiceBean!com.example.comptecourant.ejb.UtilisateurServiceRemote"
-                );
+                // Chemin JNDI local: java:global/comptecourant + bean UtilisateurServiceBean
+                // Pour Stateful, on crée une session via ejb:
+                String jndiPath = "java:global/comptecourant/UtilisateurServiceBean!com.example.comptecourant.ejb.UtilisateurServiceRemote";
+                LOGGER.info("Tentative lookup JNDI local: " + jndiPath);
+                utilisateurServiceRemote = ctx.lookup(jndiPath);
                 LOGGER.info("UtilisateurServiceRemote initialisé avec succès");
             } catch (NamingException e) {
                 LOGGER.severe("Erreur lors du lookup du service EJB distant: " + e.getMessage());
@@ -50,12 +54,14 @@ public class AuthenticationServiceImpl implements Serializable {
             initializeRemoteService();
             LOGGER.info("Tentative d'authentification pour: " + nomUtilisateur);
             
-            Boolean result = (Boolean) utilisateurServiceRemote.getClass()
+            // Utiliser la réflexion pour appeler login(String, String)
+            boolean result = (boolean) utilisateurServiceRemote.getClass()
                 .getMethod("login", String.class, String.class)
                 .invoke(utilisateurServiceRemote, nomUtilisateur, motDePasse);
             
-            if (result != null && result) {
+            if (result) {
                 // Récupérer les informations complètes de l'utilisateur connecté
+                // Utiliser la réflexion pour appeler getUtilisateurConnecte()
                 Object utilisateur = utilisateurServiceRemote.getClass()
                     .getMethod("getUtilisateurConnecte")
                     .invoke(utilisateurServiceRemote);
@@ -110,6 +116,7 @@ public class AuthenticationServiceImpl implements Serializable {
         try {
             if (sessionUtilisateur != null) {
                 initializeRemoteService();
+                // Utiliser la réflexion pour appeler logout()
                 utilisateurServiceRemote.getClass()
                     .getMethod("logout")
                     .invoke(utilisateurServiceRemote);
@@ -148,11 +155,10 @@ public class AuthenticationServiceImpl implements Serializable {
             }
             
             initializeRemoteService();
-            Boolean result = (Boolean) utilisateurServiceRemote.getClass()
+            // Utiliser la réflexion pour appeler estConnecte()
+            return (boolean) utilisateurServiceRemote.getClass()
                 .getMethod("estConnecte")
                 .invoke(utilisateurServiceRemote);
-            
-            return result != null && result;
         } catch (Exception e) {
             LOGGER.warning("Erreur lors de la vérification de connexion: " + e.getMessage());
             return false;
@@ -196,11 +202,10 @@ public class AuthenticationServiceImpl implements Serializable {
                 return false;
             }
             
-            Boolean result = (Boolean) utilisateurServiceRemote.getClass()
+            // Utiliser la réflexion pour appeler aAutorisationPour(String, String)
+            return (boolean) utilisateurServiceRemote.getClass()
                 .getMethod("aAutorisationPour", String.class, String.class)
                 .invoke(utilisateurServiceRemote, nomTable, nomAction);
-            
-            return result != null && result;
         } catch (Exception e) {
             LOGGER.warning("Erreur lors de la vérification d'autorisation: " + e.getMessage());
             return false;

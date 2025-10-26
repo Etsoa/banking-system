@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration xmlns="urn:wildfly:client:config:3.0">
+    
+    <!-- Configuration pour la connexion aux services EJB distants -->
+    
+    <!-- Connexion au serveur Echange sur Docker -->
+    <client-interceptors/>
+    
+    <connections>
+        <connection name="echange">
+            <protocol>remote</protocol>
+            <host>host.docker.internal</host>
+            <port>8081</port>
+        </connection>
+    </connections>
+    
+    <!-- Configuration SSL/TLS (désactivée) -->
+    <ssl>
+        <key-stores>
+            <key-store name="default">
+                <credential-reference clear-text="password"/>
+                <implementation-properties>
+                    <property name="keyStoreType" value="JKS"/>
+                </implementation-properties>
+            </key-store>
+        </key-stores>
+        <key-managers>
+            <key-manager name="default">
+                <key-store name="default"/>
+            </key-manager>
+        </key-managers>
+        <client-ssl-context name="default">
+            <key-manager-name>default</key-manager-name>
+        </client-ssl-context>
+    </ssl>
+</configuration>

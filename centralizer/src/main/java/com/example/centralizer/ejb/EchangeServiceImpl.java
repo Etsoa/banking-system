@@ -25,16 +25,22 @@ public class EchangeServiceImpl implements Serializable {
 
     /**
      * Initialise le service EJB distant via JNDI
+     * Format JNDI pour WildFly distant (Docker): 
+     * ejb:echange/EchangeServiceBean!com.example.echange.ejb.EchangeServiceRemote
+     * La connexion est configurée dans jboss-ejb-client.properties pour l'adresse Docker
+     * Le jar s'appelle "echange.jar" donc c'est "ejb:echange/..."
      */
     private void initializeRemoteService() {
         if (echangeServiceRemote == null) {
             try {
                 InitialContext ctx = new InitialContext();
-                // Lookup du service EJB distant du module echange
-                echangeServiceRemote = ctx.lookup(
-                    "ejb:eap/echange/EchangeServiceBean!com.example.echange.ejb.EchangeServiceRemote"
-                );
-                LOGGER.info("EchangeServiceRemote initialisé avec succès");
+                // Lookup du service EJB distant du module echange (déployé sur Docker)
+                // La configuration ejb-client gère la connexion à distance
+                // Pas de ?stateful car EchangeServiceBean est Stateless
+                String jndiPath = "ejb:echange/EchangeServiceBean!com.example.echange.ejb.EchangeServiceRemote";
+                LOGGER.info("Lookup EchangeServiceRemote distant: " + jndiPath);
+                echangeServiceRemote = ctx.lookup(jndiPath);
+                LOGGER.info("EchangeServiceRemote distant initialisé avec succès");
             } catch (NamingException e) {
                 LOGGER.severe("Erreur lors du lookup du service EJB distant: " + e.getMessage());
                 throw new RuntimeException("Impossible de localiser le service EJB distant", e);
@@ -49,13 +55,13 @@ public class EchangeServiceImpl implements Serializable {
         try {
             initializeRemoteService();
             
-            @SuppressWarnings("unchecked")
-            List<Object> result = (List<Object>) echangeServiceRemote.getClass()
+            // Utiliser la réflexion pour appeler la méthode getAllEchanges()
+            List<?> result = (List<?>) echangeServiceRemote.getClass()
                 .getMethod("getAllEchanges")
                 .invoke(echangeServiceRemote);
             
             LOGGER.info("Taux d'échange récupérés: " + (result != null ? result.size() : 0));
-            return convertToEchangeDTOList(result);
+            return convertToEchangeDTOList((List<Object>) result);
         } catch (Exception e) {
             LOGGER.severe("Erreur lors de la récupération des taux d'échange: " + e.getMessage());
             e.printStackTrace();
@@ -70,13 +76,13 @@ public class EchangeServiceImpl implements Serializable {
         try {
             initializeRemoteService();
             
-            @SuppressWarnings("unchecked")
-            List<Object> result = (List<Object>) echangeServiceRemote.getClass()
+            // Utiliser la réflexion pour appeler la méthode getEchangesActifs(LocalDate)
+            List<?> result = (List<?>) echangeServiceRemote.getClass()
                 .getMethod("getEchangesActifs", LocalDate.class)
                 .invoke(echangeServiceRemote, date);
             
             LOGGER.info("Taux actifs à " + date + " récupérés: " + (result != null ? result.size() : 0));
-            return convertToEchangeDTOList(result);
+            return convertToEchangeDTOList((List<Object>) result);
         } catch (Exception e) {
             LOGGER.severe("Erreur lors de la récupération des taux à " + date + ": " + e.getMessage());
             return new ArrayList<>();
@@ -90,6 +96,7 @@ public class EchangeServiceImpl implements Serializable {
         try {
             initializeRemoteService();
             
+            // Utiliser la réflexion pour appeler la méthode convertirVersAriary(String, BigDecimal, LocalDate)
             BigDecimal result = (BigDecimal) echangeServiceRemote.getClass()
                 .getMethod("convertirVersAriary", String.class, BigDecimal.class, LocalDate.class)
                 .invoke(echangeServiceRemote, devise, montant, date);
@@ -109,6 +116,7 @@ public class EchangeServiceImpl implements Serializable {
         try {
             initializeRemoteService();
             
+            // Utiliser la réflexion pour appeler la méthode convertirDepuisAriary(String, BigDecimal, LocalDate)
             BigDecimal result = (BigDecimal) echangeServiceRemote.getClass()
                 .getMethod("convertirDepuisAriary", String.class, BigDecimal.class, LocalDate.class)
                 .invoke(echangeServiceRemote, devise, montantAriary, date);
