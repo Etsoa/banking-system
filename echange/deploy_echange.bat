@@ -1,7 +1,7 @@
 @echo off
 set PROJECT_DIR=%~dp0
 set WILDFLY_DEPLOY_DIR=C:\apk\wildfly-37.0.1.Final\standalone\deployments
-set WAR_NAME=echange.war
+set WAR_NAME=echange.jar
 
 cd /d "%PROJECT_DIR%"
 

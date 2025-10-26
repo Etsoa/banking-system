@@ -5,7 +5,8 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.logging.Logger;
 
-import com.example.centralizer.dto.CompteCourant;
+import com.example.centralizer.dto.comptecourant.CompteCourant;
+import com.example.centralizer.dto.comptecourant.SessionUtilisateur;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -13,18 +14,32 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 
 /**
- * Servlet pour gérer les comptes courants - utilise JSP et session beans
+ * Servlet pour gérer les comptes courants - utilise SessionManager et session HTTP
  */
 @WebServlet(urlPatterns = {"/comptes", "/comptes/*"})
 public class CompteCourantServlet extends HttpServlet {
+    private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(CompteCourantServlet.class.getName());
+    
+    private static final String COMPTE_COURANT_SERVICE_JNDI = "java:module/CompteCourantServiceImpl";
+    
+    /**
+     * Obtenir une nouvelle instance de CompteCourantService via JNDI lookup
+     */
+    private com.example.centralizer.ejb.CompteCourantServiceImpl getCompteCourantService() throws NamingException {
+        InitialContext ctx = new InitialContext();
+        return (com.example.centralizer.ejb.CompteCourantServiceImpl) ctx.lookup(COMPTE_COURANT_SERVICE_JNDI);
+    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        // Vérifier l'authentification
-        if (!checkAuthentication(req, resp)) {
+        // Vérifier l'authentification via SessionManager
+        if (!SessionManager.isAuthenticated(req)) {
+            resp.sendRedirect(req.getContextPath() + "/login");
             return;
         }
 
@@ -49,107 +64,86 @@ public class CompteCourantServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        // Vérifier l'authentification
-        if (!checkAuthentication(req, resp)) {
+        // Vérifier l'authentification via SessionManager
+        if (!SessionManager.isAuthenticated(req)) {
+            resp.sendRedirect(req.getContextPath() + "/login");
             return;
         }
 
         String action = req.getParameter("action");
         
-        if ("create".equals(action)) {
-            createCompte(req, resp);
-        } else if ("depot".equals(action)) {
-            effectuerDepot(req, resp);
-        } else if ("retrait".equals(action)) {
-            effectuerRetrait(req, resp);
-        } else {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Action invalide");
+        switch (action != null ? action : "") {
+            case "create":
+                createCompte(req, resp);
+                break;
+            case "depot":
+                effectuerDepot(req, resp);
+                break;
+            case "retrait":
+                effectuerRetrait(req, resp);
+                break;
+            default:
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Action invalide");
         }
-    }
-
-    private boolean checkAuthentication(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        HttpSession session = req.getSession(false);
-        if (session == null || session.getAttribute("authenticated") == null || 
-            !(Boolean) session.getAttribute("authenticated")) {
-            resp.sendRedirect(req.getContextPath() + "/login");
-            return false;
-        }
-        return true;
     }
 
     private void listComptes(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        HttpSession session = req.getSession();
-        com.example.centralizer.ejb.CompteCourantServiceImpl compteCourantService = 
-            (com.example.centralizer.ejb.CompteCourantServiceImpl) session.getAttribute("compteCourantService");
-        
-        if (compteCourantService == null) {
-            resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Service non disponible - veuillez vous reconnecter");
-            return;
-        }
-        
         try {
+            com.example.centralizer.ejb.CompteCourantServiceImpl compteCourantService = getCompteCourantService();
+            
             List<CompteCourant> comptes = compteCourantService.getAllComptes();
             req.setAttribute("comptes", comptes);
+            
+            // Ajouter les infos de session
+            SessionUtilisateur session = SessionManager.getSessionUtilisateur(req);
+            req.setAttribute("sessionUtilisateur", session);
+            
             req.getRequestDispatcher("/comptes-courant/list.jsp").forward(req, resp);
         } catch (Exception e) {
             LOGGER.severe("Erreur lors de la récupération des comptes: " + e.getMessage());
             req.setAttribute("error", "Erreur lors de la récupération des comptes");
-            req.getRequestDispatcher("/comptes-courant/list.jsp").forward(req, resp);
+            try {
+                req.getRequestDispatcher("/comptes-courant/list.jsp").forward(req, resp);
+            } catch (Exception e2) {
+                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Erreur serveur");
+            }
         }
     }
 
     private void showCompteDetails(HttpServletRequest req, HttpServletResponse resp, Integer idCompte) throws ServletException, IOException {
-        HttpSession session = req.getSession();
-        com.example.centralizer.ejb.CompteCourantServiceImpl compteCourantService = 
-            (com.example.centralizer.ejb.CompteCourantServiceImpl) session.getAttribute("compteCourantService");
-        
-        if (compteCourantService == null) {
-            resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Service non disponible - veuillez vous reconnecter");
-            return;
-        }
-        
         try {
+            com.example.centralizer.ejb.CompteCourantServiceImpl compteCourantService = getCompteCourantService();
+            
             CompteCourant compte = compteCourantService.getCompteById(idCompte);
             if (compte != null) {
                 req.setAttribute("compte", compte);
                 
                 // Récupérer les transactions du compte
-                List<com.example.centralizer.dto.Transaction> transactions = 
+                List<com.example.centralizer.dto.comptecourant.Transaction> transactions = 
                     compteCourantService.getTransactionsByCompte(idCompte);
                 req.setAttribute("transactions", transactions);
                 
-                // Récupérer les devises disponibles pour les dépôts/retraits
-                LOGGER.info("=== DEBUT récupération des devises ===");
-                com.example.centralizer.ejb.EchangeServiceImpl echangeService = 
-                    (com.example.centralizer.ejb.EchangeServiceImpl) session.getAttribute("echangeService");
-                
-                LOGGER.info("EchangeService depuis session: " + (echangeService != null ? "EXISTE" : "NULL"));
-                
-                if (echangeService != null) {
-                    try {
-                        LOGGER.info("Appel de getEchangesActifs()...");
-                        List<com.example.centralizer.dto.echange.Echange> devises = echangeService.getEchangesActifs();
-                        LOGGER.info("Devises récupérées: " + (devises != null ? devises.size() + " devises" : "NULL"));
-                        
-                        if (devises != null) {
-                            for (com.example.centralizer.dto.echange.Echange dev : devises) {
-                                LOGGER.info("  - " + dev.getNom() + " = " + dev.getValeur() + " MGA");
-                            }
+                // Récupérer le service Echange de la session
+                HttpSession httpSession = req.getSession(false);
+                if (httpSession != null) {
+                    com.example.centralizer.ejb.EchangeServiceImpl echangeService = 
+                        (com.example.centralizer.ejb.EchangeServiceImpl) httpSession.getAttribute("echangeService");
+                    
+                    if (echangeService != null) {
+                        try {
+                            // Récupérer les devises actives pour aujourd'hui
+                            List<com.example.centralizer.dto.echange.Echange> devises = echangeService.getEchangesActifs(java.time.LocalDate.now());
+                            req.setAttribute("devises", devises);
+                        } catch (Exception e) {
+                            LOGGER.warning("Erreur lors de la récupération des devises: " + e.getMessage());
+                            // Continuer sans les devises - seul MGA sera disponible
                         }
-                        
-                        req.setAttribute("devises", devises);
-                        LOGGER.info("Devises ajoutées à l'attribut de requête");
-                    } catch (Exception e) {
-                        LOGGER.severe("Erreur lors de la récupération des devises: " + e.getClass().getName());
-                        LOGGER.severe("Message: " + e.getMessage());
-                        e.printStackTrace();
-                        // Continuer sans les devises - seul MGA sera disponible
                     }
-                } else {
-                    LOGGER.warning("EchangeService non disponible dans la session - seul MGA sera disponible");
                 }
                 
-                LOGGER.info("=== FIN récupération des devises ===");
+                // Ajouter les infos de session
+                SessionUtilisateur session = SessionManager.getSessionUtilisateur(req);
+                req.setAttribute("sessionUtilisateur", session);
                 
                 req.getRequestDispatcher("/comptes-courant/details.jsp").forward(req, resp);
             } else {
@@ -162,16 +156,9 @@ public class CompteCourantServlet extends HttpServlet {
     }
 
     private void createCompte(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        HttpSession session = req.getSession();
-        com.example.centralizer.ejb.CompteCourantServiceImpl compteCourantService = 
-            (com.example.centralizer.ejb.CompteCourantServiceImpl) session.getAttribute("compteCourantService");
-        
-        if (compteCourantService == null) {
-            resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Service non disponible - veuillez vous reconnecter");
-            return;
-        }
-        
         try {
+            com.example.centralizer.ejb.CompteCourantServiceImpl compteCourantService = getCompteCourantService();
+            
             String soldeStr = req.getParameter("solde");
             BigDecimal solde = new BigDecimal(soldeStr != null ? soldeStr : "0");
             
@@ -190,16 +177,9 @@ public class CompteCourantServlet extends HttpServlet {
     }
 
     private void effectuerDepot(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        HttpSession session = req.getSession();
-        com.example.centralizer.ejb.CompteCourantServiceImpl compteCourantService = 
-            (com.example.centralizer.ejb.CompteCourantServiceImpl) session.getAttribute("compteCourantService");
-        
-        if (compteCourantService == null) {
-            resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Service non disponible - veuillez vous reconnecter");
-            return;
-        }
-        
         try {
+            com.example.centralizer.ejb.CompteCourantServiceImpl compteCourantService = getCompteCourantService();
+            
             Integer idCompte = Integer.parseInt(req.getParameter("idCompte"));
             BigDecimal montant = new BigDecimal(req.getParameter("montant"));
             
@@ -214,16 +194,9 @@ public class CompteCourantServlet extends HttpServlet {
     }
 
     private void effectuerRetrait(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        HttpSession session = req.getSession();
-        com.example.centralizer.ejb.CompteCourantServiceImpl compteCourantService = 
-            (com.example.centralizer.ejb.CompteCourantServiceImpl) session.getAttribute("compteCourantService");
-        
-        if (compteCourantService == null) {
-            resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Service non disponible - veuillez vous reconnecter");
-            return;
-        }
-        
         try {
+            com.example.centralizer.ejb.CompteCourantServiceImpl compteCourantService = getCompteCourantService();
+            
             Integer idCompte = Integer.parseInt(req.getParameter("idCompte"));
             BigDecimal montant = new BigDecimal(req.getParameter("montant"));
             

@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ page import="com.example.centralizer.dto.Transaction" %>
+<%@ page import="com.example.centralizer.dto.comptecourant.Transaction" %>
+<%@ page import="com.example.centralizer.dto.comptecourant.SessionUtilisateur" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.text.NumberFormat" %>
 <%@ page import="java.util.Locale" %>
@@ -10,51 +11,34 @@
     <title>Transactions</title>
 </head>
 <body>
-    <h1>Banking System - Transactions</h1>
-    <p>DEBUG: JSP chargé !</p>
+    <nav class="navbar">
+        <div class="container">
+            <h1>Banking System Centralizer</h1>
+            <div class="nav-links">
+                <a href="${pageContext.request.contextPath}/home">Accueil</a>
+                <a href="${pageContext.request.contextPath}/comptes">Comptes</a>
+                <%
+                    SessionUtilisateur sessionUtilisateur = (SessionUtilisateur) request.getAttribute("sessionUtilisateur");
+                    if (sessionUtilisateur != null) {
+                %>
+                    <span>Utilisateur: <strong><%= sessionUtilisateur.getNomUtilisateur() %></strong></span>
+                <%
+                    }
+                %>
+                <a href="${pageContext.request.contextPath}/logout" class="btn btn-secondary">Déconnexion</a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <h1>Banking System - Transactions</h1>
+    
     <%
-        System.out.println("=== JSP list.jsp chargé ===");
         List<Transaction> transactions = (List<Transaction>) request.getAttribute("transactions");
         String titre = (String) request.getAttribute("titre");
-        System.out.println("Titre: " + titre);
-        System.out.println("Transactions: " + (transactions != null ? transactions.size() : "null"));
     %>
-    
-    <p><a href="${pageContext.request.contextPath}/home">Accueil</a> | 
-       <a href="${pageContext.request.contextPath}/comptes">Comptes</a> | 
-       <a href="${pageContext.request.contextPath}/logout">Déconnexion</a></p>
-    <hr>
     
     <h2><%= titre != null ? titre : "Transactions" %></h2>
-    
-    <%
-        // Afficher les messages de succès ou d'erreur depuis la session
-        String successMessage = (String) session.getAttribute("successMessage");
-        String errorMessage = (String) session.getAttribute("errorMessage");
-        
-        if (successMessage != null) {
-            session.removeAttribute("successMessage");
-    %>
-        <p style="color: green; font-weight: bold;">✓ <%= successMessage %></p>
-    <%
-        }
-        if (errorMessage != null) {
-            session.removeAttribute("errorMessage");
-    %>
-        <p style="color: red; font-weight: bold;">✗ <%= errorMessage %></p>
-    <%
-        }
-    %>
-    
-    <p><a href="${pageContext.request.contextPath}/transactions">Toutes</a> | 
-       <a href="${pageContext.request.contextPath}/transactions/en-attente">En attente</a> |
-    <hr>
-    
-    <p>DEBUG: Nombre de transactions = <%= transactions != null ? transactions.size() : "null" %></p>
-    <%
-        if (transactions != null && !transactions.isEmpty()) {
-            System.out.println("Affichage du tableau avec " + transactions.size() + " transactions");
-    %>
     <table border="1" cellpadding="5" cellspacing="0">
         <tr>
             <th>ID</th>
@@ -102,13 +86,13 @@
             }
         %>
     </table>
-    <%
+        <%
         } else {
-            System.out.println("Aucune transaction à afficher");
     %>
-    <p><strong>Aucune transaction.</strong></p>
-    <%
+        <p><strong>Aucune transaction.</strong></p>
+        <%
         }
     %>
+    </div>
 </body>
 </html>

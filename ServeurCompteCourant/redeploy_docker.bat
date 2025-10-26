@@ -1,6 +1,6 @@
 @echo off
 echo ========================================
-echo Redeploiement du serveur Echange Docker
+echo Redeploiement du serveur CompteCourant EJB
 echo ========================================
 echo.
 
@@ -14,24 +14,23 @@ if %ERRORLEVEL% NEQ 0 (
 echo.
 
 echo [2/3] Verification du conteneur Docker...
-docker ps | findstr echange >nul
+docker ps | findstr comptecourant >nul
 if %ERRORLEVEL% NEQ 0 (
-    echo ERREUR: Le conteneur echange n'est pas en cours d'execution!
+    echo ERREUR: Le conteneur comptecourant n'est pas en cours d'execution!
     echo Veuillez d'abord demarrer le conteneur avec: docker-compose up -d
     pause
     exit /b 1
 )
 echo.
 
-
 echo [3/3] Copie du JAR dans le conteneur...
-if not exist target\echange.jar (
-    echo ERREUR: Le fichier target\echange.jar est introuvable!
+if not exist target\comptecourant.jar (
+    echo ERREUR: Le fichier target\comptecourant.jar est introuvable!
     echo Verifiez le nom du JAR dans target\ apres compilation.
     pause
     exit /b 1
 )
-docker cp target\echange.jar echange:/opt/jboss/wildfly/standalone/deployments/
+docker cp target\comptecourant.jar comptecourant-ejb:/opt/jboss/wildfly/standalone/deployments/
 if %ERRORLEVEL% NEQ 0 (
     echo ERREUR: La copie du JAR a echoue!
     pause
@@ -47,6 +46,6 @@ echo Le JAR a ete copie. WildFly va le redeployer automatiquement.
 echo Patientez quelques secondes...
 echo.
 echo Pour voir les logs: docker-compose logs -f
-echo Pour tester l'API: curl http://localhost:8081/echange/api/echanges
+echo Pour acceder au serveur: http://localhost:8082
 echo.
 pause

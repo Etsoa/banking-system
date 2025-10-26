@@ -1,4 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="com.example.centralizer.dto.comptecourant.SessionUtilisateur" %>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -12,7 +13,14 @@
         <div class="container">
             <h1>Banking System Centralizer</h1>
             <div class="nav-links">
-                <span>Bienvenue, <%= request.getAttribute("username") %></span>
+                <%
+                    SessionUtilisateur sessionUtilisateur = (SessionUtilisateur) request.getAttribute("sessionUtilisateur");
+                    if (sessionUtilisateur != null) {
+                %>
+                    <span>Bienvenue, <strong><%= sessionUtilisateur.getNomUtilisateur() %></strong> (Rôle: <%= sessionUtilisateur.getRoleUtilisateur() %>)</span>
+                <%
+                    }
+                %>
                 <a href="${pageContext.request.contextPath}/logout" class="btn btn-secondary">Déconnexion</a>
             </div>
         </div>

@@ -1,70 +1,209 @@
 package com.example.centralizer.ejb;
 
+import java.io.Serializable;
 import java.util.logging.Logger;
 
-import com.example.centralizer.dto.LoginRequest;
-import com.example.centralizer.dto.LoginResponse;
-
+import com.example.centralizer.dto.comptecourant.LoginResponse;
+import com.example.centralizer.dto.comptecourant.SessionUtilisateur;
 import jakarta.ejb.Stateful;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 
 /**
  * Service EJB Stateful pour l'authentification
+ * Gère la session utilisateur complète avec rôles et actions/permissions
+ * Utilise JNDI lookup pour accéder aux services EJB distants du module comptecourant
  */
 @Stateful
-public class AuthenticationServiceImpl {
+public class AuthenticationServiceImpl implements Serializable {
+    private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(AuthenticationServiceImpl.class.getName());
     
-    private Integer currentUserId;
-    private String currentUsername;
+    private Object utilisateurServiceRemote;
+    private SessionUtilisateur sessionUtilisateur;  // Session complète de l'utilisateur
     private boolean authenticated = false;
     
-    public LoginResponse login(LoginRequest request) {
+    /**
+     * Initialise le service EJB distant via JNDI
+     */
+    private void initializeRemoteService() {
+        if (utilisateurServiceRemote == null) {
+            try {
+                InitialContext ctx = new InitialContext();
+                utilisateurServiceRemote = ctx.lookup(
+                    "ejb:eap/comptecourant/UtilisateurServiceBean!com.example.comptecourant.ejb.UtilisateurServiceRemote"
+                );
+                LOGGER.info("UtilisateurServiceRemote initialisé avec succès");
+            } catch (NamingException e) {
+                LOGGER.severe("Erreur lors du lookup du service EJB distant: " + e.getMessage());
+                throw new RuntimeException("Impossible de localiser le service EJB distant", e);
+            }
+        }
+    }
+    
+    /**
+     * Authentification auprès du serveur de compte courant
+     * Crée et populate une SessionUtilisateur complète avec tous les rôles et actions/permissions
+     */
+    public LoginResponse login(String nomUtilisateur, String motDePasse) {
         try {
-            // Validation simple - l'authentification réelle se fait dans CompteCourantServiceImpl
-            if (request.getNomUtilisateur() != null && request.getMotDePasse() != null) {
-                this.currentUsername = request.getNomUtilisateur();
-                this.currentUserId = request.getIdUtilisateur() != null ? request.getIdUtilisateur() : 1;
-                this.authenticated = true;
+            initializeRemoteService();
+            LOGGER.info("Tentative d'authentification pour: " + nomUtilisateur);
+            
+            Boolean result = (Boolean) utilisateurServiceRemote.getClass()
+                .getMethod("login", String.class, String.class)
+                .invoke(utilisateurServiceRemote, nomUtilisateur, motDePasse);
+            
+            if (result != null && result) {
+                // Récupérer les informations complètes de l'utilisateur connecté
+                Object utilisateur = utilisateurServiceRemote.getClass()
+                    .getMethod("getUtilisateurConnecte")
+                    .invoke(utilisateurServiceRemote);
                 
-                LOGGER.info("Utilisateur " + currentUsername + " (ID: " + currentUserId + ") session créée");
-                
-                LoginResponse response = new LoginResponse(true, "Authentification réussie");
-                response.setIdUtilisateur(currentUserId);
-                response.setNomUtilisateur(currentUsername);
-                return response;
+                if (utilisateur != null) {
+                    Integer idUtilisateur = null;
+                    String nomUtilisateurConnecte = null;
+                    Integer roleUtilisateur = null;
+                    
+                    Object idObj = utilisateur.getClass().getMethod("getIdUtilisateur").invoke(utilisateur);
+                    Object nomObj = utilisateur.getClass().getMethod("getNomUtilisateur").invoke(utilisateur);
+                    Object roleObj = utilisateur.getClass().getMethod("getRoleUtilisateur").invoke(utilisateur);
+                    
+                    if (idObj != null) idUtilisateur = ((Number) idObj).intValue();
+                    if (nomObj != null) nomUtilisateurConnecte = nomObj.toString();
+                    if (roleObj != null && roleObj instanceof Number) roleUtilisateur = ((Number) roleObj).intValue();
+                    
+                    // Créer la session utilisateur complète
+                    sessionUtilisateur = new SessionUtilisateur(
+                        idUtilisateur, 
+                        nomUtilisateurConnecte, 
+                        roleUtilisateur
+                    );
+                    
+                    // TODO: Récupérer les ActionRoles pour ce rôle depuis le serveur
+                    // sessionUtilisateur.setActionsRoles(fetchActionRolesForRole(roleUtilisateur));
+                    
+                    authenticated = true;
+                    LOGGER.info("Authentification réussie pour: " + nomUtilisateurConnecte + " (ID: " + idUtilisateur + ", Rôle: " + roleUtilisateur + ")");
+                    
+                    LoginResponse response = new LoginResponse(true, "Authentification réussie");
+                    response.setIdUtilisateur(idUtilisateur);
+                    response.setNomUtilisateur(nomUtilisateurConnecte);
+                    return response;
+                }
             }
             
+            LOGGER.warning("Échec d'authentification pour: " + nomUtilisateur);
             return new LoginResponse(false, "Nom d'utilisateur ou mot de passe invalide");
         } catch (Exception e) {
             LOGGER.severe("Erreur lors de l'authentification: " + e.getMessage());
-            this.authenticated = false;
-            this.currentUsername = null;
-            this.currentUserId = null;
+            sessionUtilisateur = null;
+            authenticated = false;
             return new LoginResponse(false, "Erreur d'authentification: " + e.getMessage());
         }
     }
     
+    /**
+     * Déconnexion de l'utilisateur
+     */
     public void logout() {
         try {
-            if (authenticated) {
-                LOGGER.info("Utilisateur " + currentUsername + " déconnecté");
+            if (sessionUtilisateur != null) {
+                initializeRemoteService();
+                utilisateurServiceRemote.getClass()
+                    .getMethod("logout")
+                    .invoke(utilisateurServiceRemote);
+                
+                LOGGER.info("Utilisateur " + sessionUtilisateur.getNomUtilisateur() + " déconnecté");
             }
+        } catch (Exception e) {
+            LOGGER.warning("Erreur lors de la déconnexion: " + e.getMessage());
         } finally {
-            this.authenticated = false;
-            this.currentUsername = null;
-            this.currentUserId = null;
+            sessionUtilisateur = null;
+            authenticated = false;
         }
     }
     
+    /**
+     * Récupère l'utilisateur actuellement connecté
+     */
+    public LoginResponse getCurrentUser() {
+        if (sessionUtilisateur == null || !authenticated) {
+            return new LoginResponse(false, "Aucun utilisateur connecté");
+        }
+        
+        LoginResponse response = new LoginResponse(true, "Utilisateur récupéré");
+        response.setIdUtilisateur(sessionUtilisateur.getIdUtilisateur());
+        response.setNomUtilisateur(sessionUtilisateur.getNomUtilisateur());
+        return response;
+    }
+    
+    /**
+     * Vérifie si l'utilisateur est authentifié
+     */
     public boolean isAuthenticated() {
-        return authenticated;
+        try {
+            if (!authenticated || sessionUtilisateur == null) {
+                return false;
+            }
+            
+            initializeRemoteService();
+            Boolean result = (Boolean) utilisateurServiceRemote.getClass()
+                .getMethod("estConnecte")
+                .invoke(utilisateurServiceRemote);
+            
+            return result != null && result;
+        } catch (Exception e) {
+            LOGGER.warning("Erreur lors de la vérification de connexion: " + e.getMessage());
+            return false;
+        }
     }
     
+    /**
+     * Retourne la session utilisateur complète
+     */
+    public SessionUtilisateur getSessionUtilisateur() {
+        return sessionUtilisateur;
+    }
+    
+    /**
+     * Retourne l'ID de l'utilisateur actuellement connecté
+     */
     public Integer getCurrentUserId() {
-        return currentUserId;
+        return sessionUtilisateur != null ? sessionUtilisateur.getIdUtilisateur() : null;
     }
     
+    /**
+     * Retourne le nom d'utilisateur actuellement connecté
+     */
     public String getCurrentUsername() {
-        return currentUsername;
+        return sessionUtilisateur != null ? sessionUtilisateur.getNomUtilisateur() : null;
+    }
+    
+    /**
+     * Retourne l'ID du rôle de l'utilisateur actuellement connecté
+     */
+    public Integer getCurrentUserRoleId() {
+        return sessionUtilisateur != null ? sessionUtilisateur.getRoleUtilisateur() : null;
+    }
+    
+    /**
+     * Vérifie si l'utilisateur connecté a une action/permission spécifique sur une table
+     */
+    public boolean aAutorisationPour(String nomTable, String nomAction) {
+        try {
+            if (!authenticated || utilisateurServiceRemote == null) {
+                return false;
+            }
+            
+            Boolean result = (Boolean) utilisateurServiceRemote.getClass()
+                .getMethod("aAutorisationPour", String.class, String.class)
+                .invoke(utilisateurServiceRemote, nomTable, nomAction);
+            
+            return result != null && result;
+        } catch (Exception e) {
+            LOGGER.warning("Erreur lors de la vérification d'autorisation: " + e.getMessage());
+            return false;
+        }
     }
 }

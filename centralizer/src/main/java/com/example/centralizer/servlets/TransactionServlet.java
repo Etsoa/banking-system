@@ -5,7 +5,8 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.logging.Logger;
 
-import com.example.centralizer.dto.Transaction;
+import com.example.centralizer.dto.comptecourant.Transaction;
+import com.example.centralizer.dto.comptecourant.SessionUtilisateur;
 import com.example.centralizer.dto.echange.Echange;
 import com.example.centralizer.ejb.CompteCourantServiceImpl;
 import com.example.centralizer.ejb.EchangeServiceImpl;
@@ -16,31 +17,33 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 
 /**
  * Servlet pour la gestion des transactions
  */
 @WebServlet(urlPatterns = {"/transactions", "/transactions/en-attente", "/transactions/compte/*", "/transactions/depot", "/transactions/retrait"})
 public class TransactionServlet extends HttpServlet {
+    private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(TransactionServlet.class.getName());
+    
+    private static final String COMPTE_COURANT_SERVICE_JNDI = "java:module/CompteCourantServiceImpl";
+    
+    /**
+     * Obtenir une nouvelle instance de CompteCourantService via JNDI lookup
+     */
+    private CompteCourantServiceImpl getCompteCourantService() throws NamingException {
+        InitialContext ctx = new InitialContext();
+        return (CompteCourantServiceImpl) ctx.lookup(COMPTE_COURANT_SERVICE_JNDI);
+    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         LOGGER.info("=== TransactionServlet.doGet appelé ===");
-        LOGGER.info("Request URI: " + req.getRequestURI());
         
-        HttpSession session = req.getSession(false);
-        
-        if (session == null) {
-            LOGGER.warning("Session is null - redirecting to login");
-            resp.sendRedirect(req.getContextPath() + "/login");
-            return;
-        }
-        
-        CompteCourantServiceImpl service = (CompteCourantServiceImpl) session.getAttribute("compteCourantService");
-        
-        if (service == null) {
-            LOGGER.warning("CompteCourantService not found in session - redirecting to login");
+        // Vérifier l'authentification via SessionManager
+        if (!SessionManager.isAuthenticated(req)) {
             resp.sendRedirect(req.getContextPath() + "/login");
             return;
         }
@@ -48,6 +51,8 @@ public class TransactionServlet extends HttpServlet {
         String pathInfo = req.getPathInfo();
         
         try {
+            CompteCourantServiceImpl service = getCompteCourantService();
+            
             if (pathInfo == null) {
                 // /transactions
                 afficherToutesTransactions(req, resp, service);
@@ -56,7 +61,7 @@ public class TransactionServlet extends HttpServlet {
                 afficherTransactionsEnAttente(req, resp, service);
             } else if (pathInfo.equals("/depot") || pathInfo.equals("/retrait")) {
                 // /transactions/depot ou /transactions/retrait
-                afficherFormulaireTransaction(req, resp, session, pathInfo.substring(1));
+                afficherFormulaireTransaction(req, resp, pathInfo.substring(1));
             } else if (pathInfo.startsWith("/compte/")) {
                 // /transactions/compte/{id}
                 String idStr = pathInfo.substring("/compte/".length());
@@ -66,7 +71,11 @@ public class TransactionServlet extends HttpServlet {
         } catch (Exception e) {
             LOGGER.severe("Erreur lors du traitement de la requête: " + e.getMessage());
             req.setAttribute("error", "Erreur lors de la récupération des transactions");
-            req.getRequestDispatcher("/transactions/list.jsp").forward(req, resp);
+            try {
+                req.getRequestDispatcher("/transactions/list.jsp").forward(req, resp);
+            } catch (Exception e2) {
+                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Erreur serveur");
+            }
         }
     }
 
@@ -74,15 +83,26 @@ public class TransactionServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         LOGGER.info("=== TransactionServlet.doPost appelé ===");
         
-        HttpSession session = req.getSession(false);
-        
-        if (session == null || session.getAttribute("compteCourantService") == null) {
-            LOGGER.warning("Session ou service null - redirection vers login");
+        // Vérifier l'authentification via SessionManager
+        if (!SessionManager.isAuthenticated(req)) {
             resp.sendRedirect(req.getContextPath() + "/login");
             return;
         }
         
-        CompteCourantServiceImpl service = (CompteCourantServiceImpl) session.getAttribute("compteCourantService");
+        HttpSession session = req.getSession(false);
+        if (session == null) {
+            resp.sendRedirect(req.getContextPath() + "/login");
+            return;
+        }
+        
+        CompteCourantServiceImpl service;
+        try {
+            service = getCompteCourantService();
+        } catch (NamingException e) {
+            LOGGER.severe("Erreur lors de la récupération du service: " + e.getMessage());
+            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Service non disponible");
+            return;
+        }
         
         String action = req.getParameter("action");
         
@@ -111,10 +131,8 @@ public class TransactionServlet extends HttpServlet {
                     session.setAttribute("errorMessage", "Action inconnue");
                     resp.sendRedirect(req.getContextPath() + "/transactions");
             }
-            
         } catch (Exception e) {
             LOGGER.severe("Erreur inattendue dans doPost: " + e.getMessage());
-            e.printStackTrace();
             session.setAttribute("errorMessage", "Erreur technique: " + e.getMessage());
             resp.sendRedirect(req.getContextPath() + "/transactions");
         }
@@ -200,7 +218,7 @@ public class TransactionServlet extends HttpServlet {
                 }
                 
                 // Utiliser la date de transaction pour trouver le taux actif à cette date
-                montantAriary = echangeService.convertirVersAriaryADate(devise + "/MGA", montantDevise, dateTransaction);
+                montantAriary = echangeService.convertirVersAriary(devise, montantDevise, dateTransaction);
                 LOGGER.info("Montant converti à la date " + dateTransaction + ": " + montantDevise + " " + devise + " = " + montantAriary + " MGA");
             }
             
@@ -230,7 +248,6 @@ public class TransactionServlet extends HttpServlet {
             resp.sendRedirect(req.getContextPath() + "/transactions/" + action);
         } catch (Exception e) {
             LOGGER.severe("Erreur lors de la conversion ou transaction: " + e.getMessage());
-            e.printStackTrace();
             session.setAttribute("errorMessage", "Erreur: " + e.getMessage());
             resp.sendRedirect(req.getContextPath() + "/transactions/" + action);
         }
@@ -244,6 +261,11 @@ public class TransactionServlet extends HttpServlet {
         req.setAttribute("transactions", transactions);
         req.setAttribute("titre", "Toutes les transactions");
         req.setAttribute("type", "all");
+        
+        // Ajouter les infos de session
+        SessionUtilisateur session = SessionManager.getSessionUtilisateur(req);
+        req.setAttribute("sessionUtilisateur", session);
+        
         LOGGER.info("Avant forward vers /transactions/list.jsp");
         req.getRequestDispatcher("/transactions/list.jsp").forward(req, resp);
         LOGGER.info("Après forward vers /transactions/list.jsp");
@@ -256,6 +278,11 @@ public class TransactionServlet extends HttpServlet {
         req.setAttribute("transactions", transactions);
         req.setAttribute("titre", "Transactions en attente de validation");
         req.setAttribute("type", "en-attente");
+        
+        // Ajouter les infos de session
+        SessionUtilisateur session = SessionManager.getSessionUtilisateur(req);
+        req.setAttribute("sessionUtilisateur", session);
+        
         req.getRequestDispatcher("/transactions/list.jsp").forward(req, resp);
     }
 
@@ -266,30 +293,46 @@ public class TransactionServlet extends HttpServlet {
         req.setAttribute("titre", "Transactions du compte #" + idCompte);
         req.setAttribute("type", "compte");
         req.setAttribute("idCompte", idCompte);
+        
+        // Ajouter les infos de session
+        SessionUtilisateur session = SessionManager.getSessionUtilisateur(req);
+        req.setAttribute("sessionUtilisateur", session);
+        
         req.getRequestDispatcher("/transactions/list.jsp").forward(req, resp);
     }
     
     private void afficherFormulaireTransaction(HttpServletRequest req, HttpServletResponse resp,
-                                              HttpSession session, String type) throws ServletException, IOException {
+                                              String type) throws ServletException, IOException {
         // Récupérer la liste des devises disponibles
-        EchangeServiceImpl echangeService = (EchangeServiceImpl) session.getAttribute("echangeService");
-        if (echangeService != null) {
-            try {
-                List<Echange> devises = echangeService.getEchangesActifs();
-                req.setAttribute("devises", devises);
-            } catch (Exception e) {
-                LOGGER.warning("Erreur lors de la récupération des devises: " + e.getMessage());
-                // Continuer sans les devises
+        HttpSession httpSession = req.getSession(false);
+        if (httpSession != null) {
+            EchangeServiceImpl echangeService = (EchangeServiceImpl) httpSession.getAttribute("echangeService");
+            if (echangeService != null) {
+                try {
+                    List<Echange> devises = echangeService.getEchangesActifs(java.time.LocalDate.now());
+                    req.setAttribute("devises", devises);
+                } catch (Exception e) {
+                    LOGGER.warning("Erreur lors de la récupération des devises: " + e.getMessage());
+                    // Continuer sans les devises
+                }
+            } else {
+                LOGGER.warning("EchangeService non disponible dans la session");
             }
-        } else {
-            LOGGER.warning("EchangeService non disponible dans la session");
         }
         
         req.setAttribute("type", type);
         
         // Récupérer la liste des comptes pour le dropdown
-        CompteCourantServiceImpl compteCourantService = (CompteCourantServiceImpl) session.getAttribute("compteCourantService");
-        req.setAttribute("comptes", compteCourantService.getAllComptes());
+        try {
+            CompteCourantServiceImpl compteCourantService = getCompteCourantService();
+            req.setAttribute("comptes", compteCourantService.getAllComptes());
+        } catch (NamingException e) {
+            LOGGER.warning("Erreur lors de la récupération de la liste des comptes: " + e.getMessage());
+        }
+        
+        // Ajouter les infos de session
+        SessionUtilisateur session = SessionManager.getSessionUtilisateur(req);
+        req.setAttribute("sessionUtilisateur", session);
         
         req.getRequestDispatcher("/transactions/form.jsp").forward(req, resp);
     }

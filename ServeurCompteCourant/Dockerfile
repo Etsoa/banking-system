@@ -1,11 +1,10 @@
-
 # Use WildFly base image
 FROM quay.io/wildfly/wildfly:37.0.0.Final-jdk17
 
-COPY target/echange.jar /opt/jboss/wildfly/standalone/deployments/
+COPY target/comptecourant.jar /opt/jboss/wildfly/standalone/deployments/
 
 USER root
-# Création de l'utilisateur admin WildFly avec nouveau login/mdp
+# Création de l'utilisateur admin WildFly
 RUN /opt/jboss/wildfly/bin/add-user.sh -u fetraniaina -p EtsoaMahimba -g admin
 USER jboss
 

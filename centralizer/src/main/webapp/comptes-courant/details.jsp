@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ page import="com.example.centralizer.dto.CompteCourant" %>
-<%@ page import="com.example.centralizer.dto.Transaction" %>
+<%@ page import="com.example.centralizer.dto.comptecourant.CompteCourant" %>
+<%@ page import="com.example.centralizer.dto.comptecourant.Transaction" %>
+<%@ page import="com.example.centralizer.dto.comptecourant.SessionUtilisateur" %>
 <%@ page import="com.example.centralizer.dto.echange.Echange" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.text.NumberFormat" %>
@@ -20,6 +21,14 @@
             <div class="nav-links">
                 <a href="${pageContext.request.contextPath}/home">Accueil</a>
                 <a href="${pageContext.request.contextPath}/comptes">Comptes</a>
+                <%
+                    SessionUtilisateur sessionUtilisateur = (SessionUtilisateur) request.getAttribute("sessionUtilisateur");
+                    if (sessionUtilisateur != null) {
+                %>
+                    <span>Utilisateur: <strong><%= sessionUtilisateur.getNomUtilisateur() %></strong></span>
+                <%
+                    }
+                %>
                 <a href="${pageContext.request.contextPath}/logout" class="btn btn-secondary">Déconnexion</a>
             </div>
         </div>

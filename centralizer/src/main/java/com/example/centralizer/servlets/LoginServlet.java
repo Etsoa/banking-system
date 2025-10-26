@@ -6,8 +6,8 @@ import java.util.logging.Logger;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
-import com.example.centralizer.dto.LoginRequest;
-import com.example.centralizer.dto.LoginResponse;
+import com.example.centralizer.dto.comptecourant.LoginResponse;
+import com.example.centralizer.dto.comptecourant.SessionUtilisateur;
 import com.example.centralizer.ejb.AuthenticationServiceImpl;
 import com.example.centralizer.ejb.CompteCourantServiceImpl;
 import com.example.centralizer.ejb.EchangeServiceImpl;
@@ -20,12 +20,15 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 /**
- * Servlet de login pour authentifier les utilisateurs - utilise JSP et JNDI lookup
+ * Servlet de login pour authentifier les utilisateurs
+ * Stocke la SessionUtilisateur dans la session HTTP pour chaque requête
  */
 @WebServlet(urlPatterns = {"/login", "/logout"})
 public class LoginServlet extends HttpServlet {
+    private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(LoginServlet.class.getName());
     
+    private static final String SESSION_UTILISATEUR_KEY = "sessionUtilisateur";
     private static final String AUTH_SERVICE_JNDI = "java:module/AuthenticationServiceImpl";
     private static final String COMPTE_COURANT_SERVICE_JNDI = "java:module/CompteCourantServiceImpl";
     
@@ -69,66 +72,44 @@ public class LoginServlet extends HttpServlet {
         }
 
         try {
-            // Obtenir une nouvelle instance du service d'authentification via JNDI
-            AuthenticationServiceImpl authService = getAuthenticationService();
-            
             // Obtenir une nouvelle instance du service CompteCourant via JNDI
             CompteCourantServiceImpl compteCourantService = getCompteCourantService();
             
-            // Créer une instance du service Echange (client REST Stateful, pas EJB JNDI)
+            // Créer une instance du service Echange
             EchangeServiceImpl echangeService = new EchangeServiceImpl();
-            LOGGER.info("EchangeService créé pour la session");
             
-            // Authentifier d'abord sur le serveur backend
-            boolean backendLoginSuccess = compteCourantService.login(username, password);
+            // Authentifier l'utilisateur
+            LoginResponse loginResponse = compteCourantService.login(username, password);
             
-            if (!backendLoginSuccess) {
+            if (!loginResponse.isSuccess()) {
                 req.setAttribute("error", "Nom d'utilisateur ou mot de passe invalide");
                 req.getRequestDispatcher("/login.jsp").forward(req, resp);
                 return;
             }
             
-            // Récupérer les informations réelles de l'utilisateur depuis le serveur
-            LoginResponse currentUserInfo = compteCourantService.getCurrentUser();
-            Integer realUserId = null;
-            String realUsername = username;
+            // Récupérer la session utilisateur complète depuis le service d'authentification
+            SessionUtilisateur sessionUtilisateur = compteCourantService.getSessionUtilisateur();
             
-            if (currentUserInfo != null && currentUserInfo.isSuccess()) {
-                realUserId = currentUserInfo.getIdUtilisateur();
-                realUsername = currentUserInfo.getNomUtilisateur();
-                LOGGER.info("Informations utilisateur récupérées du serveur: ID=" + realUserId + ", Username=" + realUsername);
-            } else {
-                LOGGER.warning("Impossible de récupérer les informations utilisateur, utilisation de valeurs par défaut");
-                realUserId = 1; // Valeur par défaut si la récupération échoue
-            }
-            
-            // Créer la requête de login pour la session locale avec l'ID réel
-            LoginRequest loginRequest = new LoginRequest(realUsername, password, realUserId);
-            
-            // Créer la session locale
-            LoginResponse loginResponse = authService.login(loginRequest);
-            
-            if (loginResponse.isSuccess()) {
-                // Créer la session HTTP et stocker les beans EJB dans la session
-                HttpSession session = req.getSession(true);
-                session.setAttribute("username", realUsername);
-                session.setAttribute("userId", realUserId);
-                session.setAttribute("authenticated", true);
-                session.setAttribute("authService", authService); // Stocker l'EJB d'authentification dans la session
-                session.setAttribute("compteCourantService", compteCourantService); // Stocker l'EJB de compte courant dans la session
-                session.setAttribute("echangeService", echangeService); // Stocker le service Echange dans la session
-                
-                LOGGER.info("Login réussi pour: " + realUsername + " (ID: " + realUserId + ") - Services EJB initialisés et authentifiés sur le serveur backend");
-                
-                // Rediriger vers la page d'accueil
-                resp.sendRedirect(req.getContextPath() + "/home");
-            } else {
-                req.setAttribute("error", loginResponse.getMessage());
+            if (sessionUtilisateur == null) {
+                req.setAttribute("error", "Impossible de créer la session utilisateur");
                 req.getRequestDispatcher("/login.jsp").forward(req, resp);
+                return;
             }
+            
+            // Créer la session HTTP et stocker la SessionUtilisateur
+            HttpSession httpSession = req.getSession(true);
+            httpSession.setAttribute(SESSION_UTILISATEUR_KEY, sessionUtilisateur);
+            httpSession.setAttribute("echangeService", echangeService);
+            
+            LOGGER.info("Login réussi pour: " + sessionUtilisateur.getNomUtilisateur() + 
+                       " (ID: " + sessionUtilisateur.getIdUtilisateur() + 
+                       ", Rôle: " + sessionUtilisateur.getRoleUtilisateur() + ")");
+            
+            // Rediriger vers la page d'accueil
+            resp.sendRedirect(req.getContextPath() + "/home");
+            
         } catch (Exception e) {
             LOGGER.severe("Erreur lors de l'authentification: " + e.getMessage());
-            e.printStackTrace();
             req.setAttribute("error", "Erreur de connexion au serveur");
             req.getRequestDispatcher("/login.jsp").forward(req, resp);
         }
@@ -138,23 +119,19 @@ public class LoginServlet extends HttpServlet {
         HttpSession session = req.getSession(false);
         if (session != null) {
             try {
-                // Récupérer les services de la session et les nettoyer
-                AuthenticationServiceImpl authService = 
-                    (AuthenticationServiceImpl) session.getAttribute("authService");
-                if (authService != null) {
-                    authService.logout();
-                }
+                // Récupérer la SessionUtilisateur pour logging
+                SessionUtilisateur sessionUtilisateur = 
+                    (SessionUtilisateur) session.getAttribute(SESSION_UTILISATEUR_KEY);
                 
-                // Déconnecter du serveur backend
-                CompteCourantServiceImpl compteCourantService =
-                    (CompteCourantServiceImpl) session.getAttribute("compteCourantService");
-                if (compteCourantService != null) {
-                    compteCourantService.logout();
+                if (sessionUtilisateur != null) {
+                    LOGGER.info("Déconnexion de: " + sessionUtilisateur.getNomUtilisateur());
                 }
                 
             } catch (Exception e) {
                 LOGGER.warning("Erreur lors de la déconnexion: " + e.getMessage());
             }
+            
+            // Invalider la session HTTP
             session.invalidate();
         }
         
